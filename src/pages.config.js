@@ -47,8 +47,16 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import SalesAnalytics from './pages/SalesAnalytics';
+import __Layout from './Layout.jsx';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "SalesAnalytics": SalesAnalytics,
 }
 
+export const pagesConfig = {
+    mainPage: "SalesAnalytics",
+    Pages: PAGES,
+    Layout: __Layout,
+};
