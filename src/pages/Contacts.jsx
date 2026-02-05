@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, UserCircle, MoreVertical } from 'lucide-react';
+import ContactDialog from '../components/forms/ContactDialog';
 import {
   Table,
   TableBody,
@@ -22,11 +23,20 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list('-created_date'),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.Contact.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setDialogOpen(false);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -48,7 +58,7 @@ export default function Contacts() {
           <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
           <p className="text-gray-500 mt-1">Manage your contacts</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Contact
         </Button>
@@ -151,6 +161,13 @@ export default function Contacts() {
           </TableBody>
         </Table>
       </div>
+
+      <ContactDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={(data) => createMutation.mutate(data)}
+        isLoading={createMutation.isPending}
+      />
     </div>
   );
 }

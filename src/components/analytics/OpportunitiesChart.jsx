@@ -4,17 +4,38 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 
-const data = [
-  { month: 'Jan', amount: 5000, weighted: 3000, count: 8 },
-  { month: 'Feb', amount: 12000, weighted: 7000, count: 12 },
-  { month: 'Mar', amount: 8000, weighted: 5000, count: 10 },
-  { month: 'Apr', amount: 20000, weighted: 15000, count: 18 },
-  { month: 'May', amount: 15000, weighted: 10000, count: 14 },
-  { month: 'Jun', amount: 18000, weighted: 12000, count: 16 },
-  { month: 'Jul', amount: 10000, weighted: 7000, count: 11 }
-];
+export default function OpportunitiesChart({ opportunities = [] }) {
+  const data = React.useMemo(() => {
+    const monthlyData = {};
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    opportunities.forEach(opp => {
+      const date = new Date(opp.created_date || opp.close_date || new Date());
+      const monthKey = months[date.getMonth()];
+      
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { month: monthKey, amount: 0, weighted: 0, count: 0 };
+      }
+      
+      monthlyData[monthKey].amount += opp.amount || 0;
+      monthlyData[monthKey].weighted += (opp.amount || 0) * (opp.probability || 50) / 100;
+      monthlyData[monthKey].count += 1;
+    });
+    
+    return months.map(month => monthlyData[month] || { month, amount: 0, weighted: 0, count: 0 });
+  }, [opportunities]);
 
-export default function OpportunitiesChart() {
+  const totals = React.useMemo(() => {
+    const totalAmount = opportunities.reduce((sum, o) => sum + (o.amount || 0), 0);
+    const totalWeighted = opportunities.reduce((sum, o) => sum + ((o.amount || 0) * (o.probability || 50) / 100), 0);
+    const weightedPercent = totalAmount > 0 ? (totalWeighted / totalAmount * 100) : 0;
+    
+    return {
+      amount: totalAmount,
+      weighted: weightedPercent,
+      count: opportunities.length,
+    };
+  }, [opportunities]);
   return (
     <Card className="col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -27,15 +48,15 @@ export default function OpportunitiesChart() {
         <div className="mb-4 flex items-center gap-6 text-sm">
           <div>
             <span className="text-gray-500">Amount</span>
-            <p className="text-lg font-bold">3,85,835.05</p>
+            <p className="text-lg font-bold">${totals.amount.toLocaleString()}</p>
           </div>
           <div>
             <span className="text-gray-500">Amount Weighted</span>
-            <p className="text-lg font-bold">10.45%</p>
+            <p className="text-lg font-bold">{totals.weighted.toFixed(1)}%</p>
           </div>
           <div>
             <span className="text-gray-500">Count</span>
-            <p className="text-lg font-bold">15.25%</p>
+            <p className="text-lg font-bold">{totals.count}</p>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={250}>

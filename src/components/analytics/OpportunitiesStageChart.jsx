@@ -2,14 +2,33 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Prospecting', value: 45, color: '#3b82f6' },
-  { name: 'Negotiation', value: 39, color: '#f97316' },
-  { name: 'Proposal', value: 32, color: '#eab308' },
-  { name: 'Qualification', value: 16, color: '#06b6d4' }
-];
+export default function OpportunitiesStageChart({ opportunities = [] }) {
+  const data = React.useMemo(() => {
+    const stages = {};
+    const colors = {
+      prospecting: '#3b82f6',
+      qualification: '#06b6d4',
+      proposal: '#eab308',
+      negotiation: '#f97316',
+    };
+    
+    opportunities.forEach(opp => {
+      const stage = opp.stage || 'prospecting';
+      if (['prospecting', 'qualification', 'proposal', 'negotiation'].includes(stage)) {
+        stages[stage] = (stages[stage] || 0) + 1;
+      }
+    });
+    
+    const total = Object.values(stages).reduce((sum, val) => sum + val, 0) || 1;
+    
+    return Object.entries(stages).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value: Math.round((value / total) * 100),
+      color: colors[name] || '#6b7280',
+    }));
+  }, [opportunities]);
 
-export default function OpportunitiesStageChart() {
+  const topStage = data.length > 0 ? data[0] : { value: 0 };
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -36,8 +55,8 @@ export default function OpportunitiesStageChart() {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-sm text-gray-500">All Selling</p>
-            <p className="text-3xl font-bold">50%</p>
+            <p className="text-sm text-gray-500">Top Stage</p>
+            <p className="text-3xl font-bold">{topStage.value}%</p>
           </div>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3">

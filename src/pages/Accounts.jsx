@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Building2, MoreVertical } from 'lucide-react';
+import AccountDialog from '../components/forms/AccountDialog';
 import {
   Table,
   TableBody,
@@ -22,11 +23,20 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Accounts() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: () => base44.entities.Account.list('-created_date'),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.Account.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      setDialogOpen(false);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -47,7 +57,7 @@ export default function Accounts() {
           <h1 className="text-3xl font-bold text-gray-900">Accounts</h1>
           <p className="text-gray-500 mt-1">Manage your company accounts</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Account
         </Button>
@@ -146,6 +156,13 @@ export default function Accounts() {
           </TableBody>
         </Table>
       </div>
+
+      <AccountDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={(data) => createMutation.mutate(data)}
+        isLoading={createMutation.isPending}
+      />
     </div>
   );
 }

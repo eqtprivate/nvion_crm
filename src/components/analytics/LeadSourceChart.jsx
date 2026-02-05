@@ -2,14 +2,31 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Call', value: 50, color: '#3b82f6' },
-  { name: 'Email', value: 20, color: '#f97316' },
-  { name: 'Web Site', value: 20, color: '#06b6d4' },
-  { name: 'Partner', value: 10, color: '#eab308' }
-];
+export default function LeadSourceChart({ leads = [], opportunities = [] }) {
+  const data = React.useMemo(() => {
+    const sources = {};
+    const colors = {
+      call: '#3b82f6',
+      email: '#f97316',
+      website: '#06b6d4',
+      partner: '#eab308',
+    };
+    
+    [...leads, ...opportunities].forEach(item => {
+      const source = item.source || 'email';
+      sources[source] = (sources[source] || 0) + 1;
+    });
+    
+    const total = Object.values(sources).reduce((sum, val) => sum + val, 0) || 1;
+    
+    return Object.entries(sources).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value: Math.round((value / total) * 100),
+      color: colors[name] || '#6b7280',
+    }));
+  }, [leads, opportunities]);
 
-export default function LeadSourceChart() {
+  const topSource = data.length > 0 ? data[0] : { value: 0 };
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -36,8 +53,8 @@ export default function LeadSourceChart() {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-sm text-gray-500">Share Holder</p>
-            <p className="text-3xl font-bold">50%</p>
+            <p className="text-sm text-gray-500">Top Source</p>
+            <p className="text-3xl font-bold">{topSource.value}%</p>
           </div>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3">

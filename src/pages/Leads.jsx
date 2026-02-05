@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Target, MoreVertical } from 'lucide-react';
+import LeadDialog from '../components/forms/LeadDialog';
 import {
   Table,
   TableBody,
@@ -22,11 +23,20 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['leads'],
     queryFn: () => base44.entities.Lead.list('-created_date'),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.Lead.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      setDialogOpen(false);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -55,7 +65,7 @@ export default function Leads() {
           <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
           <p className="text-gray-500 mt-1">Manage your sales leads</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Lead
         </Button>
@@ -155,6 +165,13 @@ export default function Leads() {
           </TableBody>
         </Table>
       </div>
+
+      <LeadDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={(data) => createMutation.mutate(data)}
+        isLoading={createMutation.isPending}
+      />
     </div>
   );
 }

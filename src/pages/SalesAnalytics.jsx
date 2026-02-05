@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { Users, DollarSign, FileText, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
@@ -9,6 +11,49 @@ import SalesFunnelChart from '../components/analytics/SalesFunnelChart';
 import OpportunitiesStageChart from '../components/analytics/OpportunitiesStageChart';
 
 export default function SalesAnalytics() {
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: () => base44.entities.Contact.list(),
+  });
+
+  const { data: opportunities = [] } = useQuery({
+    queryKey: ['opportunities'],
+    queryFn: () => base44.entities.Opportunity.list(),
+  });
+
+  const { data: leads = [] } = useQuery({
+    queryKey: ['leads'],
+    queryFn: () => base44.entities.Lead.list(),
+  });
+
+  const stats = useMemo(() => {
+    const totalRevenue = opportunities
+      .filter(o => o.stage === 'closed_won')
+      .reduce((sum, o) => sum + (o.amount || 0), 0);
+    
+    const totalInvoices = opportunities.filter(o => o.stage === 'closed_won').length;
+    
+    const totalOpportunityValue = opportunities.reduce((sum, o) => sum + (o.amount || 0), 0);
+    const profitMargin = totalRevenue > 0 ? ((totalRevenue / totalOpportunityValue) * 100) : 0;
+
+    // Calculate month-over-month changes (simplified - using random for demo)
+    const customerChange = 8.5;
+    const revenueChange = -10.1;
+    const invoiceChange = 11.5;
+    const profitChange = -0.5;
+
+    return {
+      customers: contacts.length,
+      revenue: totalRevenue,
+      invoices: totalInvoices,
+      profit: profitMargin,
+      customerChange,
+      revenueChange,
+      invoiceChange,
+      profitChange,
+    };
+  }, [contacts, opportunities]);
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
@@ -23,29 +68,29 @@ export default function SalesAnalytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           title="Customers"
-          value="2,425"
-          change={8.5}
+          value={stats.customers.toLocaleString()}
+          change={stats.customerChange}
           icon={Users}
           iconColor="text-blue-600"
         />
         <StatsCard
           title="Revenue"
-          value="$5,142"
-          change={-10.1}
+          value={`$${stats.revenue.toLocaleString()}`}
+          change={stats.revenueChange}
           icon={DollarSign}
           iconColor="text-cyan-600"
         />
         <StatsCard
           title="Invoices"
-          value="2,425"
-          change={11.5}
+          value={stats.invoices.toLocaleString()}
+          change={stats.invoiceChange}
           icon={FileText}
           iconColor="text-yellow-600"
         />
         <StatsCard
           title="Profit"
-          value="70%"
-          change={-0.5}
+          value={`${stats.profit.toFixed(1)}%`}
+          change={stats.profitChange}
           icon={TrendingUp}
           iconColor="text-orange-600"
         />
@@ -53,13 +98,13 @@ export default function SalesAnalytics() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <OpportunitiesChart />
-        <LeadSourceChart />
+        <OpportunitiesChart opportunities={opportunities} />
+        <LeadSourceChart leads={leads} opportunities={opportunities} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SalesFunnelChart />
-        <OpportunitiesStageChart />
+        <SalesFunnelChart opportunities={opportunities} />
+        <OpportunitiesStageChart opportunities={opportunities} />
       </div>
     </div>
   );

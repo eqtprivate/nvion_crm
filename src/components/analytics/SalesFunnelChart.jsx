@@ -4,16 +4,26 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
-const data = [
-  { month: 'Jan', prospecting: 16000, qualification: 8000, negotiation: 5000 },
-  { month: 'Feb', prospecting: 12000, qualification: 10000, negotiation: 6000 },
-  { month: 'Mar', prospecting: 20000, qualification: 5000, negotiation: 8000 },
-  { month: 'Apr', prospecting: 14000, qualification: 9000, negotiation: 7000 },
-  { month: 'May', prospecting: 18000, qualification: 6000, negotiation: 9000 },
-  { month: 'Jun', prospecting: 24000, qualification: 7000, negotiation: 6000 }
-];
-
-export default function SalesFunnelChart() {
+export default function SalesFunnelChart({ opportunities = [] }) {
+  const data = React.useMemo(() => {
+    const monthlyData = {};
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    
+    opportunities.forEach(opp => {
+      const date = new Date(opp.created_date || opp.close_date || new Date());
+      const monthKey = months[date.getMonth()];
+      
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { month: monthKey, prospecting: 0, qualification: 0, negotiation: 0 };
+      }
+      
+      if (opp.stage === 'prospecting') monthlyData[monthKey].prospecting += opp.amount || 0;
+      else if (opp.stage === 'qualification') monthlyData[monthKey].qualification += opp.amount || 0;
+      else if (opp.stage === 'negotiation') monthlyData[monthKey].negotiation += opp.amount || 0;
+    });
+    
+    return months.map(month => monthlyData[month] || { month, prospecting: 0, qualification: 0, negotiation: 0 });
+  }, [opportunities]);
   return (
     <Card className="col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
