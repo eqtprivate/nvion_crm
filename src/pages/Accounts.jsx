@@ -3,8 +3,9 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Building2, MoreVertical } from 'lucide-react';
+import { Plus, Search, Building2, MoreVertical, Download } from 'lucide-react';
 import AccountDialog from '../components/forms/AccountDialog';
+import EditAccountDialog from '../components/forms/EditAccountDialog';
 import {
   Table,
   TableBody,
@@ -24,6 +25,9 @@ import { Badge } from '@/components/ui/badge';
 export default function Accounts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery({
@@ -39,12 +43,60 @@ export default function Accounts() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Account.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      setEditDialogOpen(false);
+      setSelectedAccount(null);
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Account.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
   });
+
+  const handleEdit = (account) => {
+    setSelectedAccount(account);
+    setEditDialogOpen(true);
+  };
+
+  const handleViewDetails = (account) => {
+    setSelectedAccount(account);
+    setViewDialogOpen(true);
+  };
+
+  const exportToCSV = () => {
+    if (accounts.length === 0) return;
+    
+    const headers = ['Name', 'Industry', 'Phone', 'Email', 'Website', 'Annual Revenue', 'Employees', 'Status'];
+    const rows = accounts.map(account => [
+      account.name || '',
+      account.industry || '',
+      account.phone || '',
+      account.email || '',
+      account.website || '',
+      account.annual_revenue || '',
+      account.employees || '',
+      account.status || ''
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `accounts_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   const filteredAccounts = accounts.filter(account =>
     account.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -57,10 +109,16 @@ export default function Accounts() {
           <h1 className="text-3xl font-bold text-gray-900">Accounts</h1>
           <p className="text-gray-500 mt-1">Manage your company accounts</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Account
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={exportToCSV} disabled={accounts.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Account
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -139,8 +197,8 @@ export default function Accounts() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(account)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(account)}>View Details</DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => deleteMutation.mutate(account.id)}
@@ -162,6 +220,23 @@ export default function Accounts() {
         onOpenChange={setDialogOpen}
         onSubmit={(data) => createMutation.mutate(data)}
         isLoading={createMutation.isPending}
+      />
+
+      <EditAccountDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        account={selectedAccount}
+        onSubmit={(data) => updateMutation.mutate({ id: selectedAccount.id, data })}
+        isLoading={updateMutation.isPending}
+      />
+
+      <EditAccountDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        account={selectedAccount}
+        onSubmit={() => {}}
+        isLoading={false}
+        readOnly={true}
       />
     </div>
   );
