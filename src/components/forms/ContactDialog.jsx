@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading }) {
+export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading, initialData }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,6 +27,20 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading 
     status: 'active',
     source: 'email',
   });
+
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        email: initialData.email || '',
+        phone: initialData.phone || '',
+        company: initialData.company || '',
+        position: initialData.position || '',
+        status: 'active',
+        source: 'email',
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

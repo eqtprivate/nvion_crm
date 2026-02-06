@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Target, MoreVertical } from 'lucide-react';
 import LeadDialog from '../components/forms/LeadDialog';
+import EditLeadDialog from '../components/forms/EditLeadDialog';
 import {
   Table,
   TableBody,
@@ -24,6 +25,8 @@ import { Badge } from '@/components/ui/badge';
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: leads = [], isLoading } = useQuery({
@@ -39,12 +42,26 @@ export default function Leads() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      setEditDialogOpen(false);
+      setSelectedLead(null);
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Lead.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
     },
   });
+
+  const handleEdit = (lead) => {
+    setSelectedLead(lead);
+    setEditDialogOpen(true);
+  };
 
   const filteredLeads = leads.filter(lead =>
     lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,7 +165,7 @@ export default function Leads() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(lead)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>Convert to Opportunity</DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
@@ -171,6 +188,14 @@ export default function Leads() {
         onOpenChange={setDialogOpen}
         onSubmit={(data) => createMutation.mutate(data)}
         isLoading={createMutation.isPending}
+      />
+
+      <EditLeadDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        lead={selectedLead}
+        onSubmit={(data) => updateMutation.mutate({ id: selectedLead.id, data })}
+        isLoading={updateMutation.isPending}
       />
     </div>
   );
