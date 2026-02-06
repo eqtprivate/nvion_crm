@@ -54,6 +54,7 @@ import Contacts from './pages/Contacts';
 import Leads from './pages/Leads';
 import Reports from './pages/Reports';
 import SalesAnalytics from './pages/SalesAnalytics';
+import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "Leads": Leads,
     "Reports": Reports,
     "SalesAnalytics": SalesAnalytics,
+    "Profile": Profile,
 }
 
 export const pagesConfig = {
