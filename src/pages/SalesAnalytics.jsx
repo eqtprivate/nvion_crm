@@ -54,18 +54,53 @@ export default function SalesAnalytics() {
     };
   }, [contacts, opportunities]);
 
+  const exportAnalyticsData = () => {
+    const data = {
+      summary: {
+        customers: stats.customers,
+        revenue: stats.revenue,
+        invoices: stats.invoices,
+        profit: stats.profit,
+      },
+      opportunities: opportunities.map(o => ({
+        name: o.name,
+        amount: o.amount,
+        stage: o.stage,
+        probability: o.probability,
+        owner: o.owner,
+        close_date: o.close_date,
+      })),
+      leads: leads.map(l => ({
+        name: l.name,
+        company: l.company,
+        status: l.status,
+        source: l.source,
+        value: l.value,
+      })),
+    };
+
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales_analytics_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Sales Analytics</h1>
-        <Button variant="outline" className="flex items-center gap-2">
+    <div className="p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sales Analytics</h1>
+        <Button variant="outline" className="flex items-center gap-2" onClick={exportAnalyticsData}>
           <Calendar className="w-4 h-4" />
-          Month
+          Export Data
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <StatsCard
           title="Customers"
           value={stats.customers.toLocaleString()}
@@ -97,12 +132,12 @@ export default function SalesAnalytics() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <OpportunitiesChart opportunities={opportunities} />
         <LeadSourceChart leads={leads} opportunities={opportunities} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <SalesFunnelChart opportunities={opportunities} />
         <OpportunitiesStageChart opportunities={opportunities} />
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
+import { base44 } from '@/api/base44Client';
 import { 
   LayoutDashboard, 
   Users, 
@@ -50,7 +51,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 bg-[#2563eb] text-white flex flex-col">
+      <div className="hidden md:flex w-64 bg-[#2563eb] text-white flex-col">
         {/* Logo */}
         <div className="p-6 flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
@@ -112,10 +113,10 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 max-w-xl">
-              <div className="relative">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="hidden sm:flex flex-1 max-w-xl">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
                   placeholder="Search Anything..."
@@ -124,26 +125,27 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-gray-600">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button variant="ghost" size="icon" className="text-gray-600 hidden sm:flex">
                 <Mail className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-gray-600">
+              <Button variant="ghost" size="icon" className="text-gray-600 hidden sm:flex">
                 <Bell className="w-5 h-5" />
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">Hi, John Kuy</span>
+                  <Button variant="ghost" className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-sm font-medium text-gray-700 hidden sm:inline">Hi, John Kuy</span>
                     <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem>Logout</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('Profile')}>Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => base44.auth.logout()}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

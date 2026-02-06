@@ -67,17 +67,81 @@ export default function Reports() {
 
   const COLORS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#ec4899', '#f97316'];
 
+  const exportReportData = () => {
+    const reportData = {
+      summary: {
+        totalAccounts: accounts.length,
+        totalContacts: contacts.length,
+        totalLeads: leads.length,
+        totalOpportunities: opportunities.length,
+      },
+      leadStatus: leadStatusData,
+      opportunitiesByOwner: opportunitiesByOwner,
+      contactSource: contactSourceData,
+      topAccounts: topAccounts.map(a => ({
+        name: a.name,
+        revenue: a.annual_revenue,
+        industry: a.industry,
+        employees: a.employees,
+      })),
+    };
+
+    const jsonStr = JSON.stringify(reportData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `business_report_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Metric', 'Value'];
+    const rows = [
+      ['Total Accounts', accounts.length],
+      ['Total Contacts', contacts.length],
+      ['Total Leads', leads.length],
+      ['Total Opportunities', opportunities.length],
+      ['', ''],
+      ['Top Accounts by Revenue', ''],
+      ['Account Name', 'Annual Revenue'],
+      ...topAccounts.map(a => [a.name, a.annual_revenue || 0]),
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `business_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports</h1>
           <p className="text-gray-500 mt-1">Analyze your business performance</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={exportToCSV} className="w-full sm:w-auto">
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={exportReportData} className="w-full sm:w-auto">
+            Export JSON
+          </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -136,7 +200,7 @@ export default function Reports() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Lead Status Distribution</CardTitle>
