@@ -51,11 +51,11 @@ import Accounts from './pages/Accounts';
 import Activities from './pages/Activities';
 import Calendar from './pages/Calendar';
 import Contacts from './pages/Contacts';
+import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import SalesAnalytics from './pages/SalesAnalytics';
-import Dashboard from './pages/Dashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -64,11 +64,11 @@ export const PAGES = {
     "Activities": Activities,
     "Calendar": Calendar,
     "Contacts": Contacts,
+    "Dashboard": Dashboard,
     "Leads": Leads,
     "Profile": Profile,
     "Reports": Reports,
     "SalesAnalytics": SalesAnalytics,
-    "Dashboard": Dashboard,
 }
 
 export const pagesConfig = {
