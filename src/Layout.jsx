@@ -29,13 +29,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
 
   const menuItems = [
-    {
-      name: 'Dashboard',
-      icon: LayoutDashboard,
-      subItems: [
-        { name: 'SalesAnalytics', label: 'Sales Analytics' }
-      ]
-    },
+    { name: 'Dashboard', icon: LayoutDashboard, path: 'Dashboard' },
     { name: 'Accounts', icon: Users, path: 'Accounts' },
     { name: 'Contacts', icon: UserCircle, path: 'Contacts' },
     { name: 'Leads', icon: Target, path: 'Leads' },
