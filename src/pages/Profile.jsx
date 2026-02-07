@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
-    full_name: '',
+    display_name: '',
     profile_picture: '',
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function Profile() {
         const userData = await base44.auth.me();
         setUser(userData);
         setFormData({
-          full_name: userData.full_name || '',
+          display_name: userData.display_name || userData.full_name || '',
           profile_picture: userData.profile_picture || '',
         });
       } catch (error) {
@@ -54,19 +54,13 @@ export default function Profile() {
     e.preventDefault();
     setIsLoading(true);
     
-    console.log('Submitting form data:', formData);
-    
     try {
-      const result = await base44.auth.updateMe({
-        full_name: formData.full_name.trim(),
+      await base44.auth.updateMe({
+        display_name: formData.display_name.trim(),
         profile_picture: formData.profile_picture
       });
       
-      console.log('Update result:', result);
-      
       const updatedUser = await base44.auth.me();
-      console.log('Updated user:', updatedUser);
-      
       setUser(updatedUser);
       toast.success('Profile updated successfully');
       
@@ -74,7 +68,7 @@ export default function Profile() {
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       console.error('Update error:', error);
-      toast.error(`Failed to update profile: ${error.message || 'Unknown error'}`);
+      toast.error('Failed to update profile');
     } finally {
       setIsLoading(false);
     }
@@ -149,11 +143,11 @@ export default function Profile() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
+                    <Label htmlFor="display_name">Full Name</Label>
                     <Input
-                      id="full_name"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                      id="display_name"
+                      value={formData.display_name}
+                      onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -203,7 +197,7 @@ export default function Profile() {
                       </div>
                     )}
                   </Avatar>
-                  <h3 className="font-semibold text-lg">{user.full_name || 'User'}</h3>
+                  <h3 className="font-semibold text-lg">{user.display_name || user.full_name || 'User'}</h3>
                   <p className="text-sm text-gray-500">{user.email}</p>
                   <Badge className="mt-2 capitalize">{user.role}</Badge>
                 </div>

@@ -145,14 +145,14 @@ export default function Layout({ children, currentPageName }) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-1 sm:gap-2">
                     <span className="text-sm font-medium text-gray-700 hidden sm:inline">
-                      Hi, {currentUser?.full_name || currentUser?.email || 'Guest'}
+                      Hi, {currentUser?.display_name || currentUser?.full_name || currentUser?.email || 'Guest'}
                     </span>
                     <Avatar className="w-8 h-8">
                       {currentUser?.profile_picture ? (
                         <img src={currentUser.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
                       ) : (
                         <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
-                          {currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'G'}
+                          {currentUser?.display_name ? currentUser.display_name.charAt(0).toUpperCase() : currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'G'}
                         </div>
                       )}
                     </Avatar>
