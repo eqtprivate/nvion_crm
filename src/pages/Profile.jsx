@@ -54,15 +54,17 @@ export default function Profile() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await base44.auth.updateMe(formData);
+      await base44.auth.updateMe({
+        full_name: formData.full_name,
+        profile_picture: formData.profile_picture
+      });
       const updatedUser = await base44.auth.me();
       setUser(updatedUser);
-      setFormData({
-        full_name: updatedUser.full_name || '',
-        profile_picture: updatedUser.profile_picture || '',
-      });
       toast.success('Profile updated successfully');
+      // Reload the page to refresh the layout
+      window.location.reload();
     } catch (error) {
+      console.error('Update error:', error);
       toast.error('Failed to update profile');
     } finally {
       setIsLoading(false);
