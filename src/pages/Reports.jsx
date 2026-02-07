@@ -28,6 +28,9 @@ import PipelineForecastTab from '../components/reports/PipelineForecastTab';
 import ActivityProductivityTab from '../components/reports/ActivityProductivityTab';
 import LeadSourcesTab from '../components/reports/LeadSourcesTab';
 import AccountHealthTab from '../components/reports/AccountHealthTab';
+import SavedReportsDialog from '../components/reports/SavedReportsDialog';
+import { Button } from '@/components/ui/button';
+import { Bookmark } from 'lucide-react';
 
 export default function Reports() {
   const [filters, setFilters] = useState({
@@ -36,6 +39,12 @@ export default function Reports() {
     source: 'all',
     status: 'all',
     owner: 'all',
+  });
+
+  const [savedReportsDialogOpen, setSavedReportsDialogOpen] = useState(false);
+  const [savedReports, setSavedReports] = useState(() => {
+    const saved = localStorage.getItem('crm_saved_reports');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const { data: accounts = [] } = useQuery({
@@ -212,6 +221,16 @@ export default function Reports() {
     alert('PDF export functionality would use a library like jsPDF or html2canvas. Simulated for now.');
   };
 
+  const handleSaveReport = (report, isLoad = false) => {
+    if (isLoad) {
+      setFilters(report.filters);
+    } else {
+      const updated = [...savedReports, report];
+      setSavedReports(updated);
+      localStorage.setItem('crm_saved_reports', JSON.stringify(updated));
+    }
+  };
+
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -220,6 +239,10 @@ export default function Reports() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports & Analytics</h1>
           <p className="text-gray-500 text-sm mt-1">Comprehensive CRM reporting hub</p>
         </div>
+        <Button variant="outline" onClick={() => setSavedReportsDialogOpen(true)}>
+          <Bookmark className="w-4 h-4 mr-2" />
+          Saved Reports ({savedReports.length})
+        </Button>
       </div>
 
       {/* Global Filters */}
@@ -336,6 +359,14 @@ export default function Reports() {
           />
         </TabsContent>
       </Tabs>
+
+      <SavedReportsDialog
+        open={savedReportsDialogOpen}
+        onOpenChange={setSavedReportsDialogOpen}
+        currentFilters={filters}
+        onSaveReport={handleSaveReport}
+        savedReports={savedReports}
+      />
     </div>
   );
 }

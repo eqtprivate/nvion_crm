@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
-import { differenceInDays, parseISO } from 'date-fns';
+import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { differenceInDays, parseISO, format } from 'date-fns';
+import TableExportButtons from './TableExportButtons';
 
 export default function PipelineForecastTab({ filteredOpportunities, filteredActivities }) {
   const openOpps = filteredOpportunities.filter(o => o.stage !== 'closed_won' && o.stage !== 'closed_lost');
@@ -61,10 +62,91 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
     }).slice(0, 20);
   }, [openOpps, filteredActivities]);
 
+  // Forecasting Accuracy
+  const forecastingAccuracy = React.useMemo(() => {
+    const closedDeals = filteredOpportunities.filter(o => o.stage === 'closed_won' || o.stage === 'closed_lost');
+    
+    const monthlyData = {};
+    closedDeals.forEach(deal => {
+      if (deal.close_date && deal.created_date) {
+        const month = format(parseISO(deal.close_date), 'MMM yyyy');
+        if (!monthlyData[month]) {
+          monthlyData[month] = { month, forecasted: 0, actual: 0, accuracy: 0 };
+        }
+        
+        const forecastedAmount = (deal.amount || 0) * ((deal.probability || 50) / 100);
+        const actualAmount = deal.stage === 'closed_won' ? (deal.amount || 0) : 0;
+        
+        monthlyData[month].forecasted += forecastedAmount;
+        monthlyData[month].actual += actualAmount;
+      }
+    });
+    
+    return Object.values(monthlyData).map(item => ({
+      ...item,
+      accuracy: item.forecasted > 0 ? ((item.actual / item.forecasted) * 100).toFixed(1) : 0
+    }));
+  }, [filteredOpportunities]);
+
   const COLORS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#ec4899'];
+
+  const exportDealsAtRiskCSV = () => {
+    const headers = ['Deal', 'Account', 'Amount'];
+    const rows = dealsAtRisk.map(d => [d.name, d.account_name, d.amount || 0]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `deals_at_risk_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportOpenDealsCSV = () => {
+    const headers = ['Deal', 'Stage', 'Amount'];
+    const rows = openOpps.slice(0, 10).map(d => [d.name, d.stage, d.amount || 0]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `open_deals_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
+      {/* Forecasting Accuracy Chart */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Forecasting Accuracy</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={forecastingAccuracy}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+              <Line type="monotone" dataKey="forecasted" stroke="#3b82f6" strokeWidth={2} name="Forecasted" />
+              <Line type="monotone" dataKey="actual" stroke="#10b981" strokeWidth={2} name="Actual" />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-500">
+              Average Accuracy: {' '}
+              <span className="font-bold text-lg text-gray-900">
+                {forecastingAccuracy.length > 0
+                  ? (forecastingAccuracy.reduce((sum, item) => sum + parseFloat(item.accuracy), 0) / forecastingAccuracy.length).toFixed(1)
+                  : 0}%
+              </span>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
@@ -131,8 +213,14 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
       {/* Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Open Deals by Stage</CardTitle>
+            <TableExportButtons
+              data={openOpps.slice(0, 10).map(d => [d.name, d.stage, `$${(d.amount || 0).toLocaleString()}`])}
+              headers={['Deal', 'Stage', 'Amount']}
+              title="Open Deals by Stage"
+              onExportCSV={exportOpenDealsCSV}
+            />
           </CardHeader>
           <CardContent>
             <Table>
@@ -164,8 +252,14 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Deals at Risk (No Activity 14+ Days)</CardTitle>
+            <TableExportButtons
+              data={dealsAtRisk.map(d => [d.name, d.account_name, `$${(d.amount || 0).toLocaleString()}`])}
+              headers={['Deal', 'Account', 'Amount']}
+              title="Deals at Risk"
+              onExportCSV={exportDealsAtRiskCSV}
+            />
           </CardHeader>
           <CardContent>
             <Table>
