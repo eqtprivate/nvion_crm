@@ -342,46 +342,53 @@ export default function Contacts() {
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="sticky top-0 bg-gray-50 z-10">
-                  <TableRow>
-                    <TableHead className="cursor-pointer w-64" onClick={() => handleSort('name')}>
-                      <div className="flex items-center gap-1">
+                <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <TableRow className="border-b-2 border-gray-200">
+                    <TableHead className="cursor-pointer w-64 font-semibold text-gray-700" onClick={() => handleSort('name')}>
+                      <div className="flex items-center gap-1 hover:text-blue-600 transition-colors">
                         Name
                         {sortConfig.key === 'name' && (
                           sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('last_activity_date')}>
-                      <div className="flex items-center gap-1">
+                    <TableHead className="font-semibold text-gray-700">Role</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Priority</TableHead>
+                    <TableHead className="cursor-pointer font-semibold text-gray-700" onClick={() => handleSort('last_activity_date')}>
+                      <div className="flex items-center gap-1 hover:text-blue-600 transition-colors">
                         Last Activity
                         {sortConfig.key === 'last_activity_date' && (
                           sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead>Engagement</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Engagement</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Company</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Source</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                        Loading...
+                      <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                          <span>Loading contacts...</span>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : filteredAndSortedContacts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                        No contacts found
+                      <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                        <div className="flex flex-col items-center gap-2">
+                          <UserCircle className="w-12 h-12 text-gray-300" />
+                          <span className="font-medium">No contacts found</span>
+                          <span className="text-sm">Try adjusting your search or filters</span>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -395,22 +402,33 @@ export default function Contacts() {
                       return (
                         <TableRow 
                           key={contact.id}
-                          className={`cursor-pointer hover:bg-gray-50 ${isKeyContact ? 'bg-amber-50' : ''} ${hasNoRecentActivity ? 'opacity-60' : ''}`}
+                          className={`
+                            cursor-pointer transition-all border-b border-gray-100
+                            hover:bg-blue-50/50 hover:shadow-sm
+                            ${isKeyContact ? 'bg-gradient-to-r from-amber-50/50 to-amber-50/30 border-l-4 border-l-amber-400' : ''} 
+                            ${hasNoRecentActivity ? 'opacity-70' : ''}
+                          `}
                           onClick={() => handleViewDetails(contact)}
                         >
-                          <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableCell onClick={(e) => e.stopPropagation()} className="py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
-                                <span className="text-white font-semibold">
-                                  {contact.name?.charAt(0)?.toUpperCase()}
-                                </span>
+                              <div className="relative">
+                                <div className="w-11 h-11 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md ring-2 ring-blue-100">
+                                  <span className="text-white font-semibold text-base">
+                                    {contact.name?.charAt(0)?.toUpperCase()}
+                                  </span>
+                                </div>
+                                {isKeyContact && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow-sm">
+                                    <Award className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
                               </div>
                               <div>
-                                <p className="font-medium flex items-center gap-2">
+                                <p className="font-semibold text-gray-900 flex items-center gap-2">
                                   {contact.name}
-                                  {isKeyContact && <Award className="w-4 h-4 text-amber-600" />}
                                 </p>
-                                <p className="text-sm text-gray-500">{contact.position || 'No position'}</p>
+                                <p className="text-sm text-gray-600">{contact.position || 'No position'}</p>
                               </div>
                             </div>
                           </TableCell>
@@ -419,7 +437,7 @@ export default function Contacts() {
                               value={contact.role || ''} 
                               onValueChange={(value) => handleInlineRoleChange(contact.id, value)}
                             >
-                              <SelectTrigger className="h-8 w-[140px]">
+                              <SelectTrigger className="h-9 w-[140px] border-gray-300 hover:border-blue-400 transition-colors">
                                 <SelectValue placeholder="Set role" />
                               </SelectTrigger>
                               <SelectContent>
@@ -432,35 +450,27 @@ export default function Contacts() {
                             </Select>
                           </TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
-                            <Select 
-                              value={contact.priority || 'Standard'} 
-                              onValueChange={(value) => handleInlinePriorityChange(contact.id, value)}
-                            >
-                              <SelectTrigger className="h-8 w-[110px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Key">Key</SelectItem>
-                                <SelectItem value="Standard">Standard</SelectItem>
-                                <SelectItem value="At Risk">At Risk</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Badge className={`${priorityColors[contact.priority || 'Standard']} border font-medium px-3 py-1`}>
+                              {contact.priority || 'Standard'}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm">{getDaysSinceActivity(contact)}</span>
-                              {hasNoRecentActivity && <AlertCircle className="w-4 h-4 text-red-500" />}
+                              <Activity className={`w-4 h-4 ${hasNoRecentActivity ? 'text-red-500' : 'text-green-500'}`} />
+                              <span className={`text-sm font-medium ${hasNoRecentActivity ? 'text-red-600' : 'text-gray-700'}`}>
+                                {getDaysSinceActivity(contact)}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             {contact.engagement_level && (
-                              <div className="flex gap-1">
+                              <div className="flex gap-1.5">
                                 {[...Array(3)].map((_, i) => (
                                   <div
                                     key={i}
-                                    className={`w-1.5 h-5 rounded ${
+                                    className={`w-2 h-6 rounded-full transition-all ${
                                       i < (contact.engagement_level === 'High' ? 3 : contact.engagement_level === 'Medium' ? 2 : 1)
-                                        ? contact.engagement_level === 'High' ? 'bg-green-600' : contact.engagement_level === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
+                                        ? contact.engagement_level === 'High' ? 'bg-green-500 shadow-sm' : contact.engagement_level === 'Medium' ? 'bg-yellow-500 shadow-sm' : 'bg-red-500 shadow-sm'
                                         : 'bg-gray-200'
                                     }`}
                                   />
@@ -470,29 +480,33 @@ export default function Contacts() {
                           </TableCell>
                           <TableCell>
                             <div>
-                              <p className="font-medium text-sm">{contact.company || '-'}</p>
+                              <p className="font-semibold text-sm text-gray-900">{contact.company || '-'}</p>
                               {contact.company_size && (
-                                <p className="text-xs text-gray-500">{contact.company_size}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{contact.company_size}</p>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            {contact.source && <Badge variant="outline">{contact.source}</Badge>}
+                            {contact.source && (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium">
+                                {contact.source}
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-green-100 hover:text-green-700 transition-colors">
                                 <Phone className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-purple-100 hover:text-purple-700 transition-colors">
                                 <Mail className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-100 hover:text-blue-700 transition-colors">
                                 <MessageCircle className="w-4 h-4" />
                               </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-gray-100">
                                     <MoreVertical className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
