@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
@@ -15,6 +15,7 @@ import {
   Mail,
   Bell
 } from 'lucide-react';
+import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +27,20 @@ import {
 
 export default function Layout({ children, currentPageName }) {
   const [expandedMenu, setExpandedMenu] = useState('Dashboard');
+  const [currentUser, setCurrentUser] = useState(null);
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Failed to fetch current user", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: 'Dashboard' },
@@ -130,8 +144,18 @@ export default function Layout({ children, currentPageName }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-1 sm:gap-2">
-                    <span className="text-sm font-medium text-gray-700 hidden sm:inline">Hi, John Kuy</span>
-                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                    <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+                      Hi, {currentUser?.full_name || currentUser?.email || 'Guest'}
+                    </span>
+                    <Avatar className="w-8 h-8">
+                      {currentUser?.profile_picture ? (
+                        <img src={currentUser.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                          {currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'G'}
+                        </div>
+                      )}
+                    </Avatar>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
