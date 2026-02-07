@@ -53,19 +53,28 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    console.log('Submitting form data:', formData);
+    
     try {
-      await base44.auth.updateMe({
-        full_name: formData.full_name,
+      const result = await base44.auth.updateMe({
+        full_name: formData.full_name.trim(),
         profile_picture: formData.profile_picture
       });
+      
+      console.log('Update result:', result);
+      
       const updatedUser = await base44.auth.me();
+      console.log('Updated user:', updatedUser);
+      
       setUser(updatedUser);
       toast.success('Profile updated successfully');
+      
       // Reload the page to refresh the layout
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       console.error('Update error:', error);
-      toast.error('Failed to update profile');
+      toast.error(`Failed to update profile: ${error.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
