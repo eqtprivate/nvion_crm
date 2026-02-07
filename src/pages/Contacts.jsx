@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, UserCircle, MoreVertical, Download, Scan } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Search, UserCircle, MoreVertical, Download, Scan, Phone, Mail, MessageCircle, Activity, Users, TrendingUp, AlertCircle, Award, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import ContactDialog from '../components/forms/ContactDialog';
 import EditContactDialog from '../components/forms/EditContactDialog';
 import BusinessCardScanner from '../components/forms/BusinessCardScanner';
+import ContactKPICard from '../components/contacts/ContactKPICard';
+import ContactDetailsPanel from '../components/contacts/ContactDetailsPanel';
+import ContactFiltersPanel from '../components/contacts/ContactFiltersPanel';
 import {
   Table,
   TableBody,
@@ -22,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import moment from 'moment';
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,11 +37,27 @@ export default function Contacts() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [scannedData, setScannedData] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'last_activity_date', direction: 'desc' });
+  const [filters, setFilters] = useState({
+    roles: [],
+    priorities: [],
+    companySizes: [],
+    sources: [],
+    engagementLevels: [],
+    noRecentActivity: false
+  });
   const queryClient = useQueryClient();
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list('-created_date'),
+  });
+
+  const { data: activities = [] } = useQuery({
+    queryKey: ['activities'],
+    queryFn: () => base44.entities.Activity.list(),
   });
 
   const createMutation = useMutation({
@@ -69,7 +91,53 @@ export default function Contacts() {
 
   const handleViewDetails = (contact) => {
     setSelectedContact(contact);
-    setViewDialogOpen(true);
+    setShowDetailsPanel(true);
+  };
+
+  const handleInlinePriorityChange = async (contactId, newPriority) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: contactId,
+        data: { priority: newPriority }
+      });
+    } catch (error) {
+      console.error('Failed to update priority:', error);
+    }
+  };
+
+  const handleInlineRoleChange = async (contactId, newRole) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: contactId,
+        data: { role: newRole }
+      });
+    } catch (error) {
+      console.error('Failed to update role:', error);
+    }
+  };
+
+  const handleFilterChange = (category, value) => {
+    if (category === 'reset') {
+      setFilters({
+        roles: [],
+        priorities: [],
+        companySizes: [],
+        sources: [],
+        engagementLevels: [],
+        noRecentActivity: false
+      });
+    } else if (category === 'noRecentActivity') {
+      setFilters(prev => ({ ...prev, noRecentActivity: value }));
+    } else {
+      setFilters(prev => ({ ...prev, [category]: value }));
+    }
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
 
   const handleContactExtracted = (data) => {
@@ -105,131 +173,417 @@ export default function Contacts() {
     window.URL.revokeObjectURL(url);
   };
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and sort contacts
+  const filteredAndSortedContacts = useMemo(() => {
+    let filtered = contacts.filter(contact => {
+      // Search filter
+      const matchesSearch = contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.company?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      if (!matchesSearch) return false;
+
+      // Role filter
+      if (filters.roles.length > 0 && !filters.roles.includes(contact.role)) return false;
+      
+      // Priority filter
+      if (filters.priorities.length > 0 && !filters.priorities.includes(contact.priority)) return false;
+      
+      // Company size filter
+      if (filters.companySizes.length > 0 && !filters.companySizes.includes(contact.company_size)) return false;
+      
+      // Source filter
+      if (filters.sources.length > 0 && !filters.sources.includes(contact.source)) return false;
+      
+      // Engagement level filter
+      if (filters.engagementLevels.length > 0 && !filters.engagementLevels.includes(contact.engagement_level)) return false;
+      
+      // No recent activity filter
+      if (filters.noRecentActivity) {
+        if (!contact.last_activity_date) return true;
+        const daysSinceActivity = moment().diff(moment(contact.last_activity_date), 'days');
+        if (daysSinceActivity < 30) return false;
+      }
+
+      return true;
+    });
+
+    // Sort
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        
+        if (sortConfig.key === 'last_activity_date') {
+          const aDate = aVal ? new Date(aVal) : new Date(0);
+          const bDate = bVal ? new Date(bVal) : new Date(0);
+          return sortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
+        }
+        
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [contacts, searchTerm, filters, sortConfig]);
+
+  // Calculate KPIs
+  const kpis = useMemo(() => {
+    const total = filteredAndSortedContacts.length;
+    const thisMonth = filteredAndSortedContacts.filter(c => 
+      moment(c.created_date).isAfter(moment().startOf('month'))
+    ).length;
+    const decisionMakers = filteredAndSortedContacts.filter(c => 
+      c.role === 'Decision Maker' || c.role === 'Key Contact'
+    ).length;
+    const noActivity = filteredAndSortedContacts.filter(c => {
+      if (!c.last_activity_date) return true;
+      return moment().diff(moment(c.last_activity_date), 'days') >= 30;
+    }).length;
+
+    return { total, thisMonth, decisionMakers, noActivity };
+  }, [filteredAndSortedContacts]);
+
+  const priorityColors = {
+    'Key': 'bg-amber-100 text-amber-800 border-amber-300',
+    'Standard': 'bg-blue-100 text-blue-800 border-blue-300',
+    'At Risk': 'bg-red-100 text-red-800 border-red-300'
+  };
+
+  const getDaysSinceActivity = (contact) => {
+    if (!contact.last_activity_date) return 'Never';
+    const days = moment().diff(moment(contact.last_activity_date), 'days');
+    if (days === 0) return 'Today';
+    if (days === 1) return '1 day ago';
+    if (days < 30) return `${days} days ago`;
+    return `${Math.floor(days / 30)} months ago`;
+  };
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-          <p className="text-gray-500 mt-1">Manage your contacts</p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={exportToCSV} disabled={contacts.length === 0}>
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button variant="outline" onClick={() => setScannerOpen(true)}>
-            <Scan className="w-4 h-4 mr-2" />
-            Scan Card
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Contact
-          </Button>
-        </div>
-      </div>
+    <div className="flex h-[calc(100vh-64px)]">
+      <div className={`flex-1 overflow-auto ${showDetailsPanel ? 'mr-[500px]' : ''}`}>
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
+              <p className="text-gray-500 mt-1">Manage your contacts</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={exportToCSV} disabled={contacts.length === 0}>
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button variant="outline" onClick={() => setScannerOpen(true)}>
+                <Scan className="w-4 h-4 mr-2" />
+                Scan Card
+              </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Contact
+              </Button>
+            </div>
+          </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder="Search contacts..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <ContactKPICard
+              title="Total Contacts"
+              value={kpis.total}
+              icon={Users}
+              iconColor="bg-blue-500"
+            />
+            <ContactKPICard
+              title="New This Month"
+              value={kpis.thisMonth}
+              trend="up"
+              trendValue={`+${kpis.thisMonth}`}
+              icon={TrendingUp}
+              iconColor="bg-green-500"
+            />
+            <ContactKPICard
+              title="Top Decision Makers"
+              value={kpis.decisionMakers}
+              icon={Award}
+              iconColor="bg-amber-500"
+            />
+            <ContactKPICard
+              title="No Recent Activity"
+              value={kpis.noActivity}
+              icon={AlertCircle}
+              iconColor="bg-red-500"
             />
           </div>
-        </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : filteredContacts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  No contacts found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredContacts.map((contact) => (
-                <TableRow key={contact.id}>
-                  <TableCell>
+          {/* Filters and Search */}
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="p-4 border-b">
+              <div className="flex gap-3">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    placeholder="Search contacts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button 
+                  variant={showFilters ? "default" : "outline"}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filters
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-gray-50 z-10">
+                  <TableRow>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                      <div className="flex items-center gap-1">
+                        Name
+                        {sortConfig.key === 'name' && (
+                          sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('last_activity_date')}>
+                      <div className="flex items-center gap-1">
+                        Last Activity
+                        {sortConfig.key === 'last_activity_date' && (
+                          sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead>Engagement</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredAndSortedContacts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        No contacts found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAndSortedContacts.map((contact) => {
+                      const daysSinceActivity = contact.last_activity_date 
+                        ? moment().diff(moment(contact.last_activity_date), 'days')
+                        : 999;
+                      const isKeyContact = contact.priority === 'Key';
+                      const hasNoRecentActivity = daysSinceActivity >= 30;
+
+                      return (
+                        <TableRow 
+                          key={contact.id}
+                          className={`cursor-pointer hover:bg-gray-50 ${isKeyContact ? 'bg-amber-50' : ''} ${hasNoRecentActivity ? 'opacity-60' : ''}`}
+                          onClick={() => handleViewDetails(contact)}
+                        >
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
+                                <span className="text-white font-semibold">
+                                  {contact.name?.charAt(0)?.toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium flex items-center gap-2">
+                                  {contact.name}
+                                  {isKeyContact && <Award className="w-4 h-4 text-amber-600" />}
+                                </p>
+                                <p className="text-sm text-gray-500">{contact.position || 'No position'}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <Select 
+                              value={contact.role || ''} 
+                              onValueChange={(value) => handleInlineRoleChange(contact.id, value)}
+                            >
+                              <SelectTrigger className="h-8 w-[140px]">
+                                <SelectValue placeholder="Set role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Decision Maker">Decision Maker</SelectItem>
+                                <SelectItem value="Key Contact">Key Contact</SelectItem>
+                                <SelectItem value="Influencer">Influencer</SelectItem>
+                                <SelectItem value="End User">End User</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <Select 
+                              value={contact.priority || 'Standard'} 
+                              onValueChange={(value) => handleInlinePriorityChange(contact.id, value)}
+                            >
+                              <SelectTrigger className="h-8 w-[110px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Key">Key</SelectItem>
+                                <SelectItem value="Standard">Standard</SelectItem>
+                                <SelectItem value="At Risk">At Risk</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{getDaysSinceActivity(contact)}</span>
+                              {hasNoRecentActivity && <AlertCircle className="w-4 h-4 text-red-500" />}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {contact.engagement_level && (
+                              <div className="flex gap-1">
+                                {[...Array(3)].map((_, i) => (
+                                  <div
+                                    key={i}
+                                    className={`w-1.5 h-5 rounded ${
+                                      i < (contact.engagement_level === 'High' ? 3 : contact.engagement_level === 'Medium' ? 2 : 1)
+                                        ? contact.engagement_level === 'High' ? 'bg-green-600' : contact.engagement_level === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
+                                        : 'bg-gray-200'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium text-sm">{contact.company || '-'}</p>
+                              {contact.company_size && (
+                                <p className="text-xs text-gray-500">{contact.company_size}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {contact.source && <Badge variant="outline">{contact.source}</Badge>}
+                          </TableCell>
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Phone className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Mail className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MessageCircle className="w-4 h-4" />
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEdit(contact)}>Edit</DropdownMenuItem>
+                                  <DropdownMenuItem>Log Activity</DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => deleteMutation.mutate(contact.id)}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          {/* Mobile View - Contact Cards */}
+          <div className="lg:hidden mt-6 space-y-4">
+            {filteredAndSortedContacts.map((contact) => (
+              <Card key={contact.id} className="cursor-pointer" onClick={() => handleViewDetails(contact)}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <UserCircle className="w-6 h-6 text-blue-600" />
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-lg">
+                          {contact.name?.charAt(0)?.toUpperCase()}
+                        </span>
                       </div>
                       <div>
-                        <p className="font-medium">{contact.name}</p>
-                        <p className="text-sm text-gray-500">{contact.position}</p>
+                        <p className="font-semibold">{contact.name}</p>
+                        <p className="text-sm text-gray-600">{contact.position}</p>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>{contact.email}</TableCell>
-                  <TableCell>{contact.phone || '-'}</TableCell>
-                  <TableCell>{contact.company || '-'}</TableCell>
-                  <TableCell>
-                    {contact.source ? (
-                      <Badge variant="outline">{contact.source}</Badge>
-                    ) : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className={
-                        contact.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }
-                    >
-                      {contact.status || 'active'}
+                    <Badge className={priorityColors[contact.priority] || priorityColors['Standard']}>
+                      {contact.priority || 'Standard'}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(contact)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleViewDetails(contact)}>View Details</DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => deleteMutation.mutate(contact.id)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <p className="text-gray-600">{contact.company}</p>
+                    <p className="text-gray-600">{contact.email}</p>
+                    {contact.last_activity_date && (
+                      <p className="text-gray-500">Last activity: {getDaysSinceActivity(contact)}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Phone className="w-4 h-4 mr-1" />
+                      Call
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Mail className="w-4 h-4 mr-1" />
+                      Email
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="fixed right-0 top-16 bottom-0 w-80 bg-white shadow-2xl z-40 lg:static lg:shadow-none">
+          <ContactFiltersPanel 
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClose={() => setShowFilters(false)}
+          />
+        </div>
+      )}
+
+      {/* Details Panel */}
+      {showDetailsPanel && (
+        <ContactDetailsPanel
+          contact={selectedContact}
+          onClose={() => {
+            setShowDetailsPanel(false);
+            setSelectedContact(null);
+          }}
+        />
+      )}
 
       <ContactDialog
         open={dialogOpen}

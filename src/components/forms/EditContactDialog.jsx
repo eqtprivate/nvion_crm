@@ -12,8 +12,13 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
     phone: '',
     company: '',
     position: '',
+    role: '',
+    priority: 'Standard',
     status: 'active',
-    source: 'email'
+    source: 'email',
+    engagement_level: 'Medium',
+    company_size: '',
+    last_activity_date: ''
   });
 
   useEffect(() => {
@@ -24,8 +29,13 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
         phone: contact.phone || '',
         company: contact.company || '',
         position: contact.position || '',
+        role: contact.role || '',
+        priority: contact.priority || 'Standard',
         status: contact.status || 'active',
-        source: contact.source || 'email'
+        source: contact.source || 'email',
+        engagement_level: contact.engagement_level || 'Medium',
+        company_size: contact.company_size || '',
+        last_activity_date: contact.last_activity_date || ''
       });
     }
   }, [contact]);

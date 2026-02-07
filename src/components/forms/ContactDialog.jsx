@@ -24,8 +24,13 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
     phone: '',
     company: '',
     position: '',
+    role: '',
+    priority: 'Standard',
     status: 'active',
     source: 'email',
+    engagement_level: 'Medium',
+    company_size: '',
+    last_activity_date: ''
   });
 
   React.useEffect(() => {
@@ -36,8 +41,13 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
         phone: initialData.phone || '',
         company: initialData.company || '',
         position: initialData.position || '',
+        role: '',
+        priority: 'Standard',
         status: 'active',
         source: 'email',
+        engagement_level: 'Medium',
+        company_size: '',
+        last_activity_date: ''
       });
     }
   }, [initialData]);
@@ -51,8 +61,13 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
       phone: '',
       company: '',
       position: '',
+      role: '',
+      priority: 'Standard',
       status: 'active',
       source: 'email',
+      engagement_level: 'Medium',
+      company_size: '',
+      last_activity_date: ''
     });
   };
 
