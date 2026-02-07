@@ -347,7 +347,7 @@ export default function Contacts() {
               <Table>
                 <TableHeader className="sticky top-0 bg-gray-50 z-10">
                   <TableRow>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                    <TableHead className="cursor-pointer w-64" onClick={() => handleSort('name')}>
                       <div className="flex items-center gap-1">
                         Name
                         {sortConfig.key === 'name' && (
