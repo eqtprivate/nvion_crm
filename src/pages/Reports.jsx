@@ -267,7 +267,7 @@ export default function Reports() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div id="reports-content" className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
