@@ -52,9 +52,9 @@ import Activities from './pages/Activities';
 import Calendar from './pages/Calendar';
 import Contacts from './pages/Contacts';
 import Leads from './pages/Leads';
+import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import SalesAnalytics from './pages/SalesAnalytics';
-import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -64,9 +64,9 @@ export const PAGES = {
     "Calendar": Calendar,
     "Contacts": Contacts,
     "Leads": Leads,
+    "Profile": Profile,
     "Reports": Reports,
     "SalesAnalytics": SalesAnalytics,
-    "Profile": Profile,
 }
 
 export const pagesConfig = {
