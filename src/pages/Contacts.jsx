@@ -8,6 +8,7 @@ import { Plus, Search, UserCircle, MoreVertical, Download, Scan, Phone, Mail, Me
 import ContactDialog from '../components/forms/ContactDialog';
 import EditContactDialog from '../components/forms/EditContactDialog';
 import BusinessCardScanner from '../components/forms/BusinessCardScanner';
+import ImportContactsDialog from '../components/forms/ImportContactsDialog';
 import ContactKPICard from '../components/contacts/ContactKPICard';
 import ContactDetailsPanel from '../components/contacts/ContactDetailsPanel';
 import ContactFiltersPanel from '../components/contacts/ContactFiltersPanel';
@@ -35,6 +36,7 @@ export default function Contacts() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [scannedData, setScannedData] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -278,11 +280,11 @@ export default function Contacts() {
               </Button>
               <Button variant="outline" onClick={() => setScannerOpen(true)}>
                 <Scan className="w-4 h-4 mr-2" />
-                Scan Card
+                <span className="hidden sm:inline">Scan Card</span>
               </Button>
-              <Button variant="outline" onClick={() => { /* TODO: Import contacts */ }}>
+              <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
                 <Download className="w-4 h-4 mr-2" />
-                Import Contacts
+                <span className="hidden sm:inline">Import</span>
               </Button>
               <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -646,6 +648,12 @@ export default function Contacts() {
         open={scannerOpen}
         onOpenChange={setScannerOpen}
         onContactExtracted={handleContactExtracted}
+      />
+
+      <ImportContactsDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImportComplete={() => queryClient.invalidateQueries({ queryKey: ['contacts'] })}
       />
     </div>
   );
