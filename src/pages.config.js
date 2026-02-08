@@ -55,7 +55,6 @@ import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
-import SalesAnalytics from './pages/SalesAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -68,11 +67,10 @@ export const PAGES = {
     "Leads": Leads,
     "Profile": Profile,
     "Reports": Reports,
-    "SalesAnalytics": SalesAnalytics,
 }
 
 export const pagesConfig = {
-    mainPage: "SalesAnalytics",
+    mainPage: "Accounts",
     Pages: PAGES,
     Layout: __Layout,
 };
