@@ -296,8 +296,6 @@ export default function Reports() {
           value={kpis.totalLeads.toLocaleString()}
           icon={Target}
           color="blue"
-          trend="up"
-          trendValue="+36%"
           sparklineData={kpis.sparklineLeads}
         />
         <ReportKPICard
@@ -305,8 +303,6 @@ export default function Reports() {
           value={kpis.openLeads.toLocaleString()}
           icon={Users}
           color="orange"
-          trend="up"
-          trendValue="+22.7%"
           sparklineData={kpis.sparklineLeads}
         />
         <ReportKPICard
@@ -314,8 +310,6 @@ export default function Reports() {
           value={`${kpis.wonDealsCount} $${(kpis.wonDealsValue / 1000).toFixed(1)}K`}
           icon={TrendingUp}
           color="green"
-          trend="up"
-          trendValue="+4.5%"
           sparklineData={kpis.sparklineWon}
         />
         <ReportKPICard
@@ -324,16 +318,12 @@ export default function Reports() {
           subtitle={`$${(kpis.lostDealsValue / 1000).toFixed(0)}K`}
           icon={TrendingDown}
           color="red"
-          trend="down"
-          trendValue="+2.8%"
         />
         <ReportKPICard
           title="Conversion Rate"
           value={`${kpis.conversionRate}%`}
           icon={Target}
           color="purple"
-          trend="up"
-          trendValue="+5.2%"
           sparklineData={kpis.sparklineConversion}
         />
       </div>
