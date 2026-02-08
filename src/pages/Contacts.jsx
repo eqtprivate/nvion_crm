@@ -417,10 +417,14 @@ export default function Contacts() {
                           <TableCell onClick={(e) => e.stopPropagation()} className="py-4">
                             <div className="flex items-center gap-3">
                               <div className="relative">
-                                <div className="w-11 h-11 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md ring-2 ring-blue-100">
-                                  <span className="text-white font-semibold text-base">
-                                    {contact.name?.charAt(0)?.toUpperCase()}
-                                  </span>
+                                <div className="w-11 h-11 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md ring-2 ring-blue-100 overflow-hidden">
+                                  {contact.photo_url ? (
+                                    <img src={contact.photo_url} alt={contact.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-white font-semibold text-base">
+                                      {contact.name?.charAt(0)?.toUpperCase()}
+                                    </span>
+                                  )}
                                 </div>
                                 {isKeyContact && (
                                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow-sm">
@@ -543,10 +547,14 @@ export default function Contacts() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-lg">
-                          {contact.name?.charAt(0)?.toUpperCase()}
-                        </span>
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center overflow-hidden">
+                        {contact.photo_url ? (
+                          <img src={contact.photo_url} alt={contact.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-semibold text-lg">
+                            {contact.name?.charAt(0)?.toUpperCase()}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <p className="font-semibold">{contact.name}</p>
