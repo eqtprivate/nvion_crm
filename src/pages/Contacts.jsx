@@ -280,6 +280,10 @@ export default function Contacts() {
                 <Scan className="w-4 h-4 mr-2" />
                 Scan Card
               </Button>
+              <Button variant="outline" onClick={() => { /* TODO: Import contacts */ }}>
+                <Download className="w-4 h-4 mr-2" />
+                Import Contacts
+              </Button>
               <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Contact
