@@ -76,7 +76,7 @@ export default function Dashboard() {
       .filter(o => o.stage === 'closed_won' && new Date(o.updated_date).getMonth() === currentMonth)
       .reduce((sum, o) => sum + (o.amount || 0), 0);
     
-    const salesTarget = 75000;
+    const salesTarget = 0;
     const targetProgress = salesTarget > 0 ? ((revenueThisMonth / salesTarget) * 100).toFixed(1) : 0;
     
     const conversionRate = leads.length > 0 
