@@ -13,7 +13,8 @@ import {
   ChevronDown,
   Search,
   Mail,
-  Bell
+  Bell,
+  Settings
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,10 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Reports', icon: BarChart3, path: 'Reports' }
   ];
 
+  const bottomMenuItems = [
+    { name: 'Settings', icon: Settings, path: 'Settings' }
+  ];
+
   const isActive = (itemName) => {
     return currentPageName === itemName;
   };
@@ -69,7 +74,8 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 space-y-1">
+        <nav className="flex-1 px-3 space-y-1 flex flex-col">
+          <div className="space-y-1">
           {menuItems.map((item) => (
             <div key={item.name}>
               {item.subItems ? (
@@ -113,10 +119,25 @@ export default function Layout({ children, currentPageName }) {
                   <span className="font-medium">{item.name}</span>
                 </Link>
               )}
-            </div>
-          ))}
-        </nav>
-      </div>
+              </div>
+              ))}
+              </div>
+              <div className="mt-auto space-y-1 pt-4 border-t border-white/10">
+              {bottomMenuItems.map((item) => (
+              <Link
+                key={item.name}
+                to={createPageUrl(item.path)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive(item.path) ? 'bg-white/10' : 'hover:bg-white/5'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.name}</span>
+              </Link>
+              ))}
+              </div>
+              </nav>
+              </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
