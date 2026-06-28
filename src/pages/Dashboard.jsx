@@ -52,11 +52,6 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Opportunity.list('-created_date'),
   });
 
-  const { data: activities = [] } = useQuery({
-    queryKey: ['activities'],
-    queryFn: () => base44.entities.Activity.list('-date', 10),
-  });
-
   const filteredOpportunities = useMemo(() => {
     return opportunities.filter(opp => {
       if (ownerFilter !== 'all' && opp.owner !== ownerFilter) return false;
@@ -161,12 +156,6 @@ export default function Dashboard() {
       .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))
       .slice(0, 5);
   }, [filteredOpportunities]);
-
-  const upcomingActivities = useMemo(() => {
-    return activities
-      .filter(a => new Date(a.date) >= new Date())
-      .slice(0, 3);
-  }, [activities]);
 
   const stageColors = {
     prospecting: 'bg-blue-500',
@@ -495,30 +484,34 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-base sm:text-lg">Upcoming Activities</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 h-8">
-                <Plus className="w-4 h-4 mr-1" />
-                Add
-              </Button>
+              <CardTitle className="text-base sm:text-lg">Leads Recentes</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {upcomingActivities.length > 0 ? upcomingActivities.map((activity, idx) => (
+              {leads.slice(0, 3).length > 0 ? leads.slice(0, 3).map((lead, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                   <div className="flex items-center gap-3">
-                    <Checkbox />
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs font-semibold">
+                      {lead.name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
                     <div>
-                      <p className="text-sm">{activity.description}</p>
-                      <p className="text-xs text-gray-500">{activity.related_to_name}</p>
+                      <p className="text-sm font-medium">{lead.name}</p>
+                      <p className="text-xs text-gray-500">{lead.origem || lead.status}</p>
                     </div>
                   </div>
                   <span className="text-xs text-gray-500">
-                    {new Date(activity.date).toLocaleDateString()}
+                    {lead.temperatura && (
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        lead.temperatura === 'quente' ? 'bg-red-100 text-red-700' :
+                        lead.temperatura === 'morno' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>{lead.temperatura}</span>
+                    )}
                   </span>
                 </div>
               )) : (
-                <p className="text-sm text-gray-500 text-center py-4">No upcoming activities</p>
+                <p className="text-sm text-gray-500 text-center py-4">Nenhum lead cadastrado</p>
               )}
             </div>
           </CardContent>

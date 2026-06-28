@@ -4,7 +4,7 @@
   "properties": {
     "default_currency": {
       "type": "string",
-      "default": "AED",
+      "default": "BRL",
       "description": "Default currency"
     },
     "default_lead_stage": {
