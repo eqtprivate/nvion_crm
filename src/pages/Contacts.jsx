@@ -286,7 +286,7 @@ export default function Contacts() {
                 <Download className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Import</span>
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
+              <Button className="bg-primary hover:bg-primary-dark" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Contact
               </Button>

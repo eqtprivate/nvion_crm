@@ -230,7 +230,7 @@ export default function Leads() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
+          <Button className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Lead
           </Button>

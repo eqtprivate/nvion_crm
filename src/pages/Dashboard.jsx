@@ -201,7 +201,7 @@ export default function Dashboard() {
             <Download className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Export</span>
           </Button>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+          <Button size="sm" className="bg-primary hover:bg-primary-dark">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -387,7 +387,7 @@ export default function Dashboard() {
                 <XAxis dataKey="stage" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="value" fill="#65BC9E" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-4 mt-4 text-xs">
@@ -416,8 +416,8 @@ export default function Dashboard() {
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
                 <Legend />
-                <Area type="monotone" dataKey="won" stroke="#10b981" fill="#10b981" fillOpacity={0.6} name="Won" />
-                <Area type="monotone" dataKey="target" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} name="Target" />
+                <Area type="monotone" dataKey="won" stroke="#65BC9E" fill="#65BC9E" fillOpacity={0.6} name="Won" />
+                <Area type="monotone" dataKey="target" stroke="#2D324F" fill="#2D324F" fillOpacity={0.2} name="Target" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

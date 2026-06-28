@@ -64,16 +64,11 @@ export default function Layout({ children, currentPageName }) {
 
   const SidebarContent = () => (
     <>
-      {/* Logo */}
-      <div className="p-6 flex items-center gap-3 border-b border-sidebar-border">
-        <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-          <div className="w-5 h-5 border-2 border-white rounded-md flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-sm"></div>
-          </div>
-        </div>
-        <div>
-          <span className="text-xl font-extrabold text-white tracking-tight">Nvision</span>
-          <span className="text-xs text-sidebar-foreground ml-1.5 font-medium">CRM</span>
+      {/* Logo reservada para inserção manual */}
+      <div className="h-14 flex items-center px-6 border-b border-sidebar-border">
+        <div className="h-8 w-32 flex items-center">
+          {/* Espaço reservado para a logo da marca Nvion */}
+          <span className="text-lg font-extrabold text-white tracking-tight">Nvion</span>
         </div>
       </div>
 
@@ -87,11 +82,11 @@ export default function Layout({ children, currentPageName }) {
               onClick={() => setMobileSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive(item.path) 
-                  ? 'bg-sidebar-accent text-white font-medium shadow-sm' 
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-white'
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' 
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'
               }`}
             >
-              <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+              <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-primary-foreground' : ''}`} />
               <span className="text-sm">{item.name}</span>
             </Link>
           ))}
@@ -104,8 +99,8 @@ export default function Layout({ children, currentPageName }) {
               onClick={() => setMobileSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                 isActive(item.path) 
-                  ? 'bg-sidebar-accent text-white font-medium' 
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-white'
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium' 
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'
               }`}
             >
               <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
@@ -167,7 +162,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="ghost" size="icon" className="text-gray-600 relative">
               <Bell className="w-[18px] h-[18px]" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
             </Button>
             
             <DropdownMenu>
@@ -177,7 +172,7 @@ export default function Layout({ children, currentPageName }) {
                     {currentUser?.profile_picture ? (
                       <img src={currentUser.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
                         {currentUser?.display_name ? currentUser.display_name.charAt(0).toUpperCase() : currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'N'}
                       </div>
                     )}

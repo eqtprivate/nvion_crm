@@ -227,7 +227,7 @@ export default function Calendar() {
               className="pl-9 h-9"
             />
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => { setSelectedEvent(null); setDialogOpen(true); }}>
+          <Button className="bg-primary hover:bg-primary-dark" onClick={() => { setSelectedEvent(null); setDialogOpen(true); }}>
             <Plus className="w-4 h-4 mr-2" />
             New Event
           </Button>

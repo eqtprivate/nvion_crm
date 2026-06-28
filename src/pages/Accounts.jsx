@@ -232,7 +232,7 @@ export default function Accounts() {
             <Download className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Export CSV</span>
           </Button>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" className="bg-primary hover:bg-primary-dark" onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Account
           </Button>

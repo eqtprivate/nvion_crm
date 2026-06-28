@@ -142,7 +142,7 @@ export default function Activities() {
             <CalendarIcon className="w-4 h-4 mr-2" />
             Log Meeting
           </Button>
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleQuickLog('WhatsApp')}>
+          <Button size="sm" className="bg-primary hover:bg-primary-dark" onClick={() => handleQuickLog('WhatsApp')}>
             <MessageSquare className="w-4 h-4 mr-2" />
             Log WhatsApp
           </Button>
