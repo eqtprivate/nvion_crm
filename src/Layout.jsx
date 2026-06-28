@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   UserCircle,
   Menu,
-  X
+  X,
+  Package
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -41,6 +42,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
     { name: 'Clientes', icon: Users, path: 'Contacts' },
     { name: 'Administradoras', icon: Building2, path: 'Accounts' },
+    { name: 'Produtos de Consórcio', icon: Package, path: 'ProdutoConsorcio' },
     { name: 'Equipe e Vendedores', icon: UserCircle, path: 'EquipeComercial' },
     { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
   ];
