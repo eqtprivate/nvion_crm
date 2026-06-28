@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import OpportunityDialog from '../components/forms/OpportunityDialog';
+import { useAuth } from '@/lib/AuthContext';
 
 const stageLabels = {
   novo_contato: 'Novo Contato', qualificacao: 'Qualificação', simulacao: 'Simulação',
@@ -31,21 +32,24 @@ export default function Oportunidades() {
   const [sortColumn, setSortColumn] = useState('created_date');
   const [sortDirection, setSortDirection] = useState('desc');
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
 
   const { data: oportunidades = [], isLoading } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: () => base44.entities.Opportunity.list('-created_date'),
+    queryKey: ['opportunities', empresa],
+    queryFn: () => base44.entities.Opportunity.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Opportunity.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['opportunities'] }); setDialogOpen(false); },
+    mutationFn: (data) => base44.entities.Opportunity.create({ ...data, empresa_vinculada: empresa }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); setDialogOpen(false); },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Opportunity.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] });
       setEditDialogOpen(false);
       setSelectedOportunidade(null);
     },
@@ -53,7 +57,7 @@ export default function Oportunidades() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Opportunity.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['opportunities'] }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); },
   });
 
   const handleEdit = (op) => { setSelectedOportunidade(op); setEditDialogOpen(true); };

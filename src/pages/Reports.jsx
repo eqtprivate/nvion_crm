@@ -29,6 +29,7 @@ import AccountHealthTab from '../components/reports/AccountHealthTab';
 import SavedReportsDialog from '../components/reports/SavedReportsDialog';
 import { Button } from '@/components/ui/button';
 import { Bookmark } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Reports() {
   const [filters, setFilters] = useState({
@@ -45,24 +46,31 @@ export default function Reports() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
+
   const { data: accounts = [] } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: () => base44.entities.Account.list(),
+    queryKey: ['accounts', empresa],
+    queryFn: () => base44.entities.Account.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const { data: contacts = [] } = useQuery({
-    queryKey: ['contacts'],
-    queryFn: () => base44.entities.Contact.list(),
+    queryKey: ['contacts', empresa],
+    queryFn: () => base44.entities.Contact.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const { data: leads = [] } = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => base44.entities.Lead.list(),
+    queryKey: ['leads', empresa],
+    queryFn: () => base44.entities.Lead.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const { data: opportunities = [] } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: () => base44.entities.Opportunity.list(),
+    queryKey: ['opportunities', empresa],
+    queryFn: () => base44.entities.Opportunity.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   // Get unique owners

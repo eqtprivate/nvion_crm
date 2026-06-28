@@ -21,12 +21,11 @@ import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
 
 const ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
 
-export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLoading, user }) {
+export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLoading, user, empresaVinculada }) {
   const [formData, setFormData] = useState({
     display_name: '',
     email: '',
     role: 'vendedor',
-    empresa_vinculada: '',
     status: 'pendente',
   });
 
@@ -36,7 +35,6 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
         display_name: user.display_name || '',
         email: user.email || '',
         role: user.role || 'vendedor',
-        empresa_vinculada: user.empresa_vinculada || '',
         status: user.status || 'pendente',
       });
     } else {
@@ -44,7 +42,6 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
         display_name: '',
         email: '',
         role: 'vendedor',
-        empresa_vinculada: '',
         status: 'pendente',
       });
     }
@@ -54,6 +51,7 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
     e.preventDefault();
     const data = {
       ...formData,
+      empresa_vinculada: user?.empresa_vinculada || empresaVinculada || '',
       modulos_permitidos: user?.modulos_permitidos?.length
         ? user.modulos_permitidos
         : ROLE_MODULE_DEFAULTS[formData.role] || [],
@@ -108,14 +106,6 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="empresa">Empresa Vinculada</Label>
-              <Input
-                id="empresa"
-                value={formData.empresa_vinculada}
-                onChange={(e) => setFormData({ ...formData, empresa_vinculada: e.target.value })}
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
