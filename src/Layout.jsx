@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
-import { base44 } from '@/api/base44Client';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Target, 
+import { useAuth } from '@/lib/AuthContext';
+import {
+  LayoutDashboard,
+  Users,
+  Target,
   TrendingUp,
   Building2,
   BarChart3,
@@ -31,25 +31,8 @@ import {
 
 export default function Layout({ children, currentPageName }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userAcesso, setUserAcesso] = useState(null);
+  const { user: currentUser, logout } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-        if (user?.email) {
-          const acessos = await base44.entities.UsuarioAcesso.filter({ email: user.email });
-          if (acessos.length > 0) setUserAcesso(acessos[0]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch current user", error);
-      }
-    };
-    fetchUser();
-  }, []);
 
   const allMenuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: 'Dashboard' },
@@ -66,9 +49,9 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Gestão de Acessos', icon: ShieldCheck, path: 'GestaoAcessos' }
   ];
 
-  const modulosPermitidos = userAcesso?.modulos_permitidos || currentUser?.modulos_permitidos;
+  const modulosPermitidos = currentUser?.modulos_permitidos;
   const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
-  const isAdmin = isAdminRole(currentUser?.role) || isAdminRole(userAcesso?.role);
+  const isAdmin = isAdminRole(currentUser?.role);
 
   const menuItems = allMenuItems.filter((item) =>
     !hasModules || modulosPermitidos.includes(item.path)
@@ -212,7 +195,7 @@ export default function Layout({ children, currentPageName }) {
                 <DropdownMenuItem asChild>
                   <Link to={createPageUrl('Profile')}>Perfil</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => base44.auth.logout()}>Sair</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout}>Sair</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
