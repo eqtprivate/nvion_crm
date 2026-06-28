@@ -36,13 +36,13 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
 
   const allMenuItems = [
-    { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
+    { name: 'Painel', icon: LayoutDashboard, path: 'Dashboard' },
     { name: 'Prospecção', icon: Target, path: 'Leads' },
     { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
-    { name: 'Clientes', icon: Users, path: 'Contacts' },
+    { name: 'Contatos', icon: Users, path: 'Contacts' },
     { name: 'Administradoras', icon: Building2, path: 'Accounts' },
-    { name: 'Equipe e Vendedores', icon: UserCircle, path: 'EquipeComercial' },
-    { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
+    { name: 'Equipe Comercial', icon: UserCircle, path: 'EquipeComercial' },
+    { name: 'Relatórios', icon: BarChart3, path: 'Reports' }
   ];
 
   const allBottomMenuItems = [
