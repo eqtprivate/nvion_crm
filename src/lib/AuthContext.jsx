@@ -23,13 +23,23 @@ export const AuthProvider = ({ children }) => {
     setUser({
       id: usuario.id,
       display_name: usuario.display_name,
+      full_name: usuario.full_name,
       email: usuario.email,
       role: usuario.role,
       empresa_vinculada: usuario.empresa_vinculada,
       modulos_permitidos: usuario.modulos_permitidos,
       status: usuario.status,
+      profile_picture: usuario.profile_picture,
     });
     setIsAuthenticated(true);
+  };
+
+  const updateUser = (changes) => {
+    setUser(prev => {
+      const updated = { ...prev, ...changes };
+      saveSession(updated);
+      return updated;
+    });
   };
 
   const logout = () => {
@@ -47,6 +57,7 @@ export const AuthProvider = ({ children }) => {
       authError: null,
       login,
       logout,
+      updateUser,
     }}>
       {children}
     </AuthContext.Provider>

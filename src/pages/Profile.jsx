@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,28 +8,16 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { User, Mail, Shield, Camera } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [formData, setFormData] = useState({ display_name: '', profile_picture: '' });
+  const { user, updateUser } = useAuth();
+  const [formData, setFormData] = useState({
+    display_name: user?.display_name || user?.full_name || '',
+    profile_picture: user?.profile_picture || '',
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await base44.auth.me();
-        setUser(userData);
-        setFormData({
-          display_name: userData.display_name || userData.full_name || '',
-          profile_picture: userData.profile_picture || '',
-        });
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      }
-    };
-    loadUser();
-  }, []);
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -37,7 +25,7 @@ export default function Profile() {
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFormData({ ...formData, profile_picture: file_url });
+      setFormData(prev => ({ ...prev, profile_picture: file_url }));
       toast.success('Foto enviada com sucesso');
     } catch (error) {
       toast.error('Erro ao enviar foto');
@@ -48,13 +36,16 @@ export default function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.id) return;
     setIsLoading(true);
     try {
-      await base44.auth.updateMe({ display_name: formData.display_name.trim(), profile_picture: formData.profile_picture });
-      const updatedUser = await base44.auth.me();
-      setUser(updatedUser);
+      const changes = {
+        display_name: formData.display_name.trim(),
+        profile_picture: formData.profile_picture,
+      };
+      await base44.entities.UsuarioAcesso.update(user.id, changes);
+      updateUser(changes);
       toast.success('Perfil atualizado com sucesso');
-      setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       toast.error('Erro ao atualizar perfil');
@@ -66,6 +57,8 @@ export default function Profile() {
   if (!user) {
     return <div className="p-4 sm:p-8"><div className="max-w-4xl mx-auto"><div className="text-center py-12">Carregando...</div></div></div>;
   }
+
+  const displayName = formData.display_name || user.email || 'Usuário';
 
   return (
     <div className="p-4 sm:p-8">
@@ -85,7 +78,10 @@ export default function Profile() {
                     <Label>Foto do Perfil</Label>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                       <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
-                        {formData.profile_picture ? <img src={formData.profile_picture} alt="Perfil" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-blue-100 flex items-center justify-center"><User className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600" /></div>}
+                        {formData.profile_picture
+                          ? <img src={formData.profile_picture} alt="Perfil" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full bg-blue-100 flex items-center justify-center"><User className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600" /></div>
+                        }
                       </Avatar>
                       <div className="flex-1 w-full">
                         <input type="file" id="photo-upload" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
@@ -97,20 +93,97 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div className="space-y-2"><Label htmlFor="display_name">Nome Completo</Label><Input id="display_name" value={formData.display_name} onChange={(e) => setFormData({ ...formData, display_name: e.target.value })} placeholder="Informe seu nome completo" /></div>
-                  <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={user.email} disabled className="bg-gray-50" /><p className="text-xs text-gray-500">O email não pode ser alterado nesta tela.</p></div>
-                  <div className="space-y-2"><Label htmlFor="role">Perfil de Acesso</Label><Input id="role" value={user.role} disabled className="bg-gray-50 capitalize" /></div>
-                  <div className="pt-4"><Button type="submit" disabled={isLoading} className="w-full sm:w-auto">{isLoading ? 'Salvando...' : 'Salvar Alterações'}</Button></div>
+                  <div className="space-y-2">
+                    <Label htmlFor="display_name">Nome Completo</Label>
+                    <Input
+                      id="display_name"
+                      value={formData.display_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+                      placeholder="Informe seu nome completo"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={user.email} disabled className="bg-gray-50" />
+                    <p className="text-xs text-gray-500">O email não pode ser alterado nesta tela.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Perfil de Acesso</Label>
+                    <Input id="role" value={user.role} disabled className="bg-gray-50 capitalize" />
+                  </div>
+
+                  <div className="pt-4">
+                    <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+                      {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </CardContent>
           </Card>
 
           <div className="space-y-4 sm:space-y-6">
-            <Card><CardContent className="p-6"><div className="flex flex-col items-center text-center"><Avatar className="w-20 h-20 mb-4">{user.profile_picture ? <img src={user.profile_picture} alt="Perfil" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-blue-100 flex items-center justify-center"><User className="w-10 h-10 text-blue-600" /></div>}</Avatar><h3 className="font-semibold text-lg">{user.display_name || user.full_name || 'Usuário'}</h3><p className="text-sm text-gray-500">{user.email}</p><Badge className="mt-2 capitalize">{user.role}</Badge></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0"><User className="w-6 h-6 text-blue-600" /></div><div className="min-w-0"><p className="text-sm text-gray-500">Tipo de Conta</p><p className="font-semibold capitalize truncate">{user.role}</p></div></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0"><Mail className="w-6 h-6 text-green-600" /></div><div className="min-w-0"><p className="text-sm text-gray-500">Email Verificado</p><p className="font-semibold">Sim</p></div></div></CardContent></Card>
-            <Card><CardContent className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0"><Shield className="w-6 h-6 text-purple-600" /></div><div className="min-w-0"><p className="text-sm text-gray-500">Segurança</p><p className="font-semibold">Protegido</p></div></div></CardContent></Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center">
+                  <Avatar className="w-20 h-20 mb-4">
+                    {formData.profile_picture
+                      ? <img src={formData.profile_picture} alt="Perfil" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-white font-semibold text-xl">
+                          {displayName.charAt(0).toUpperCase()}
+                        </div>
+                    }
+                  </Avatar>
+                  <h3 className="font-semibold text-lg">{displayName}</h3>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <Badge className="mt-2 capitalize">{user.role}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500">Tipo de Conta</p>
+                    <p className="font-semibold capitalize truncate">{user.role}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500">Email Verificado</p>
+                    <p className="font-semibold">Sim</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500">Segurança</p>
+                    <p className="font-semibold">Protegido</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
