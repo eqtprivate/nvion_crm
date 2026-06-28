@@ -17,7 +17,9 @@ import {
   UserCircle,
   Menu,
   X,
-  Package
+  Package,
+  ReceiptText,
+  Percent
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -44,6 +46,8 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Administradoras', icon: Building2, path: 'Accounts' },
     { name: 'Produtos de Consórcio', icon: Package, path: 'ProdutoConsorcio' },
     { name: 'Equipe e Vendedores', icon: UserCircle, path: 'EquipeComercial' },
+    { name: 'Vendas de Consórcio', icon: ReceiptText, path: 'VendasConsorcio' },
+    { name: 'Regras de Comissão', icon: Percent, path: 'RegrasComissao' },
     { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
   ];
 
@@ -76,7 +80,6 @@ export default function Layout({ children, currentPageName }) {
 
   const SidebarContent = () => (
     <>
-      {/* Logo NVION */}
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
         <img
           src="https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png"
@@ -84,8 +87,6 @@ export default function Layout({ children, currentPageName }) {
           className="h-8 w-auto"
         />
       </div>
-
-      {/* Navegação */}
       <nav className="flex-1 px-3 py-4 space-y-1 flex flex-col overflow-y-auto">
         <div className="space-y-0.5">
           {menuItems.map((item) => (
@@ -94,8 +95,8 @@ export default function Layout({ children, currentPageName }) {
               to={createPageUrl(item.path)}
               onClick={() => setMobileSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                isActive(item.path) 
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' 
+                isActive(item.path)
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'
               }`}
             >
@@ -130,20 +131,15 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      {/* Sidebar desktop */}
       <div className="hidden md:flex w-64 bg-sidebar flex-col fixed inset-y-0 left-0 z-30">
         <SidebarContent />
       </div>
 
-      {/* Sidebar mobile */}
       {mobileSidebarOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-64 bg-sidebar flex-col flex">
-            <button 
-              className="absolute top-5 right-4 text-sidebar-foreground hover:text-white"
-              onClick={() => setMobileSidebarOpen(false)}
-            >
+            <button className="absolute top-5 right-4 text-sidebar-foreground hover:text-white" onClick={() => setMobileSidebarOpen(false)}>
               <X className="w-5 h-5" />
             </button>
             <SidebarContent />
@@ -151,36 +147,24 @@ export default function Layout({ children, currentPageName }) {
         </div>
       )}
 
-      {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
-        {/* Barra superior */}
         <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
           <div className="flex items-center gap-3 flex-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden"
-              onClick={() => setMobileSidebarOpen(true)}
-            >
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileSidebarOpen(true)}>
               <Menu className="w-5 h-5" />
             </Button>
             <div className="hidden sm:flex flex-1 max-w-md">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar no sistema..."
-                  className="pl-9 bg-gray-50 border-gray-200 h-9 text-sm"
-                />
+                <Input placeholder="Buscar no sistema..." className="pl-9 bg-gray-50 border-gray-200 h-9 text-sm" />
               </div>
             </div>
           </div>
-          
           <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="ghost" size="icon" className="text-gray-600 relative">
               <Bell className="w-[18px] h-[18px]" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
             </Button>
-            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 px-2">
@@ -200,19 +184,13 @@ export default function Layout({ children, currentPageName }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('Profile')}>Meu Perfil</Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to={createPageUrl('Profile')}>Meu Perfil</Link></DropdownMenuItem>
                 <DropdownMenuItem onClick={logout}>Sair</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-
-        {/* Conteúdo da página */}
-        <main className="flex-1 overflow-auto bg-slate-50">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto bg-slate-50">{children}</main>
       </div>
     </div>
   );
