@@ -23,6 +23,7 @@ import AccountDialog from '../components/forms/AccountDialog';
 import EditAccountDialog from '../components/forms/EditAccountDialog';
 import AccountKPICard from '../components/accounts/AccountKPICard';
 import AccountInsightsDialog from '../components/accounts/AccountInsightsDialog';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Accounts() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,20 +33,25 @@ export default function Accounts() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
+
   const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: () => base44.entities.Account.list('-created_date'),
+    queryKey: ['accounts', empresa],
+    queryFn: () => base44.entities.Account.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const { data: opportunities = [] } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: () => base44.entities.Opportunity.list('-created_date'),
+    queryKey: ['opportunities', empresa],
+    queryFn: () => base44.entities.Opportunity.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Account.create(data),
+    mutationFn: (data) => base44.entities.Account.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts', empresa] });
       setDialogOpen(false);
     },
   });
@@ -53,7 +59,7 @@ export default function Accounts() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Account.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts', empresa] });
       setEditDialogOpen(false);
       setSelectedAccount(null);
     },
@@ -62,7 +68,7 @@ export default function Accounts() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Account.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts', empresa] });
     },
   });
 

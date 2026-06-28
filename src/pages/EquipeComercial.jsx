@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/lib/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -40,15 +41,19 @@ export default function EquipeComercial() {
   });
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
+
   const { data: equipes = [], isLoading } = useQuery({
-    queryKey: ['equipes'],
-    queryFn: () => base44.entities.EquipeComercial.list('-created_date'),
+    queryKey: ['equipes', empresa],
+    queryFn: () => base44.entities.EquipeComercial.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.EquipeComercial.create(data),
+    mutationFn: (data) => base44.entities.EquipeComercial.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['equipes'] });
+      queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
       setDialogOpen(false);
       setForm({ nome_equipe: '', lider_responsavel: '', meta_mensal: '', status: 'ativo' });
     },
@@ -57,7 +62,7 @@ export default function EquipeComercial() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.EquipeComercial.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['equipes'] });
+      queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
     },
   });
 

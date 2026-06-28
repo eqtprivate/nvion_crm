@@ -29,6 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import moment from 'moment';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,15 +53,19 @@ export default function Contacts() {
   });
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
+
   const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ['contacts'],
-    queryFn: () => base44.entities.Contact.list('-created_date'),
+    queryKey: ['contacts', empresa],
+    queryFn: () => base44.entities.Contact.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Contact.create(data),
+    mutationFn: (data) => base44.entities.Contact.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts', empresa] });
       setDialogOpen(false);
     },
   });
@@ -68,7 +73,7 @@ export default function Contacts() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Contact.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts', empresa] });
       setEditDialogOpen(false);
       setSelectedContact(null);
     },
@@ -77,7 +82,7 @@ export default function Contacts() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Contact.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts', empresa] });
     },
   });
 

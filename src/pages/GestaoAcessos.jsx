@@ -29,6 +29,8 @@ import KPICard from '@/components/shared/KPICard';
 import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
 import { ROLE_LABELS } from '@/lib/modules';
+import { useAuth } from '@/lib/AuthContext';
+import { hashPassword } from '@/lib/auth';
 
 function generateTempPassword() {
   const digits = Math.floor(1000 + Math.random() * 9000);
@@ -119,15 +121,19 @@ export default function GestaoAcessos() {
   const [lastCreatedUser, setLastCreatedUser] = useState({ name: '', senha: '' });
   const queryClient = useQueryClient();
 
+  const { user: currentUser } = useAuth();
+  const empresa = currentUser?.empresa_vinculada;
+
   const { data: usuarios = [], isLoading } = useQuery({
-    queryKey: ['usuariosAcesso'],
-    queryFn: () => base44.entities.UsuarioAcesso.list('-created_date'),
+    queryKey: ['usuariosAcesso', empresa],
+    queryFn: () => base44.entities.UsuarioAcesso.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.UsuarioAcesso.create(data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['usuariosAcesso'] });
+      queryClient.invalidateQueries({ queryKey: ['usuariosAcesso', empresa] });
       setCreateDialogOpen(false);
       setLastCreatedUser({ name: variables.display_name, senha: variables.senha_temporaria });
       setSenhaDialogOpen(true);
@@ -137,7 +143,7 @@ export default function GestaoAcessos() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.UsuarioAcesso.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usuariosAcesso'] });
+      queryClient.invalidateQueries({ queryKey: ['usuariosAcesso', empresa] });
       setEditDialogOpen(false);
       setModulesDialogOpen(false);
     },
@@ -145,7 +151,7 @@ export default function GestaoAcessos() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.UsuarioAcesso.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usuariosAcesso'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['usuariosAcesso', empresa] }),
   });
 
   const kpis = useMemo(() => {
@@ -178,9 +184,15 @@ export default function GestaoAcessos() {
     setSenhaDialogOpen(true);
   };
 
-  const handleCreate = (data) => {
+  const handleCreate = async (data) => {
     const senha = generateTempPassword();
-    createMutation.mutate({ ...data, senha_temporaria: senha });
+    const senha_hash = await hashPassword(senha);
+    createMutation.mutate({
+      ...data,
+      empresa_vinculada: empresa,
+      senha_temporaria: senha,
+      senha_hash,
+    });
   };
 
   return (
@@ -310,6 +322,7 @@ export default function GestaoAcessos() {
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreate}
         isLoading={createMutation.isPending}
+        empresaVinculada={empresa}
       />
       <UsuarioAcessoDialog
         open={editDialogOpen}

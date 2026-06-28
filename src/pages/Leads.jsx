@@ -13,6 +13,7 @@ import EditLeadDialog from '../components/forms/EditLeadDialog';
 import KPICard from '../components/leads/KPICard';
 import LeadFilters from '../components/leads/LeadFilters';
 import LeadsAnalytics from '../components/leads/LeadsAnalytics';
+import { useAuth } from '@/lib/AuthContext';
 
 const STATUS_LABELS = Object.fromEntries(LEAD_STATUSES.map(s => [s.value, s.label]));
 const ORIGEM_LABELS = Object.fromEntries(ORIGENS.map(o => [o.value, o.label]));
@@ -41,25 +42,28 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [filters, setFilters] = useState({ status: 'all', origem: 'all', temperatura: 'all' });
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
 
   const { data: leads = [], isLoading } = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => base44.entities.Lead.list('-created_date'),
+    queryKey: ['leads', empresa],
+    queryFn: () => base44.entities.Lead.filter({ empresa_vinculada: empresa }),
+    enabled: !!empresa,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Lead.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); setDialogOpen(false); },
+    mutationFn: (data) => base44.entities.Lead.create({ ...data, empresa_vinculada: empresa }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setDialogOpen(false); },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads'] }); setEditDialogOpen(false); setSelectedLead(null); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setEditDialogOpen(false); setSelectedLead(null); },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.Lead.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads', empresa] }),
   });
 
   const handleEdit = (lead) => { setSelectedLead(lead); setEditDialogOpen(true); };

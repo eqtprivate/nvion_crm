@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -24,8 +25,11 @@ function KPI({ title, value, Icon }) {
 }
 
 export default function Dashboard() {
-  const { data: leads = [] } = useQuery({ queryKey: ['leads'], queryFn: () => base44.entities.Lead.list('-created_date') });
-  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => base44.entities.Opportunity.list('-created_date') });
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
+
+  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: () => base44.entities.Lead.filter({ empresa_vinculada: empresa }), enabled: !!empresa });
+  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: () => base44.entities.Opportunity.filter({ empresa_vinculada: empresa }), enabled: !!empresa });
 
   const kpis = useMemo(() => {
     const totalLeads = leads.length;
