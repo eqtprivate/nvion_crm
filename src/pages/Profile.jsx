@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Shield, Camera } from 'lucide-react';
+import { User, Mail, Shield, Camera, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
+import { hashPassword } from '@/lib/auth';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -18,6 +19,8 @@ export default function Profile() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [senhaForm, setSenhaForm] = useState({ atual: '', nova: '', confirmar: '' });
+  const [senhaLoading, setSenhaLoading] = useState(false);
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -54,6 +57,38 @@ export default function Profile() {
     }
   };
 
+  const handleSenhaSubmit = async (e) => {
+    e.preventDefault();
+    if (!senhaForm.nova || senhaForm.nova.length < 6) {
+      toast.error('A nova senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    if (senhaForm.nova !== senhaForm.confirmar) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+    setSenhaLoading(true);
+    try {
+      const todos = await base44.entities.UsuarioAcesso.list();
+      const registro = todos.find(u => u.id === user.id);
+      if (!registro) throw new Error('Usuário não encontrado');
+      const hashAtual = await hashPassword(senhaForm.atual);
+      if (registro.senha_hash !== hashAtual) {
+        toast.error('Senha atual incorreta');
+        return;
+      }
+      const novaSenhaHash = await hashPassword(senhaForm.nova);
+      await base44.entities.UsuarioAcesso.update(user.id, { senha_hash: novaSenhaHash, senha_temporaria: null });
+      setSenhaForm({ atual: '', nova: '', confirmar: '' });
+      toast.success('Senha alterada com sucesso');
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      toast.error('Erro ao alterar senha');
+    } finally {
+      setSenhaLoading(false);
+    }
+  };
+
   if (!user) {
     return <div className="p-4 sm:p-8"><div className="max-w-4xl mx-auto"><div className="text-center py-12">Carregando...</div></div></div>;
   }
@@ -68,8 +103,9 @@ export default function Profile() {
           <p className="text-gray-500 mt-1">Gerencie suas informações de acesso e identificação no NVION CRM</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <Card className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <Card>
             <CardHeader><CardTitle>Informações Pessoais</CardTitle></CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit}>
@@ -123,6 +159,53 @@ export default function Profile() {
               </form>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><KeyRound className="w-5 h-5" />Alterar Senha</CardTitle></CardHeader>
+            <CardContent>
+              <form onSubmit={handleSenhaSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="senha_atual">Senha Atual</Label>
+                  <Input
+                    id="senha_atual"
+                    type="password"
+                    value={senhaForm.atual}
+                    onChange={(e) => setSenhaForm(prev => ({ ...prev, atual: e.target.value }))}
+                    placeholder="Digite sua senha atual"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="senha_nova">Nova Senha</Label>
+                  <Input
+                    id="senha_nova"
+                    type="password"
+                    value={senhaForm.nova}
+                    onChange={(e) => setSenhaForm(prev => ({ ...prev, nova: e.target.value }))}
+                    placeholder="Mínimo 6 caracteres"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="senha_confirmar">Confirmar Nova Senha</Label>
+                  <Input
+                    id="senha_confirmar"
+                    type="password"
+                    value={senhaForm.confirmar}
+                    onChange={(e) => setSenhaForm(prev => ({ ...prev, confirmar: e.target.value }))}
+                    placeholder="Repita a nova senha"
+                    required
+                  />
+                </div>
+                <div className="pt-2">
+                  <Button type="submit" variant="outline" disabled={senhaLoading} className="w-full sm:w-auto">
+                    {senhaLoading ? 'Alterando...' : 'Alterar Senha'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+          </div>
 
           <div className="space-y-4 sm:space-y-6">
             <Card>
