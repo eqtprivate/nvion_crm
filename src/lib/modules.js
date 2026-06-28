@@ -11,13 +11,13 @@ export const AVAILABLE_MODULES = [
 ];
 
 export const MODULE_LABELS = {
-  Dashboard: 'Dashboard',
-  Leads: 'Leads',
+  Dashboard: 'Painel Geral',
+  Leads: 'Prospecção',
   Oportunidades: 'Oportunidades',
   Contacts: 'Clientes',
   Accounts: 'Administradoras',
-  EquipeComercial: 'Equipe Comercial',
-  Reports: 'Relatórios',
+  EquipeComercial: 'Equipe e Vendedores',
+  Reports: 'Relatórios Gerenciais',
   Settings: 'Configurações',
   GestaoAcessos: 'Gestão de Acessos',
 };
