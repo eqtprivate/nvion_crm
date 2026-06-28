@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
+const LOGIN_BUILD = 'auth-fix-2026-06-28-v3';
+
 function normalizeEmail(value) {
   return String(value || '').toLowerCase().trim();
 }
@@ -19,7 +21,7 @@ function getLoginErrorMessage(err) {
   if (message.toLowerCase().includes('unauthorized') || message.toLowerCase().includes('401') || message.toLowerCase().includes('403')) {
     return 'O domínio publicado não está autorizado a consultar a base de usuários. Revise a configuração de acesso do app.';
   }
-  return 'Erro ao consultar usuários. Tente novamente ou solicite suporte.';
+  return `Erro ao consultar usuários. Detalhe técnico: ${message || 'sem detalhe retornado'}`;
 }
 
 export default function Login() {
@@ -73,7 +75,7 @@ export default function Login() {
 
       login(usuario);
     } catch (err) {
-      setError('Erro inesperado no login. Recarregue a página e tente novamente.');
+      setError(`Erro inesperado no login. Detalhe técnico: ${err?.message || err?.toString?.() || 'sem detalhe retornado'}`);
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +120,7 @@ export default function Login() {
           </form>
 
           <p className="text-xs text-gray-400 text-center mt-6">NVION CRM &copy; {new Date().getFullYear()} — Acesso restrito</p>
+          <p className="text-[10px] text-gray-300 text-center mt-2">{LOGIN_BUILD}</p>
         </div>
       </div>
     </div>
