@@ -14,11 +14,13 @@ export function saveSession(user) {
     user: {
       id: user.id,
       display_name: user.display_name,
+      full_name: user.full_name,
       email: user.email,
       role: user.role,
       empresa_vinculada: user.empresa_vinculada,
       modulos_permitidos: user.modulos_permitidos,
       status: user.status,
+      profile_picture: user.profile_picture,
     },
     expiresAt: Date.now() + 8 * 60 * 60 * 1000,
   };

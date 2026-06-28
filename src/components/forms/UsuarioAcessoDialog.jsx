@@ -17,17 +17,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Info } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
 
 const ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
 
-export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLoading, user, empresaVinculada }) {
+export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLoading, user, empresaVinculada, isSuperAdmin }) {
   const [formData, setFormData] = useState({
     display_name: '',
     email: '',
     role: 'vendedor',
     status: 'pendente',
+    empresa_vinculada: '',
   });
+  const [empresas, setEmpresas] = useState([]);
+
+  useEffect(() => {
+    base44.entities.Empresa.list('-razao_social').then(list => setEmpresas(list || [])).catch(() => setEmpresas([]));
+  }, [open]);
 
   useEffect(() => {
     if (user) {
@@ -36,6 +43,7 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
         email: user.email || '',
         role: user.role || 'vendedor',
         status: user.status || 'pendente',
+        empresa_vinculada: user.empresa_vinculada || '',
       });
     } else {
       setFormData({
@@ -43,15 +51,18 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
         email: '',
         role: 'vendedor',
         status: 'pendente',
+        empresa_vinculada: empresaVinculada || '',
       });
     }
-  }, [user, open]);
+  }, [user, open, empresaVinculada]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = {
       ...formData,
-      empresa_vinculada: user?.empresa_vinculada || empresaVinculada || '',
+      empresa_vinculada: isSuperAdmin
+        ? (formData.empresa_vinculada || empresaVinculada || '')
+        : (user?.empresa_vinculada || empresaVinculada || ''),
       modulos_permitidos: user?.modulos_permitidos?.length
         ? user.modulos_permitidos
         : ROLE_MODULE_DEFAULTS[formData.role] || [],
@@ -94,6 +105,26 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
+            {isSuperAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="empresa_vinculada">Empresa</Label>
+                <Select
+                  value={formData.empresa_vinculada}
+                  onValueChange={(value) => setFormData({ ...formData, empresa_vinculada: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {empresas.map((emp) => (
+                      <SelectItem key={emp.id} value={emp.razao_social}>
+                        {emp.razao_social}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="role">Perfil</Label>
               <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>

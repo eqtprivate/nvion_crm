@@ -48,7 +48,15 @@
     },
     "senha_temporaria": {
       "type": "string",
-      "description": "Senha temporaria gerada para primeiro acesso — limpar apos usuario ativar conta"
+      "description": "Senha temporaria gerada para primeiro acesso \u2014 limpar apos usuario ativar conta"
+    },
+    "senha_hash": {
+      "type": "string",
+      "description": "Hash SHA-256 da senha do usuario"
+    },
+    "profile_picture": {
+      "type": "string",
+      "description": "URL da foto de perfil do usuario"
     }
   },
   "required": [
