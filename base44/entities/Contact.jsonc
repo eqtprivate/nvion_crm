@@ -64,8 +64,15 @@
       "default": "lead",
       "description": "Status do cliente"
     },
-    "documentos_anexados": {
+    "observacoes": {
       "type": "string",
+      "description": "Observacoes"
+    },
+    "documentos_anexados": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
       "description": "Documentos anexados (URLs)"
     }
   },
