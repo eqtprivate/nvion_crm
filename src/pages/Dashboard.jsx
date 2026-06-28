@@ -1,594 +1,244 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Target, 
-  Percent, 
-  Calendar,
-  CheckCircle,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Plus,
-  Download
-} from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
-  AreaChart,
-  Area,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts';
+import { Target, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const STAGE_LABELS = {
+  novo_contato: 'Novo Contato', qualificacao: 'Qualificação', simulacao: 'Simulação',
+  proposta_enviada: 'Proposta Enviada', documentacao: 'Documentação',
+  em_aprovacao: 'Em Aprovação', venda_concluida: 'Venda Concluída', perdida: 'Perdida',
+};
+
+const STATUS_BADGE = {
+  aberta: 'bg-blue-100 text-blue-800', ganha: 'bg-green-100 text-green-800',
+  perdida: 'bg-red-100 text-red-800', suspensa: 'bg-gray-100 text-gray-800',
+};
+
+const COLORS = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
+
+function KPI({ title, value, sub, Icon, color }) {
+  const colors = {
+    blue: 'text-blue-600 bg-blue-50', green: 'text-green-600 bg-green-50',
+    red: 'text-red-600 bg-red-50', purple: 'text-purple-600 bg-purple-50',
+    orange: 'text-orange-600 bg-orange-50', cyan: 'text-cyan-600 bg-cyan-50',
+  };
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-500">{title}</span>
+          <div className={`p-1.5 rounded-lg ${colors[color]}`}><Icon className="w-4 h-4" /></div>
+        </div>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Dashboard() {
-  const [dateRange, setDateRange] = useState('month');
-  const [ownerFilter, setOwnerFilter] = useState('all');
-  const [stageFilter, setStageFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState('all');
-
   const { data: leads = [] } = useQuery({
     queryKey: ['leads'],
     queryFn: () => base44.entities.Lead.list('-created_date'),
   });
 
-  const { data: opportunities = [] } = useQuery({
+  const { data: oportunidades = [] } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => base44.entities.Opportunity.list('-created_date'),
   });
 
-  const filteredOpportunities = useMemo(() => {
-    return opportunities.filter(opp => {
-      if (ownerFilter !== 'all' && opp.owner !== ownerFilter) return false;
-      if (stageFilter !== 'all' && opp.stage !== stageFilter) return false;
-      if (sourceFilter !== 'all' && opp.source !== sourceFilter) return false;
-      return true;
-    });
-  }, [opportunities, ownerFilter, stageFilter, sourceFilter]);
-
   const kpis = useMemo(() => {
     const totalLeads = leads.length;
-    const closedDeals = filteredOpportunities.filter(o => o.stage === 'closed_won');
-    const dealsClosedValue = closedDeals.reduce((sum, o) => sum + (o.amount || 0), 0);
-    
-    const currentMonth = new Date().getMonth();
-    const revenueThisMonth = filteredOpportunities
-      .filter(o => o.stage === 'closed_won' && new Date(o.updated_date).getMonth() === currentMonth)
-      .reduce((sum, o) => sum + (o.amount || 0), 0);
-    
-    const salesTarget = 0;
-    const targetProgress = salesTarget > 0 ? ((revenueThisMonth / salesTarget) * 100).toFixed(1) : 0;
-    
-    const conversionRate = leads.length > 0 
-      ? ((leads.filter(l => l.status === 'won').length / leads.length) * 100).toFixed(1) 
+    const leadsAtivos = leads.filter(l => !['venda_concluida', 'perdida'].includes(l.status)).length;
+    const taxaConversao = totalLeads > 0
+      ? ((leads.filter(l => l.status === 'venda_concluida').length / totalLeads) * 100).toFixed(1)
       : 0;
-    
-    const wonLeads = leads.filter(l => l.status === 'won');
-    const avgSalesCycle = wonLeads.length > 0
-      ? Math.round(wonLeads.reduce((sum, l) => {
-          const days = Math.floor((new Date() - new Date(l.created_date)) / (1000 * 60 * 60 * 24));
-          return sum + days;
-        }, 0) / wonLeads.length)
-      : 0;
+    const oppAbertas = oportunidades.filter(o => o.status === 'aberta');
+    const oppGanhas = oportunidades.filter(o => o.status === 'ganha');
+    const valorPipelineAberto = oppAbertas.reduce((s, o) => s + (o.valor_carta || 0), 0);
+    const valorGanho = oppGanhas.reduce((s, o) => s + (o.valor_carta || 0), 0);
+    return { totalLeads, leadsAtivos, taxaConversao, oppAbertas: oppAbertas.length, oppGanhas: oppGanhas.length, valorPipelineAberto, valorGanho };
+  }, [leads, oportunidades]);
 
-    return {
-      totalLeads,
-      dealsClosedValue,
-      revenueThisMonth,
-      salesTarget,
-      targetProgress,
-      conversionRate,
-      avgSalesCycle,
-    };
-  }, [leads, filteredOpportunities]);
-
-  const pipelineData = useMemo(() => {
-    const stages = ['prospecting', 'qualification', 'proposal', 'negotiation', 'closed_won'];
-    return stages.map(stage => ({
-      stage: stage === 'closed_won' ? 'Won' : stage.charAt(0).toUpperCase() + stage.slice(1),
-      value: filteredOpportunities.filter(o => o.stage === stage).reduce((sum, o) => sum + (o.amount || 0), 0),
-      count: filteredOpportunities.filter(o => o.stage === stage).length,
-    }));
-  }, [filteredOpportunities]);
-
-  const revenueOverTime = useMemo(() => {
-    const months = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
-    const currentMonth = new Date().getMonth();
-    
-    return months.map((month, idx) => {
-      const monthRevenue = opportunities
-        .filter(o => {
-          const oppMonth = new Date(o.updated_date).getMonth();
-          return oppMonth === (currentMonth - 6 + idx + 12) % 12 && o.stage === 'closed_won';
-        })
-        .reduce((sum, o) => sum + (o.amount || 0), 0);
-      
-      return {
-        month,
-        won: monthRevenue,
-        target: 55000 + Math.random() * 10000,
-      };
+  const pipelinePorEtapa = useMemo(() => {
+    const counts = {};
+    const valores = {};
+    oportunidades.filter(o => o.status === 'aberta').forEach(o => {
+      counts[o.stage] = (counts[o.stage] || 0) + 1;
+      valores[o.stage] = (valores[o.stage] || 0) + (o.valor_carta || 0);
     });
-  }, [opportunities]);
+    return Object.keys(STAGE_LABELS)
+      .map(k => ({ name: STAGE_LABELS[k], count: counts[k] || 0, valor: Math.round((valores[k] || 0) / 1000) }))
+      .filter(s => s.count > 0);
+  }, [oportunidades]);
 
-  const topPerformers = useMemo(() => {
-    const performerMap = {};
-    filteredOpportunities.forEach(opp => {
-      if (opp.owner) {
-        if (!performerMap[opp.owner]) {
-          performerMap[opp.owner] = { name: opp.owner, deals: 0, value: 0 };
-        }
-        if (opp.stage === 'closed_won') {
-          performerMap[opp.owner].deals++;
-          performerMap[opp.owner].value += opp.amount || 0;
-        }
-      }
+  const rankingVendedores = useMemo(() => {
+    const map = {};
+    oportunidades.forEach(o => {
+      const v = o.vendedor || 'Sem vendedor';
+      if (!map[v]) map[v] = { nome: v, ganhas: 0, valor: 0 };
+      if (o.status === 'ganha') { map[v].ganhas++; map[v].valor += o.valor_carta || 0; }
     });
-    return Object.values(performerMap).sort((a, b) => b.value - a.value).slice(0, 3);
-  }, [filteredOpportunities]);
+    return Object.values(map).sort((a, b) => b.valor - a.valor).slice(0, 5);
+  }, [oportunidades]);
 
-  const leadSources = useMemo(() => {
-    const sourceMap = {};
-    leads.forEach(lead => {
-      const source = lead.source || 'Unknown';
-      sourceMap[source] = (sourceMap[source] || 0) + 1;
+  const rankingAdministradoras = useMemo(() => {
+    const map = {};
+    oportunidades.filter(o => o.status === 'ganha').forEach(o => {
+      const a = o.administradora_pretendida || 'Não informada';
+      if (!map[a]) map[a] = { nome: a, ganhas: 0, valor: 0 };
+      map[a].ganhas++;
+      map[a].valor += o.valor_carta || 0;
     });
-    return Object.entries(sourceMap).map(([source, count]) => ({ source, count }));
+    return Object.values(map).sort((a, b) => b.valor - a.valor).slice(0, 5);
+  }, [oportunidades]);
+
+  const leadsPorOrigem = useMemo(() => {
+    const map = {};
+    leads.forEach(l => { const o = l.origem || 'outro'; map[o] = (map[o] || 0) + 1; });
+    return Object.entries(map).map(([k, v]) => ({ name: k, value: v }));
   }, [leads]);
 
-  const recentDeals = useMemo(() => {
-    return filteredOpportunities
-      .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))
-      .slice(0, 5);
-  }, [filteredOpportunities]);
-
-  const stageColors = {
-    prospecting: 'bg-blue-500',
-    qualification: 'bg-cyan-500',
-    proposal: 'bg-yellow-500',
-    negotiation: 'bg-orange-500',
-    closed_won: 'bg-green-500',
-    closed_lost: 'bg-red-500',
-  };
-
-  const statusColors = {
-    prospecting: 'bg-blue-100 text-blue-800',
-    qualification: 'bg-purple-100 text-purple-800',
-    proposal: 'bg-yellow-100 text-yellow-800',
-    negotiation: 'bg-orange-100 text-orange-800',
-    closed_won: 'bg-green-100 text-green-800',
-    closed_lost: 'bg-red-100 text-red-800',
-  };
+  const recentesOportunidades = useMemo(() =>
+    [...oportunidades].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5),
+    [oportunidades]
+  );
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Add</span>
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
-          <Button size="sm" className="bg-primary hover:bg-primary-dark">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 mt-1">Visão geral do pipeline de consórcio</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs sm:text-sm text-gray-600">Total Leads</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl sm:text-3xl font-bold">{kpis.totalLeads}</span>
-              <div className="text-xs text-green-600 mb-1">+5.3%</div>
-            </div>
-            <div className="mt-2 h-8">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[{v:10},{v:12},{v:11},{v:14},{v:13},{v:15}]}>
-                  <Line type="monotone" dataKey="v" stroke="#10b981" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs sm:text-sm text-gray-600">Deals Closed</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl sm:text-3xl font-bold">${(kpis.dealsClosedValue / 1000).toFixed(1)}k</span>
-            </div>
-            <div className="mt-2 h-8 flex items-end gap-1">
-              {[40, 55, 45, 70, 60, 80, 75].map((h, i) => (
-                <div key={i} className="flex-1 bg-cyan-400 rounded-sm" style={{height: `${h}%`}}></div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs sm:text-sm text-gray-600">Revenue This Month</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl sm:text-3xl font-bold">${(kpis.revenueThisMonth / 1000).toFixed(1)}k</span>
-              <div className="text-xs text-green-600 mb-1">+15%</div>
-            </div>
-            <div className="mt-2 h-8 flex items-end gap-1">
-              {[30, 40, 50, 45, 60, 70, 80].map((h, i) => (
-                <div key={i} className="flex-1 bg-green-400 rounded-sm" style={{height: `${h}%`}}></div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs sm:text-sm text-gray-600">Sales Target</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl sm:text-3xl font-bold">${(kpis.salesTarget / 1000).toFixed(0)}k</span>
-              <div className="text-xs text-gray-600 mb-1">{kpis.targetProgress}%</div>
-            </div>
-            <div className="mt-2 h-8 flex items-end gap-1">
-              {[30, 45, 60, 50, 70, 65, 75].map((h, i) => (
-                <div key={i} className="flex-1 rounded-sm" style={{
-                  height: `${h}%`,
-                  backgroundColor: i < 4 ? '#fbbf24' : '#3b82f6'
-                }}></div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs sm:text-sm text-gray-600">Conversion Rate</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl sm:text-3xl font-bold">{kpis.conversionRate}%</span>
-            </div>
-            <div className="mt-2 h-8">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={[{v:25},{v:28},{v:30},{v:29},{v:32},{v:31}]}>
-                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs sm:text-sm text-gray-600">Avg. Sales Cycle</span>
-            </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl sm:text-3xl font-bold">{kpis.avgSalesCycle}</span>
-              <span className="text-xs text-gray-600 mb-1">days</span>
-            </div>
-            <div className="mt-2 h-8">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[{v:30},{v:28},{v:29},{v:27},{v:26},{v:26}]}>
-                  <Line type="monotone" dataKey="v" stroke="#10b981" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+        <KPI title="Total de Leads" value={kpis.totalLeads} Icon={Target} color="blue" />
+        <KPI title="Leads Ativos" value={kpis.leadsAtivos} Icon={Target} color="orange" />
+        <KPI title="Taxa de Conversão" value={`${kpis.taxaConversao}%`} Icon={TrendingUp} color="cyan" />
+        <KPI title="Oportunidades Abertas" value={kpis.oppAbertas} Icon={DollarSign} color="purple" />
+        <KPI title="Oportunidades Ganhas" value={kpis.oppGanhas} Icon={CheckCircle} color="green" />
+        <KPI title="Pipeline Aberto" value={`R$${(kpis.valorPipelineAberto / 1000).toFixed(0)}k`} Icon={DollarSign} color="blue" />
+        <KPI title="Valor Ganho" value={`R$${(kpis.valorGanho / 1000).toFixed(0)}k`} Icon={CheckCircle} color="green" />
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow mb-6 p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" size="sm" className="sm:w-auto">
-            <Filter className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Filter</span>
-          </Button>
-          
-          <Select value={stageFilter} onValueChange={setStageFilter}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Stage" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stages</SelectItem>
-              <SelectItem value="prospecting">Prospecting</SelectItem>
-              <SelectItem value="qualification">Qualification</SelectItem>
-              <SelectItem value="proposal">Proposal</SelectItem>
-              <SelectItem value="negotiation">Negotiation</SelectItem>
-              <SelectItem value="closed_won">Won</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value="format">
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Format" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="table">Table</SelectItem>
-              <SelectItem value="cards">Cards</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              <SelectItem value="call">Call</SelectItem>
-              <SelectItem value="email">Email</SelectItem>
-              <SelectItem value="website">Website</SelectItem>
-              <SelectItem value="partner">Partner</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input placeholder="Stage: Source" className="pl-9 h-9" />
-          </div>
-
-          <Button variant="ghost" size="sm">More...</Button>
-        </div>
-      </div>
-
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Sales Pipeline by Stage</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Pipeline por Etapa (R$ mil)</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={pipelineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="stage" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                <Bar dataKey="value" fill="#65BC9E" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 mt-4 text-xs">
-              {pipelineData.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded ${stageColors[item.stage.toLowerCase().replace(' ', '_')] || 'bg-gray-400'}`}></div>
-                  <span className="text-gray-600">{item.stage}: ${(item.value/1000).toFixed(1)}k</span>
-                </div>
-              ))}
-            </div>
+            {pipelinePorEtapa.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Sem oportunidades abertas</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={pipelinePorEtapa} layout="vertical" margin={{ left: 100 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${v}k`} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
+                  <Tooltip formatter={v => `R$ ${v}k`} />
+                  <Bar dataKey="valor" fill="#6366f1" name="Valor (R$ mil)" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base sm:text-lg">Revenue Over Time</CardTitle>
-              <span className="text-xs text-gray-500">Last 6 months</span>
-            </div>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Leads por Origem</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueOverTime}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                <Legend />
-                <Area type="monotone" dataKey="won" stroke="#65BC9E" fill="#65BC9E" fillOpacity={0.6} name="Won" />
-                <Area type="monotone" dataKey="target" stroke="#2D324F" fill="#2D324F" fillOpacity={0.2} name="Target" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {leadsPorOrigem.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Sem leads cadastrados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={leadsPorOrigem} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}
+                    label={({ name, value }) => `${name}: ${value}`}>
+                    {leadsPorOrigem.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base sm:text-lg">Top Performing Sales Reps</CardTitle>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Ranking de Vendedores</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-gray-500 pb-2 border-b">
-                <span>Sales Rep</span>
-                <div className="flex gap-8">
-                  <span>Deals</span>
-                  <span>Owner</span>
-                </div>
-              </div>
-              {topPerformers.map((performer, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-8 h-8 bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-semibold">
-                      {performer.name.split(' ').map(n => n[0]).join('')}
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{performer.name}</p>
-                      <p className="text-xs text-gray-500">Top Admin</p>
+            {rankingVendedores.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Sem dados</p>
+            ) : (
+              <div className="space-y-3">
+                {rankingVendedores.map((v, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 text-xs font-bold text-gray-400">#{i + 1}</span>
+                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold">
+                        {v.nome.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium truncate max-w-[100px]">{v.nome}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green-600">R$ {(v.valor / 1000).toFixed(0)}k</p>
+                      <p className="text-xs text-gray-400">{v.ganhas} ganhas</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-semibold">${(performer.value/1000).toFixed(0)}k</span>
-                    <Badge className={performer.deals > 0 ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
-                      {performer.deals > 0 ? 'Won' : 'Active'}
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Ranking de Administradoras</CardTitle></CardHeader>
+          <CardContent>
+            {rankingAdministradoras.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Sem dados</p>
+            ) : (
+              <div className="space-y-3">
+                {rankingAdministradoras.map((a, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 text-xs font-bold text-gray-400">#{i + 1}</span>
+                      <span className="text-sm font-medium truncate max-w-[120px]">{a.nome}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green-600">R$ {(a.valor / 1000).toFixed(0)}k</p>
+                      <p className="text-xs text-gray-400">{a.ganhas} vendas</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Oportunidades Recentes</CardTitle></CardHeader>
+          <CardContent>
+            {recentesOportunidades.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Sem oportunidades</p>
+            ) : (
+              <div className="space-y-3">
+                {recentesOportunidades.map((op, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{op.name}</p>
+                      <p className="text-xs text-gray-500">{op.produto || '-'} · {op.valor_carta ? `R$ ${op.valor_carta.toLocaleString('pt-BR')}` : '-'}</p>
+                    </div>
+                    <Badge className={`ml-2 flex-shrink-0 ${STATUS_BADGE[op.status] || 'bg-gray-100 text-gray-800'}`}>
+                      {op.status || '-'}
                     </Badge>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base sm:text-lg">Lead Sources</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 h-8">
-                <Plus className="w-4 h-4 mr-1" />
-                Add
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {leadSources.slice(0, 4).map((source, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                  <div className="flex items-center gap-3">
-                    <Checkbox />
-                    <span className="text-sm">Follow up with {source.source}</span>
-                  </div>
-                  <span className="text-xs text-gray-500">{source.count}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base sm:text-lg">Leads Recentes</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {leads.slice(0, 3).length > 0 ? leads.slice(0, 3).map((lead, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs font-semibold">
-                      {lead.name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{lead.name}</p>
-                      <p className="text-xs text-gray-500">{lead.origem || lead.status}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {lead.temperatura && (
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        lead.temperatura === 'quente' ? 'bg-red-100 text-red-700' :
-                        lead.temperatura === 'morno' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>{lead.temperatura}</span>
-                    )}
-                  </span>
-                </div>
-              )) : (
-                <p className="text-sm text-gray-500 text-center py-4">Nenhum lead cadastrado</p>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Deals */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-base sm:text-lg">Recent Deals</CardTitle>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-xs text-gray-500 border-b">
-                  <th className="text-left py-2 font-medium">Lead</th>
-                  <th className="text-left py-2 font-medium">Company</th>
-                  <th className="text-left py-2 font-medium">Deal Value</th>
-                  <th className="text-left py-2 font-medium">Status</th>
-                  <th className="text-left py-2 font-medium">Owner</th>
-                  <th className="text-left py-2 font-medium">Close Date</th>
-                  <th className="text-left py-2 font-medium">Status</th>
-                  <th className="w-8"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentDeals.map((deal, idx) => (
-                  <tr key={idx} className="border-b hover:bg-gray-50">
-                    <td className="py-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-8 h-8 bg-gray-200" />
-                        <div>
-                          <p className="text-sm font-medium">{deal.name}</p>
-                          <p className="text-xs text-gray-500">{deal.account_name}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="text-sm">{deal.account_name}</td>
-                    <td className="text-sm font-semibold">${(deal.amount || 0).toLocaleString()}</td>
-                    <td>
-                      <Badge className={statusColors[deal.stage] || 'bg-gray-100 text-gray-800'}>
-                        {deal.stage === 'closed_won' ? 'Won' : deal.stage}
-                      </Badge>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6 bg-blue-100" />
-                        <span className="text-sm">{deal.owner}</span>
-                      </div>
-                    </td>
-                    <td className="text-sm text-gray-600">
-                      {new Date(deal.close_date).toLocaleDateString()}
-                    </td>
-                    <td>
-                      <Badge variant="outline" className="text-xs">
-                        {deal.stage === 'closed_won' ? 'Contacted' : 
-                         deal.stage === 'negotiation' ? 'Proposal' : 'Contacted'}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
