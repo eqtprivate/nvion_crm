@@ -38,7 +38,7 @@
         "em_analise",
         "suspensa"
       ],
-      "default": "em_analise",
+      "default": "ativa",
       "description": "Status da administradora"
     },
     "observacoes": {
