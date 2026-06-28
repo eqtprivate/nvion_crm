@@ -4,73 +4,97 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Opportunity name"
+      "description": "Nome da oportunidade"
     },
-    "account_name": {
+    "empresa_vinculada": {
       "type": "string",
-      "description": "Associated account"
+      "description": "Empresa vinculada"
     },
-    "amount": {
+    "cliente_vinculado": {
+      "type": "string",
+      "description": "Cliente vinculado"
+    },
+    "lead_vinculado": {
+      "type": "string",
+      "description": "Lead de origem"
+    },
+    "vendedor": {
+      "type": "string",
+      "description": "Vendedor responsavel"
+    },
+    "lider": {
+      "type": "string",
+      "description": "Lider comercial"
+    },
+    "administradora_pretendida": {
+      "type": "string",
+      "description": "Administradora pretendida"
+    },
+    "produto": {
+      "type": "string",
+      "description": "Produto de consorcio"
+    },
+    "valor_carta": {
       "type": "number",
-      "description": "Deal amount"
+      "description": "Valor da carta de credito"
+    },
+    "previsao_fechamento": {
+      "type": "string",
+      "format": "date",
+      "description": "Previsao de fechamento"
+    },
+    "probabilidade": {
+      "type": "number",
+      "description": "Probabilidade de fechamento (%)"
+    },
+    "motivo_perda": {
+      "type": "string",
+      "description": "Motivo da perda"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberta",
+        "ganha",
+        "perdida",
+        "suspensa"
+      ],
+      "default": "aberta",
+      "description": "Status da oportunidade"
     },
     "stage": {
       "type": "string",
       "enum": [
-        "prospecting",
-        "qualification",
-        "proposal",
-        "negotiation",
-        "closed_won",
-        "closed_lost"
+        "novo_contato",
+        "qualificacao",
+        "simulacao",
+        "proposta_enviada",
+        "documentacao",
+        "em_aprovacao",
+        "venda_concluida",
+        "perdida"
       ],
-      "default": "prospecting",
-      "description": "Sales stage"
-    },
-    "probability": {
-      "type": "number",
-      "description": "Win probability percentage"
-    },
-    "close_date": {
-      "type": "string",
-      "format": "date",
-      "description": "Expected close date"
-    },
-    "owner": {
-      "type": "string",
-      "description": "Opportunity owner"
-    },
-    "source": {
-      "type": "string",
-      "enum": [
-        "call",
-        "email",
-        "website",
-        "partner"
-      ],
-      "description": "Lead source"
+      "default": "novo_contato",
+      "description": "Etapa do funil"
     }
   },
   "required": [
     "name",
-    "amount",
+    "valor_carta",
     "stage"
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "read": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "update": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "delete": {
-      "created_by": "{{user.email}}"
-    },
-    "write": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     }
   }
 }
