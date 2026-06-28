@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Info } from 'lucide-react';
 import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
 
 const ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
@@ -122,6 +123,15 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
               </Select>
             </div>
           </div>
+          {!user && (
+            <div className="flex gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 mb-2">
+              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <p>
+                O usuário ficará com status <strong>Pendente</strong> até o primeiro acesso.
+                Informe o email cadastrado e oriente-o a usar <strong>"Esqueci minha senha"</strong> na tela de login para definir sua senha.
+              </p>
+            </div>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
