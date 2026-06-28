@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
+import { APP_VERSION } from '@/lib/version';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -106,8 +107,8 @@ export default function Layout({ children, currentPageName }) {
               to={createPageUrl(item.path)}
               onClick={() => setMobileSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                isActive(item.path) 
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium' 
+                isActive(item.path)
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'
               }`}
             >
@@ -115,6 +116,9 @@ export default function Layout({ children, currentPageName }) {
               <span className="text-sm">{item.name}</span>
             </Link>
           ))}
+          <p className="text-[10px] text-sidebar-foreground/30 text-center pt-3 pb-1 select-none">
+            Nvision v{APP_VERSION}
+          </p>
         </div>
       </nav>
     </>
