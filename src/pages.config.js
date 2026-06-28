@@ -56,6 +56,7 @@ import Oportunidades from './pages/Oportunidades';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import GestaoAcessos from './pages/GestaoAcessos';
 import __Layout from './Layout.jsx';
 
 
@@ -69,6 +70,7 @@ export const PAGES = {
     "Profile": Profile,
     "Reports": Reports,
     "Settings": Settings,
+    "GestaoAcessos": GestaoAcessos,
 }
 
 export const pagesConfig = {

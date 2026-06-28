@@ -13,10 +13,12 @@ import {
   Search,
   Bell,
   Settings,
+  ShieldCheck,
   UserCircle,
   Menu,
   X
 } from 'lucide-react';
+import { isAdminRole } from '@/lib/modules';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -30,6 +32,7 @@ import {
 export default function Layout({ children, currentPageName }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userAcesso, setUserAcesso] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -37,6 +40,10 @@ export default function Layout({ children, currentPageName }) {
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
+        if (user?.email) {
+          const acessos = await base44.entities.UsuarioAcesso.filter({ email: user.email });
+          if (acessos.length > 0) setUserAcesso(acessos[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch current user", error);
       }
@@ -44,7 +51,7 @@ export default function Layout({ children, currentPageName }) {
     fetchUser();
   }, []);
 
-  const menuItems = [
+  const allMenuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: 'Dashboard' },
     { name: 'CRM', icon: Target, path: 'Leads' },
     { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
@@ -54,9 +61,26 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Relatórios', icon: BarChart3, path: 'Reports' }
   ];
 
-  const bottomMenuItems = [
-    { name: 'Configurações', icon: Settings, path: 'Settings' }
+  const allBottomMenuItems = [
+    { name: 'Configurações', icon: Settings, path: 'Settings' },
+    { name: 'Gestão de Acessos', icon: ShieldCheck, path: 'GestaoAcessos' }
   ];
+
+  const modulosPermitidos = userAcesso?.modulos_permitidos || currentUser?.modulos_permitidos;
+  const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
+  const isAdmin = isAdminRole(currentUser?.role) || isAdminRole(userAcesso?.role);
+
+  const menuItems = allMenuItems.filter((item) =>
+    !hasModules || modulosPermitidos.includes(item.path)
+  );
+
+  const bottomMenuItems = allBottomMenuItems.filter((item) => {
+    if (item.path === 'GestaoAcessos') {
+      if (!isAdmin) return false;
+      return !hasModules || modulosPermitidos.includes('GestaoAcessos');
+    }
+    return !hasModules || modulosPermitidos.includes(item.path);
+  });
 
   const isActive = (itemName) => {
     return currentPageName === itemName;

@@ -1,14 +1,14 @@
 {
-  "name": "User",
+  "name": "UsuarioAcesso",
   "type": "object",
   "properties": {
     "display_name": {
       "type": "string",
-      "description": "Nome de exibicao"
+      "description": "Nome de exibicao do usuario"
     },
-    "profile_picture": {
+    "email": {
       "type": "string",
-      "description": "URL da foto de perfil"
+      "description": "Email do usuario"
     },
     "role": {
       "type": "string",
@@ -16,8 +16,8 @@
         "super_admin",
         "admin_empresa",
         "gestor_comercial",
-        "gestor_financeiro",
         "lider_comercial",
+        "gestor_financeiro",
         "vendedor",
         "analista_plataforma"
       ],
@@ -34,7 +34,7 @@
         "type": "string"
       },
       "default": [],
-      "description": "Modulos permitidos"
+      "description": "Modulos permitidos para o usuario"
     },
     "status": {
       "type": "string",
@@ -49,6 +49,6 @@
   },
   "required": [
     "display_name",
-    "profile_picture"
+    "email"
   ]
 }
