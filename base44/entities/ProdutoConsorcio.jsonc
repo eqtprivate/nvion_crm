@@ -1,0 +1,69 @@
+{
+  "name": "ProdutoConsorcio",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "administradora_vinculada": {
+      "type": "string",
+      "description": "Administradora vinculada"
+    },
+    "nome_produto": {
+      "type": "string",
+      "description": "Nome do produto"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "imovel",
+        "veiculo",
+        "pesados",
+        "servicos",
+        "agro",
+        "outros"
+      ],
+      "default": "veiculo",
+      "description": "Categoria do produto"
+    },
+    "percentual_comissao_padrao": {
+      "type": "number",
+      "description": "Percentual de comissao padrao"
+    },
+    "prazo_medio_pagamento": {
+      "type": "number",
+      "description": "Prazo medio de pagamento (dias)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "inativo"
+      ],
+      "default": "ativo",
+      "description": "Status do produto"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": [
+    "nome_produto"
+  ],
+  "rls": {
+    "create": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "read": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "update": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "delete": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    }
+  }
+}

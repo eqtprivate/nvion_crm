@@ -1,0 +1,80 @@
+{
+  "name": "Empresa",
+  "type": "object",
+  "properties": {
+    "razao_social": {
+      "type": "string",
+      "description": "Razao social"
+    },
+    "nome_fantasia": {
+      "type": "string",
+      "description": "Nome fantasia"
+    },
+    "cnpj": {
+      "type": "string",
+      "description": "CNPJ"
+    },
+    "responsavel_principal": {
+      "type": "string",
+      "description": "Responsavel principal"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone"
+    },
+    "endereco": {
+      "type": "string",
+      "description": "Endereco"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "em_implantacao",
+        "ativa",
+        "em_analise",
+        "elegivel_para_credito",
+        "suspensa",
+        "inativa"
+      ],
+      "default": "em_implantacao",
+      "description": "Status da empresa"
+    },
+    "plano_contratado": {
+      "type": "string",
+      "description": "Plano contratado"
+    },
+    "data_inicio_plataforma": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de inicio na plataforma"
+    },
+    "elegivel_antecipacao": {
+      "type": "boolean",
+      "default": false,
+      "description": "Elegivel para antecipacao"
+    },
+    "limite_atual_sugerido": {
+      "type": "number",
+      "description": "Limite atual sugerido"
+    },
+    "limite_utilizado": {
+      "type": "number",
+      "description": "Limite utilizado"
+    },
+    "limite_disponivel": {
+      "type": "number",
+      "description": "Limite disponivel"
+    },
+    "observacoes_internas": {
+      "type": "string",
+      "description": "Observacoes internas"
+    }
+  },
+  "required": [
+    "razao_social"
+  ]
+}

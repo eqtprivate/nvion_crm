@@ -5,16 +5,17 @@ import { base44 } from '@/api/base44Client';
 import { 
   LayoutDashboard, 
   Users, 
-  UserCircle, 
   Target, 
-  Calendar,
-  Activity,
+  TrendingUp,
+  Building2,
   BarChart3,
   ChevronDown,
   Search,
-  Mail,
   Bell,
-  Settings
+  Settings,
+  UserCircle,
+  Menu,
+  X
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Layout({ children, currentPageName }) {
-  const [expandedMenu, setExpandedMenu] = useState('Dashboard');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const location = useLocation();
 
@@ -45,154 +46,160 @@ export default function Layout({ children, currentPageName }) {
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: 'Dashboard' },
-    { name: 'Accounts', icon: Users, path: 'Accounts' },
-    { name: 'Contacts', icon: UserCircle, path: 'Contacts' },
-    { name: 'Leads', icon: Target, path: 'Leads' },
-    { name: 'Calendar', icon: Calendar, path: 'Calendar' },
-    { name: 'Activities', icon: Activity, path: 'Activities' },
-    { name: 'Reports', icon: BarChart3, path: 'Reports' }
+    { name: 'CRM', icon: Target, path: 'Leads' },
+    { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
+    { name: 'Clientes', icon: Users, path: 'Contacts' },
+    { name: 'Administradoras', icon: Building2, path: 'Accounts' },
+    { name: 'Equipe Comercial', icon: UserCircle, path: 'EquipeComercial' },
+    { name: 'Relatórios', icon: BarChart3, path: 'Reports' }
   ];
 
   const bottomMenuItems = [
-    { name: 'Settings', icon: Settings, path: 'Settings' }
+    { name: 'Configurações', icon: Settings, path: 'Settings' }
   ];
 
   const isActive = (itemName) => {
     return currentPageName === itemName;
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="hidden md:flex w-64 bg-[#2563eb] text-white flex-col">
-        {/* Logo */}
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 bg-[#2563eb] rounded-full"></div>
+  const SidebarContent = () => (
+    <>
+      {/* Logo */}
+      <div className="p-6 flex items-center gap-3 border-b border-sidebar-border">
+        <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-5 h-5 border-2 border-white rounded-md flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-sm"></div>
           </div>
-          <span className="text-2xl font-bold">CRM</span>
         </div>
+        <div>
+          <span className="text-xl font-extrabold text-white tracking-tight">Nvision</span>
+          <span className="text-xs text-sidebar-foreground ml-1.5 font-medium">CRM</span>
+        </div>
+      </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 space-y-1 flex flex-col">
-          <div className="space-y-1">
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1 flex flex-col overflow-y-auto">
+        <div className="space-y-0.5">
           {menuItems.map((item) => (
-            <div key={item.name}>
-              {item.subItems ? (
-                <div>
-                  <button
-                    onClick={() => setExpandedMenu(expandedMenu === item.name ? null : item.name)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-                      expandedMenu === item.name ? 'bg-white/10' : 'hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className="w-5 h-5" />
-                      <span className="font-medium">{item.name}</span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${expandedMenu === item.name ? 'rotate-180' : ''}`} />
-                  </button>
-                  {expandedMenu === item.name && (
-                    <div className="ml-6 mt-1 space-y-1">
-                      {item.subItems.map((subItem) => (
-                        <Link
-                          key={subItem.name}
-                          to={createPageUrl(subItem.name)}
-                          className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
-                            isActive(subItem.name) ? 'bg-white/20 font-medium' : 'hover:bg-white/5'
-                          }`}
-                        >
-                          {subItem.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  to={createPageUrl(item.path)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive(item.path) ? 'bg-white/10' : 'hover:bg-white/5'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              )}
-              </div>
-              ))}
-              </div>
-              <div className="mt-auto space-y-1 pt-4 border-t border-white/10">
-              {bottomMenuItems.map((item) => (
-              <Link
-                key={item.name}
-                to={createPageUrl(item.path)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive(item.path) ? 'bg-white/10' : 'hover:bg-white/5'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.name}</span>
-              </Link>
-              ))}
-              </div>
-              </nav>
-              </div>
+            <Link
+              key={item.name}
+              to={createPageUrl(item.path)}
+              onClick={() => setMobileSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                isActive(item.path) 
+                  ? 'bg-sidebar-accent text-white font-medium shadow-sm' 
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-white'
+              }`}
+            >
+              <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+              <span className="text-sm">{item.name}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-auto pt-4 border-t border-sidebar-border space-y-0.5">
+          {bottomMenuItems.map((item) => (
+            <Link
+              key={item.name}
+              to={createPageUrl(item.path)}
+              onClick={() => setMobileSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                isActive(item.path) 
+                  ? 'bg-sidebar-accent text-white font-medium' 
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-white'
+              }`}
+            >
+              <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+              <span className="text-sm">{item.name}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+    </>
+  );
+
+  return (
+    <div className="flex h-screen bg-slate-50">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex w-64 bg-sidebar flex-col fixed inset-y-0 left-0 z-30">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile Sidebar */}
+      {mobileSidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
+          <div className="absolute inset-y-0 left-0 w-64 bg-sidebar flex-col flex">
+            <button 
+              className="absolute top-5 right-4 text-sidebar-foreground hover:text-white"
+              onClick={() => setMobileSidebarOpen(false)}
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <SidebarContent />
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="hidden sm:flex flex-1 max-w-xl">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
+          <div className="flex items-center gap-3 flex-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden"
+              onClick={() => setMobileSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <div className="hidden sm:flex flex-1 max-w-md">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search Anything..."
-                  className="pl-10 bg-gray-50 border-gray-200"
+                  placeholder="Buscar..."
+                  className="pl-9 bg-gray-50 border-gray-200 h-9 text-sm"
                 />
               </div>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button variant="ghost" size="icon" className="text-gray-600 relative">
+              <Bell className="w-[18px] h-[18px]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+            </Button>
             
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button variant="ghost" size="icon" className="text-gray-600 hidden sm:flex">
-                <Mail className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-600 hidden sm:flex">
-                <Bell className="w-5 h-5" />
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-1 sm:gap-2">
-                    <span className="text-sm font-medium text-gray-700 hidden sm:inline">
-                      Hi, {currentUser?.display_name || currentUser?.full_name || currentUser?.email || 'Guest'}
-                    </span>
-                    <Avatar className="w-8 h-8">
-                      {currentUser?.profile_picture ? (
-                        <img src={currentUser.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
-                          {currentUser?.display_name ? currentUser.display_name.charAt(0).toUpperCase() : currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'G'}
-                        </div>
-                      )}
-                    </Avatar>
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to={createPageUrl('Profile')}>Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => base44.auth.logout()}>Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 px-2">
+                  <Avatar className="w-8 h-8">
+                    {currentUser?.profile_picture ? (
+                      <img src={currentUser.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        {currentUser?.display_name ? currentUser.display_name.charAt(0).toUpperCase() : currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'N'}
+                      </div>
+                    )}
+                  </Avatar>
+                  <span className="text-sm font-medium text-gray-700 hidden lg:inline">
+                    {currentUser?.display_name || currentUser?.full_name || 'Usuário'}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to={createPageUrl('Profile')}>Perfil</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => base44.auth.logout()}>Sair</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-gray-50">
+        <main className="flex-1 overflow-auto bg-slate-50">
           {children}
         </main>
       </div>

@@ -1,0 +1,55 @@
+{
+  "name": "EquipeComercial",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "nome_equipe": {
+      "type": "string",
+      "description": "Nome da equipe"
+    },
+    "lider_responsavel": {
+      "type": "string",
+      "description": "Lider responsavel"
+    },
+    "vendedores_vinculados": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Vendedores vinculados"
+    },
+    "meta_mensal": {
+      "type": "number",
+      "description": "Meta mensal"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "inativo"
+      ],
+      "default": "ativo",
+      "description": "Status da equipe"
+    }
+  },
+  "required": [
+    "nome_equipe"
+  ],
+  "rls": {
+    "create": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "read": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "update": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "delete": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "description": "Nome de exibicao"
+    },
+    "profile_picture": {
+      "type": "string",
+      "description": "URL da foto de perfil"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "super_admin",
+        "admin_empresa",
+        "gestor_comercial",
+        "gestor_financeiro",
+        "lider_comercial",
+        "vendedor",
+        "analista_plataforma"
+      ],
+      "default": "vendedor",
+      "description": "Perfil do usuario"
+    },
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    }
+  },
+  "required": [
+    "display_name",
+    "profile_picture"
+  ]
+}
