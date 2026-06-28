@@ -49,11 +49,11 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex justify-center mb-8">
-            <img
-              src="https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png"
-              alt="Nvision"
-              className="h-12 w-auto"
-            />
+            <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/b0d5da66e_nvion_logo_white.png"
+
+            alt="Nvision"
+            className="h-12 w-auto" />
+            
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Bem-vindo</h1>
@@ -69,10 +69,10 @@ export default function Login() {
                   type="email"
                   required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
-                  className="pl-10"
-                />
+                  className="pl-10" />
+                
               </div>
             </div>
 
@@ -85,25 +85,25 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-10 pr-10"
-                />
+                  className="pl-10 pr-10" />
+                
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+            {error &&
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
                 {error}
               </div>
-            )}
+            }
 
             <Button type="submit" className="w-full bg-primary hover:bg-primary-dark" disabled={isLoading}>
               {isLoading ? 'Entrando...' : 'Entrar'}
@@ -115,6 +115,6 @@ export default function Login() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
