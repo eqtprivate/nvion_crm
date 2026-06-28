@@ -3,10 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Building2, MoreVertical, Download, Star, AlertCircle } from 'lucide-react';
+import { Plus, Search, Building2, MoreVertical, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -24,7 +22,6 @@ import {
 import AccountDialog from '../components/forms/AccountDialog';
 import EditAccountDialog from '../components/forms/EditAccountDialog';
 import AccountKPICard from '../components/accounts/AccountKPICard';
-import AccountFilters from '../components/accounts/AccountFilters';
 import AccountInsightsDialog from '../components/accounts/AccountInsightsDialog';
 
 export default function Accounts() {
@@ -33,27 +30,11 @@ export default function Accounts() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [insightsDialogOpen, setInsightsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [filters, setFilters] = useState({
-    owner: 'all',
-    industry: 'all',
-    revenue: 'all',
-    tiers: [],
-  });
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: () => base44.entities.Account.list('-created_date'),
-  });
-
-  const { data: activities = [] } = useQuery({
-    queryKey: ['activities'],
-    queryFn: () => base44.entities.Activity.list('-date'),
-  });
-
-  const { data: contacts = [] } = useQuery({
-    queryKey: ['contacts'],
-    queryFn: () => base44.entities.Contact.list('-created_date'),
   });
 
   const { data: opportunities = [] } = useQuery({
@@ -85,77 +66,24 @@ export default function Accounts() {
     },
   });
 
-  const enrichedAccounts = useMemo(() => {
-    return accounts.map(account => {
-      const accountActivities = activities.filter(a => a.related_to_name === account.name);
-      const lastActivity = accountActivities.length > 0 
-        ? new Date(Math.max(...accountActivities.map(a => new Date(a.date))))
-        : null;
-      
-      const openDeals = opportunities.filter(
-        o => o.account_name === account.name && 
-        o.stage !== 'closed_won' && 
-        o.stage !== 'closed_lost'
-      ).length;
-
-      const overdueActivities = accountActivities.filter(a => 
-        new Date(a.date) < new Date() && !a.completed
-      ).length;
-
-      // Assign random tier for demo (in real app, this would be in the entity)
-      const tiers = ['Key', 'A', 'B', 'C'];
-      const tier = account.annual_revenue > 1000000 ? 'Key' : 
-                   account.annual_revenue > 500000 ? 'A' : 
-                   account.annual_revenue > 100000 ? 'B' : 'C';
-
-      // Calculate health status
-      const daysSinceLastActivity = lastActivity 
-        ? Math.floor((new Date() - lastActivity) / (1000 * 60 * 60 * 24))
-        : 999;
-      
-      const health = overdueActivities > 0 ? 'Needs Attention' :
-                     daysSinceLastActivity > 30 ? 'At Risk' : 'Healthy';
-
-      return {
-        ...account,
-        tier,
-        lastActivity,
-        openDeals,
-        overdueActivities,
-        health,
-        owner: account.created_by || 'John Kuy',
-      };
-    });
-  }, [accounts, activities, opportunities]);
-
   const filteredAccounts = useMemo(() => {
-    return enrichedAccounts.filter(account => {
+    return accounts.filter(account => {
       const matchSearch = account.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchIndustry = filters.industry === 'all' || account.industry === filters.industry;
-      const matchTier = filters.tiers.length === 0 || filters.tiers.includes(account.tier) || 
-                        (filters.tiers.includes('Key Account') && account.tier === 'Key');
-      
-      return matchSearch && matchIndustry && matchTier;
+      return matchSearch;
     });
-  }, [enrichedAccounts, searchTerm, filters]);
+  }, [accounts, searchTerm]);
 
   const kpis = useMemo(() => {
-    const totalAccounts = enrichedAccounts.length;
-    const activeAccounts = enrichedAccounts.filter(a => a.status === 'active').length;
-    const keyAccounts = enrichedAccounts.filter(a => a.tier === 'Key').length;
+    const totalAccounts = accounts.length;
+    const activeAccounts = accounts.filter(a => a.status === 'ativa').length;
+    const keyAccounts = accounts.filter(a => a.status === 'ativa').length;
     const totalRevenue = opportunities
-      .filter(o => o.stage === 'closed_won')
-      .reduce((sum, o) => sum + (o.amount || 0), 0);
-    const overdueAccounts = enrichedAccounts.filter(a => a.overdueActivities > 0).length;
+      .filter(o => o.status === 'ganha')
+      .reduce((sum, o) => sum + (o.valor_carta || 0), 0);
+    const overdueAccounts = accounts.filter(a => a.status === 'em_analise').length;
 
-    return {
-      totalAccounts,
-      activeAccounts,
-      keyAccounts,
-      totalRevenue,
-      overdueAccounts,
-    };
-  }, [enrichedAccounts, opportunities]);
+    return { totalAccounts, activeAccounts, keyAccounts, totalRevenue, overdueAccounts };
+  }, [accounts, opportunities]);
 
   const handleEdit = (account) => {
     setSelectedAccount(account);
@@ -167,58 +95,33 @@ export default function Accounts() {
     setInsightsDialogOpen(true);
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
   const exportToCSV = () => {
     if (accounts.length === 0) return;
-    
-    const headers = ['Name', 'Industry', 'Phone', 'Email', 'Website', 'Annual Revenue', 'Employees', 'Status', 'Tier', 'Health'];
+    const headers = ['Nome', 'CNPJ', 'Contato', 'Email', 'Telefone', 'Prazo Médio Pagamento', 'Status'];
     const rows = filteredAccounts.map(account => [
       account.name || '',
-      account.industry || '',
-      account.phone || '',
+      account.cnpj || '',
+      account.contato || '',
       account.email || '',
-      account.website || '',
-      account.annual_revenue || '',
-      account.employees || '',
+      account.telefone || '',
+      account.prazo_medio_pagamento || '',
       account.status || '',
-      account.tier || '',
-      account.health || ''
     ]);
-    
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-    
+    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `accounts_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `administradoras_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
-  const getTierBadge = (tier) => {
-    const colors = {
-      'Key': 'bg-yellow-100 text-yellow-800',
-      'A': 'bg-green-100 text-green-800',
-      'B': 'bg-blue-100 text-blue-800',
-      'C': 'bg-gray-100 text-gray-800',
-    };
-    return colors[tier] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getHealthBadge = (health) => {
-    const colors = {
-      'Healthy': 'bg-green-100 text-green-800',
-      'At Risk': 'bg-yellow-100 text-yellow-800',
-      'Needs Attention': 'bg-red-100 text-red-800',
-    };
-    return colors[health] || 'bg-gray-100 text-gray-800';
+  const statusColors = {
+    ativa: 'bg-green-100 text-green-800',
+    inativa: 'bg-gray-100 text-gray-800',
+    em_analise: 'bg-yellow-100 text-yellow-800',
+    suspensa: 'bg-red-100 text-red-800',
   };
 
   return (
@@ -281,176 +184,96 @@ export default function Accounts() {
         />
       </div>
 
-      <div className="flex gap-6">
-        <div className="flex-1">
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Select value="table">
-                  <SelectTrigger className="w-full sm:w-32">
-                    <SelectValue placeholder="View" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="table">Table</SelectItem>
-                    <SelectItem value="cards">Cards</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value="format">
-                  <SelectTrigger className="w-full sm:w-32">
-                    <SelectValue placeholder="Format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="detailed">Detailed</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button variant="outline" size="sm">More</Button>
-
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search accounts..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
-
-                <Button variant="outline" size="sm" onClick={exportToCSV}>
-                  Export CSV
-                </Button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Account Name</TableHead>
-                    <TableHead>Industry</TableHead>
-                    <TableHead>Revenue</TableHead>
-                    <TableHead>Tier</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>Last Activity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredAccounts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                        No accounts found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredAccounts.map((account) => (
-                      <TableRow 
-                        key={account.id} 
-                        className={`cursor-pointer hover:bg-gray-50 ${
-                          account.tier === 'Key' ? 'bg-yellow-50/30' : ''
-                        } ${account.overdueActivities > 0 ? 'border-l-4 border-l-red-500' : ''}`}
-                        onClick={() => handleViewInsights(account)}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <Building2 className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{account.name}</p>
-                                {account.tier === 'Key' && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
-                                {account.overdueActivities > 0 && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    {account.overdueActivities} Overdue
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-500">{account.email}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{account.industry || '-'}</TableCell>
-                        <TableCell>
-                          {account.annual_revenue ? `$${(account.annual_revenue / 1000000).toFixed(1)}M` : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getTierBadge(account.tier)}>
-                            {account.tier}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-6 h-6 bg-blue-100 text-blue-600 text-xs font-semibold flex items-center justify-center">
-                              {account.owner?.split(' ').map(n => n[0]).join('') || 'A'}
-                            </Avatar>
-                            <span className="text-sm">{account.owner}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-gray-600">
-                            {account.lastActivity 
-                              ? new Date(account.lastActivity).toLocaleDateString()
-                              : 'No activity'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getHealthBadge(account.health)}>
-                            {account.health}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(account);
-                              }}>Edit</DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewInsights(account);
-                              }}>View Insights</DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteMutation.mutate(account.id);
-                                }}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-4 border-b">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Buscar administradoras..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9"
+            />
           </div>
         </div>
 
-        {/* Right Sidebar Filters */}
-        <div className="hidden lg:block w-80">
-          <AccountFilters
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          />
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead className="hidden md:table-cell">CNPJ</TableHead>
+                <TableHead className="hidden lg:table-cell">Contato</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden lg:table-cell">Prazo Médio (dias)</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">Carregando...</TableCell>
+                </TableRow>
+              ) : filteredAccounts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <Building2 className="w-12 h-12 text-gray-300" />
+                      <span className="font-medium">Nenhuma administradora encontrada</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredAccounts.map((account) => (
+                  <TableRow key={account.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewInsights(account)}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Building2 className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{account.name}</p>
+                          <p className="text-xs text-gray-500">{account.telefone || ''}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">{account.cnpj || '-'}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm">{account.contato || '-'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">{account.email || '-'}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm">
+                      {account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento}d` : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[account.status] || 'bg-gray-100 text-gray-800'}>
+                        {account.status || '-'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(account); }}>
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(account.id); }}
+                          >
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -473,8 +296,8 @@ export default function Accounts() {
         open={insightsDialogOpen}
         onOpenChange={setInsightsDialogOpen}
         account={selectedAccount}
-        activities={activities}
-        contacts={contacts}
+        activities={[]}
+        contacts={[]}
         opportunities={opportunities}
       />
     </div>

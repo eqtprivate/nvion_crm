@@ -2,13 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Target, 
-  TrendingUp, 
-  DollarSign, 
-  Clock, 
+import {
+  Target,
+  TrendingUp,
+  DollarSign,
+  Clock,
   TrendingDown,
-  Activity,
   Users
 } from 'lucide-react';
 import { 
@@ -25,7 +24,6 @@ import GlobalFilters from '../components/reports/GlobalFilters';
 import ReportKPICard from '../components/reports/ReportKPICard';
 import SalesOverviewTab from '../components/reports/SalesOverviewTab';
 import PipelineForecastTab from '../components/reports/PipelineForecastTab';
-import ActivityProductivityTab from '../components/reports/ActivityProductivityTab';
 import LeadSourcesTab from '../components/reports/LeadSourcesTab';
 import AccountHealthTab from '../components/reports/AccountHealthTab';
 import SavedReportsDialog from '../components/reports/SavedReportsDialog';
@@ -65,11 +63,6 @@ export default function Reports() {
   const { data: opportunities = [] } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => base44.entities.Opportunity.list(),
-  });
-
-  const { data: activities = [] } = useQuery({
-    queryKey: ['activities'],
-    queryFn: () => base44.entities.Activity.list(),
   });
 
   // Get unique owners
@@ -113,14 +106,8 @@ export default function Reports() {
       return dateMatch && sourceMatch;
     });
 
-    const filteredActivities = activities.filter(activity => {
-      const dateMatch = filters.dateRange === 'all' || 
-        (activity.date && isWithinInterval(parseISO(activity.date), { start: dateStart, end: now }));
-      return dateMatch;
-    });
-
-    return { filteredOpportunities, filteredLeads, filteredActivities, filteredContacts: contacts, filteredAccounts: accounts };
-  }, [opportunities, leads, activities, contacts, accounts, filters]);
+    return { filteredOpportunities, filteredLeads, filteredContacts: contacts, filteredAccounts: accounts };
+  }, [opportunities, leads, contacts, accounts, filters]);
 
   // KPI Calculations with sparkline data
   const kpis = useMemo(() => {
@@ -330,21 +317,18 @@ export default function Reports() {
 
       {/* Tabs */}
       <Tabs defaultValue="sales" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto bg-white border">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto bg-white border">
           <TabsTrigger value="sales" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Sales Overview
+            Visão de Vendas
           </TabsTrigger>
           <TabsTrigger value="pipeline" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
             Pipeline & Forecast
           </TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Activity & Productivity
-          </TabsTrigger>
           <TabsTrigger value="sources" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Lead Sources
+            Origens de Leads
           </TabsTrigger>
           <TabsTrigger value="accounts" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Account Health
+            Saúde das Administradoras
           </TabsTrigger>
         </TabsList>
 
@@ -356,16 +340,9 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="pipeline">
-          <PipelineForecastTab 
+          <PipelineForecastTab
             filteredOpportunities={filteredData.filteredOpportunities}
-            filteredActivities={filteredData.filteredActivities}
-          />
-        </TabsContent>
-
-        <TabsContent value="activity">
-          <ActivityProductivityTab 
-            filteredActivities={filteredData.filteredActivities}
-            filteredOpportunities={filteredData.filteredOpportunities}
+            filteredActivities={[]}
           />
         </TabsContent>
 
@@ -377,9 +354,9 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="accounts">
-          <AccountHealthTab 
+          <AccountHealthTab
             filteredAccounts={filteredData.filteredAccounts}
-            filteredActivities={filteredData.filteredActivities}
+            filteredActivities={[]}
             filteredOpportunities={filteredData.filteredOpportunities}
           />
         </TabsContent>

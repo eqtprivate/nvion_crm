@@ -3,91 +3,69 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Phone, Mail, MessageCircle, Building2, Calendar, Star, Activity } from 'lucide-react';
+import { X, Phone, Mail, MessageCircle, Building2, MapPin, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import moment from 'moment';
+
+const statusLabels = {
+  lead: 'Lead',
+  em_negociacao: 'Em Negociação',
+  cliente_ativo: 'Cliente Ativo',
+  venda_concluida: 'Venda Concluída',
+  perdido: 'Perdido',
+  inativo: 'Inativo',
+};
+
+const statusColors = {
+  lead: 'bg-blue-100 text-blue-800',
+  em_negociacao: 'bg-yellow-100 text-yellow-800',
+  cliente_ativo: 'bg-green-100 text-green-800',
+  venda_concluida: 'bg-purple-100 text-purple-800',
+  perdido: 'bg-red-100 text-red-800',
+  inativo: 'bg-gray-100 text-gray-800',
+};
 
 export default function ContactDetailsPanel({ contact, onClose }) {
-  const { data: activities = [] } = useQuery({
-    queryKey: ['activities', contact?.id],
-    queryFn: () => base44.entities.Activity.filter({ related_to_id: contact.id }),
-    enabled: !!contact,
-  });
-
   const { data: opportunities = [] } = useQuery({
     queryKey: ['opportunities', contact?.id],
-    queryFn: () => base44.entities.Opportunity.filter({ account_name: contact.company }),
-    enabled: !!contact?.company,
+    queryFn: () => base44.entities.Opportunity.list(),
+    enabled: !!contact,
+    select: (data) => data.filter(o => o.cliente_vinculado === contact?.id),
   });
 
   if (!contact) return null;
 
-  const priorityColors = {
-    'Key': 'bg-amber-100 text-amber-800 border-amber-300',
-    'Standard': 'bg-blue-100 text-blue-800 border-blue-300',
-    'At Risk': 'bg-red-100 text-red-800 border-red-300'
-  };
-
-  const engagementColors = {
-    'High': 'bg-green-600',
-    'Medium': 'bg-yellow-600',
-    'Low': 'bg-red-600'
-  };
-
   return (
-    <div className="fixed top-0 right-0 h-full w-full md:w-[500px] bg-white shadow-2xl z-50 overflow-y-auto border-l">
+    <div className="fixed top-0 right-0 h-full w-full md:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto border-l">
       <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
-        <h2 className="text-xl font-bold">Contact Details</h2>
+        <h2 className="text-xl font-bold">Detalhes do Cliente</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="w-5 h-5" />
         </Button>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Profile Section */}
+        {/* Profile */}
         <div className="text-center pb-6 border-b">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl font-bold text-white">
               {contact.name?.charAt(0)?.toUpperCase()}
             </span>
           </div>
           <h3 className="text-2xl font-bold mb-1">{contact.name}</h3>
-          <p className="text-gray-600 mb-3">{contact.position || 'No position'}</p>
-          
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Badge className={priorityColors[contact.priority] || priorityColors['Standard']}>
-              {contact.priority || 'Standard'}
-            </Badge>
-            {contact.role && (
-              <Badge variant="outline">{contact.role}</Badge>
-            )}
-          </div>
-
-          {contact.engagement_level && (
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <span className="text-gray-600">Engagement:</span>
-              <div className="flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-6 rounded ${
-                      i < (contact.engagement_level === 'High' ? 3 : contact.engagement_level === 'Medium' ? 2 : 1)
-                        ? engagementColors[contact.engagement_level]
-                        : 'bg-gray-200'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+          {contact.cpf_cnpj && (
+            <p className="text-gray-500 text-sm mb-2">{contact.cpf_cnpj}</p>
           )}
+          <Badge className={statusColors[contact.status] || 'bg-gray-100 text-gray-800'}>
+            {statusLabels[contact.status] || contact.status}
+          </Badge>
         </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" size="sm" className="w-full">
             <Phone className="w-4 h-4 mr-1" />
-            Call
+            Ligar
           </Button>
           <Button variant="outline" size="sm" className="w-full">
             <Mail className="w-4 h-4 mr-1" />
@@ -102,83 +80,67 @@ export default function ContactDetailsPanel({ contact, onClose }) {
         {/* Contact Info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Contact Information</CardTitle>
+            <CardTitle className="text-lg">Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-start gap-3">
-              <Mail className="w-4 h-4 text-gray-400 mt-1" />
-              <div className="flex-1">
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="font-medium">{contact.email}</p>
+            {contact.email && (
+              <div className="flex items-start gap-3">
+                <Mail className="w-4 h-4 text-gray-400 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium">{contact.email}</p>
+                </div>
               </div>
-            </div>
+            )}
             {contact.phone && (
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-gray-400 mt-1" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">Phone</p>
+                <div>
+                  <p className="text-sm text-gray-500">Telefone</p>
                   <p className="font-medium">{contact.phone}</p>
                 </div>
               </div>
             )}
-            {contact.company && (
+            {contact.empresa_vinculada && (
               <div className="flex items-start gap-3">
                 <Building2 className="w-4 h-4 text-gray-400 mt-1" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">Company</p>
-                  <p className="font-medium">{contact.company}</p>
-                  {contact.company_size && (
-                    <p className="text-sm text-gray-500">{contact.company_size}</p>
-                  )}
+                <div>
+                  <p className="text-sm text-gray-500">Empresa</p>
+                  <p className="font-medium">{contact.empresa_vinculada}</p>
                 </div>
               </div>
             )}
-            {contact.last_activity_date && (
+            {(contact.cidade || contact.estado) && (
               <div className="flex items-start gap-3">
-                <Calendar className="w-4 h-4 text-gray-400 mt-1" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">Last Activity</p>
-                  <p className="font-medium">{moment(contact.last_activity_date).format('MMM D, YYYY')}</p>
+                <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Localização</p>
+                  <p className="font-medium">{[contact.cidade, contact.estado].filter(Boolean).join(' — ')}</p>
+                </div>
+              </div>
+            )}
+            {contact.origem && (
+              <div className="flex items-start gap-3">
+                <FileText className="w-4 h-4 text-gray-400 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Origem</p>
+                  <p className="font-medium">{contact.origem}</p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Tabs Section */}
-        <Tabs defaultValue="activities" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="activities">Activities</TabsTrigger>
-            <TabsTrigger value="deals">Deals</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
+        {/* Tabs */}
+        <Tabs defaultValue="oportunidades" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="oportunidades">Oportunidades</TabsTrigger>
+            <TabsTrigger value="observacoes">Observações</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="activities" className="mt-4 space-y-3">
-            {activities.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No activities yet</p>
-            ) : (
-              activities.slice(0, 5).map((activity) => (
-                <Card key={activity.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Activity className="w-4 h-4 text-blue-600 mt-1" />
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.type}</p>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {moment(activity.date).format('MMM D, YYYY h:mm A')}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="deals" className="mt-4 space-y-3">
+          <TabsContent value="oportunidades" className="mt-4 space-y-3">
             {opportunities.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No deals found</p>
+              <p className="text-center text-gray-500 py-8">Nenhuma oportunidade vinculada</p>
             ) : (
               opportunities.map((opp) => (
                 <Card key={opp.id}>
@@ -186,9 +148,11 @@ export default function ContactDetailsPanel({ contact, onClose }) {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium">{opp.name}</p>
-                        <p className="text-sm text-gray-600">${opp.amount?.toLocaleString()}</p>
+                        {opp.valor_carta && (
+                          <p className="text-sm text-gray-600">R$ {opp.valor_carta.toLocaleString('pt-BR')}</p>
+                        )}
                       </div>
-                      <Badge>{opp.stage}</Badge>
+                      <Badge>{opp.status}</Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -196,8 +160,12 @@ export default function ContactDetailsPanel({ contact, onClose }) {
             )}
           </TabsContent>
 
-          <TabsContent value="notes" className="mt-4">
-            <p className="text-center text-gray-500 py-8">No notes yet</p>
+          <TabsContent value="observacoes" className="mt-4">
+            {contact.observacoes ? (
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{contact.observacoes}</p>
+            ) : (
+              <p className="text-center text-gray-500 py-8">Sem observações registradas</p>
+            )}
           </TabsContent>
         </Tabs>
       </div>
