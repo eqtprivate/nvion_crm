@@ -13,6 +13,8 @@ import EquipeComercial from './pages/EquipeComercial';
 import Leads from './pages/Leads';
 import Oportunidades from './pages/Oportunidades';
 import ProdutoConsorcio from './pages/ProdutoConsorcio';
+import RegrasComissao from './pages/RegrasComissao';
+import VendasConsorcio from './pages/VendasConsorcio';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -27,6 +29,8 @@ export const PAGES = {
     "Leads": Leads,
     "Oportunidades": Oportunidades,
     "ProdutoConsorcio": ProdutoConsorcio,
+    "RegrasComissao": RegrasComissao,
+    "VendasConsorcio": VendasConsorcio,
     "Profile": Profile,
     "Reports": Reports,
     "Settings": Settings,
