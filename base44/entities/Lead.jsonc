@@ -4,51 +4,98 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Lead name"
+      "description": "Nome do lead"
     },
     "email": {
       "type": "string",
-      "description": "Lead email"
+      "description": "Email do lead"
     },
     "phone": {
       "type": "string",
-      "description": "Lead phone"
+      "description": "Telefone do lead"
     },
-    "company": {
+    "empresa_vinculada": {
       "type": "string",
-      "description": "Company name"
+      "description": "Empresa (consorciadora) vinculada"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "indicacao",
+        "instagram",
+        "google",
+        "site",
+        "whatsapp",
+        "campanha_paga",
+        "base_propria",
+        "parceiro",
+        "evento",
+        "outro"
+      ],
+      "default": "base_propria",
+      "description": "Origem do lead"
+    },
+    "campanha": {
+      "type": "string",
+      "description": "Campanha de origem"
+    },
+    "produto_interesse": {
+      "type": "string",
+      "description": "Produto de consorcio de interesse"
+    },
+    "valor_estimado_carta": {
+      "type": "number",
+      "description": "Valor estimado da carta de credito"
+    },
+    "administradora_interesse": {
+      "type": "string",
+      "description": "Administradora de interesse"
+    },
+    "vendedor_responsavel": {
+      "type": "string",
+      "description": "Vendedor responsavel"
+    },
+    "lider_vinculado": {
+      "type": "string",
+      "description": "Lider comercial vinculado"
+    },
+    "temperatura": {
+      "type": "string",
+      "enum": [
+        "frio",
+        "morno",
+        "quente"
+      ],
+      "default": "frio",
+      "description": "Temperatura do lead"
     },
     "status": {
       "type": "string",
       "enum": [
-        "new",
-        "contacted",
-        "qualified",
-        "unqualified",
-        "won",
-        "lost"
+        "novo_contato",
+        "qualificacao",
+        "simulacao",
+        "proposta_enviada",
+        "documentacao",
+        "em_aprovacao",
+        "venda_concluida",
+        "perdida"
       ],
-      "default": "new"
+      "default": "novo_contato",
+      "description": "Etapa do funil de vendas"
     },
-    "source": {
-      "type": "string",
-      "enum": [
-        "call",
-        "email",
-        "website",
-        "partner",
-        "referral"
-      ],
-      "description": "Lead source"
-    },
-    "value": {
-      "type": "number",
-      "description": "Deal value"
-    },
-    "next_follow_up": {
+    "data_ultimo_contato": {
       "type": "string",
       "format": "date",
-      "description": "Next follow-up date"
+      "description": "Data do ultimo contato"
+    },
+    "proxima_acao": {
+      "type": "string",
+      "description": "Proxima acao comercial"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
     }
   },
   "required": [
@@ -56,19 +103,16 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "read": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "update": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "delete": {
-      "created_by": "{{user.email}}"
-    },
-    "write": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     }
   }
 }
