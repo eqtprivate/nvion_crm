@@ -20,7 +20,7 @@ export function saveSession(user) {
       modulos_permitidos: user.modulos_permitidos,
       status: user.status,
     },
-    expiresAt: Date.now() + 8 * 60 * 60 * 1000, // 8h
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000,
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
