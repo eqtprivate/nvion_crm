@@ -35,13 +35,13 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
 
   const allMenuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: 'Dashboard' },
-    { name: 'CRM', icon: Target, path: 'Leads' },
+    { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
+    { name: 'Prospecção', icon: Target, path: 'Leads' },
     { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
     { name: 'Clientes', icon: Users, path: 'Contacts' },
     { name: 'Administradoras', icon: Building2, path: 'Accounts' },
-    { name: 'Equipe Comercial', icon: UserCircle, path: 'EquipeComercial' },
-    { name: 'Relatórios', icon: BarChart3, path: 'Reports' }
+    { name: 'Equipe e Vendedores', icon: UserCircle, path: 'EquipeComercial' },
+    { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
   ];
 
   const allBottomMenuItems = [
@@ -71,16 +71,16 @@ export default function Layout({ children, currentPageName }) {
 
   const SidebarContent = () => (
     <>
-      {/* Logo Nvion */}
+      {/* Logo NVION */}
       <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
         <img
           src="https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png"
-          alt="Nvion"
+          alt="NVION"
           className="h-8 w-auto"
         />
       </div>
 
-      {/* Navigation */}
+      {/* Navegação */}
       <nav className="flex-1 px-3 py-4 space-y-1 flex flex-col overflow-y-auto">
         <div className="space-y-0.5">
           {menuItems.map((item) => (
@@ -122,12 +122,12 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      {/* Desktop Sidebar */}
+      {/* Sidebar desktop */}
       <div className="hidden md:flex w-64 bg-sidebar flex-col fixed inset-y-0 left-0 z-30">
         <SidebarContent />
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Sidebar mobile */}
       {mobileSidebarOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
@@ -143,9 +143,9 @@ export default function Layout({ children, currentPageName }) {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
-        {/* Top Bar */}
+        {/* Barra superior */}
         <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
           <div className="flex items-center gap-3 flex-1">
             <Button 
@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Buscar..."
+                  placeholder="Buscar no sistema..."
                   className="pl-9 bg-gray-50 border-gray-200 h-9 text-sm"
                 />
               </div>
@@ -178,7 +178,7 @@ export default function Layout({ children, currentPageName }) {
                 <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 px-2">
                   <Avatar className="w-8 h-8">
                     {currentUser?.profile_picture ? (
-                      <img src={currentUser.profile_picture} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                      <img src={currentUser.profile_picture} alt="Perfil" className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
                         {currentUser?.display_name ? currentUser.display_name.charAt(0).toUpperCase() : currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'N'}
@@ -193,7 +193,7 @@ export default function Layout({ children, currentPageName }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('Profile')}>Perfil</Link>
+                  <Link to={createPageUrl('Profile')}>Meu Perfil</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout}>Sair</DropdownMenuItem>
               </DropdownMenuContent>
@@ -201,7 +201,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Conteúdo da página */}
         <main className="flex-1 overflow-auto bg-slate-50">
           {children}
         </main>
