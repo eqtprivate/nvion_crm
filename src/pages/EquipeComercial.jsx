@@ -36,6 +36,7 @@ export default function EquipeComercial() {
   const [form, setForm] = useState({
     nome_equipe: '',
     lider_responsavel: '',
+    vendedores_texto: '',
     meta_mensal: '',
     status: 'ativo',
   });
@@ -50,12 +51,14 @@ export default function EquipeComercial() {
     enabled: !!empresa,
   });
 
+  const resetForm = () => setForm({ nome_equipe: '', lider_responsavel: '', vendedores_texto: '', meta_mensal: '', status: 'ativo' });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.EquipeComercial.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
       setDialogOpen(false);
-      setForm({ nome_equipe: '', lider_responsavel: '', meta_mensal: '', status: 'ativo' });
+      resetForm();
     },
   });
 
@@ -68,7 +71,8 @@ export default function EquipeComercial() {
 
   const filtered = equipes.filter(e =>
     e.nome_equipe?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.lider_responsavel?.toLowerCase().includes(searchTerm.toLowerCase())
+    e.lider_responsavel?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.vendedores_vinculados?.some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const kpis = {
@@ -80,10 +84,17 @@ export default function EquipeComercial() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const vendedores = form.vendedores_texto
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
     createMutation.mutate({
-      ...form,
+      nome_equipe: form.nome_equipe,
+      lider_responsavel: form.lider_responsavel,
       meta_mensal: form.meta_mensal ? parseFloat(form.meta_mensal) : undefined,
-      vendedores_vinculados: [],
+      status: form.status,
+      vendedores_vinculados: vendedores,
     });
   };
 
@@ -100,44 +111,18 @@ export default function EquipeComercial() {
         </Button>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Total de Equipes</p>
-            <p className="text-2xl font-bold text-gray-900">{kpis.total}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Equipes Ativas</p>
-            <p className="text-2xl font-bold text-green-600">{kpis.ativas}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Total de Vendedores</p>
-            <p className="text-2xl font-bold text-blue-600">{kpis.totalVendedores}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Meta Total (R$)</p>
-            <p className="text-2xl font-bold text-primary">{kpis.metaTotal.toLocaleString('pt-BR')}</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Equipes</p><p className="text-2xl font-bold text-gray-900">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Equipes Ativas</p><p className="text-2xl font-bold text-green-600">{kpis.ativas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendedores</p><p className="text-2xl font-bold text-blue-600">{kpis.totalVendedores}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Meta Total (R$)</p><p className="text-2xl font-bold text-primary">{kpis.metaTotal.toLocaleString('pt-BR')}</p></CardContent></Card>
       </div>
 
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder="Buscar equipes, líderes ou vendedores..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Buscar equipes, líderes ou vendedores..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
         </div>
 
@@ -155,70 +140,18 @@ export default function EquipeComercial() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">Carregando...</TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                    <div className="flex flex-col items-center gap-2">
-                      <Users className="w-12 h-12 text-gray-300" />
-                      <span className="font-medium">Nenhuma equipe encontrada</span>
-                      <span className="text-sm">Crie uma equipe comercial para organizar líderes e vendedores</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Users className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma equipe encontrada</span><span className="text-sm">Crie uma equipe comercial para organizar líderes e vendedores</span></div></TableCell></TableRow>
               ) : (
                 filtered.map((equipe) => (
                   <TableRow key={equipe.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Users className="w-4 h-4 text-primary" />
-                        </div>
-                        <p className="font-medium">{equipe.nome_equipe}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <UserCircle className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{equipe.lider_responsavel || '-'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {equipe.vendedores_vinculados?.length || 0} vendedor(es)
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium">
-                        {equipe.meta_mensal
-                          ? `R$ ${equipe.meta_mensal.toLocaleString('pt-BR')}`
-                          : '-'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        {equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => deleteMutation.mutate(equipe.id)}
-                          >
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    <TableCell><div className="flex items-center gap-3"><div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div><p className="font-medium">{equipe.nome_equipe}</p></div></TableCell>
+                    <TableCell><div className="flex items-center gap-2"><UserCircle className="w-4 h-4 text-gray-400" /><span className="text-sm">{equipe.lider_responsavel || '-'}</span></div></TableCell>
+                    <TableCell><div className="flex flex-wrap gap-1">{equipe.vendedores_vinculados?.length ? equipe.vendedores_vinculados.map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>) : <Badge variant="outline">0 vendedor(es)</Badge>}</div></TableCell>
+                    <TableCell><span className="font-medium">{equipe.meta_mensal ? `R$ ${equipe.meta_mensal.toLocaleString('pt-BR')}` : '-'}</span></TableCell>
+                    <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
+                    <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
                   </TableRow>
                 ))
               )}
@@ -229,45 +162,13 @@ export default function EquipeComercial() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova Equipe Comercial</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Nova Equipe Comercial</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="nome_equipe">Nome da Equipe *</Label>
-              <Input
-                id="nome_equipe"
-                value={form.nome_equipe}
-                onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))}
-                placeholder="Ex: Equipe Sul"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="lider">Líder Responsável</Label>
-              <Input
-                id="lider"
-                value={form.lider_responsavel}
-                onChange={(e) => setForm(prev => ({ ...prev, lider_responsavel: e.target.value }))}
-                placeholder="Nome do líder"
-              />
-            </div>
-            <div>
-              <Label htmlFor="meta">Meta Mensal (R$)</Label>
-              <Input
-                id="meta"
-                type="number"
-                value={form.meta_mensal}
-                onChange={(e) => setForm(prev => ({ ...prev, meta_mensal: e.target.value }))}
-                placeholder="0,00"
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button type="submit" className="bg-primary hover:bg-primary-dark" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Salvando...' : 'Criar Equipe'}
-              </Button>
-            </DialogFooter>
+            <div><Label htmlFor="nome_equipe">Nome da Equipe *</Label><Input id="nome_equipe" value={form.nome_equipe} onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))} placeholder="Ex: Equipe Sul" required /></div>
+            <div><Label htmlFor="lider">Líder Responsável</Label><Input id="lider" value={form.lider_responsavel} onChange={(e) => setForm(prev => ({ ...prev, lider_responsavel: e.target.value }))} placeholder="Nome do líder" /></div>
+            <div><Label htmlFor="vendedores">Vendedores Vinculados</Label><Input id="vendedores" value={form.vendedores_texto} onChange={(e) => setForm(prev => ({ ...prev, vendedores_texto: e.target.value }))} placeholder="Ex: Ana Lima, Marcos Oliveira, Bruno Ferreira" /><p className="text-xs text-gray-500 mt-1">Separe os vendedores por vírgula.</p></div>
+            <div><Label htmlFor="meta">Meta Mensal (R$)</Label><Input id="meta" type="number" value={form.meta_mensal} onChange={(e) => setForm(prev => ({ ...prev, meta_mensal: e.target.value }))} placeholder="0,00" /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button type="submit" className="bg-primary hover:bg-primary-dark" disabled={createMutation.isPending}>{createMutation.isPending ? 'Salvando...' : 'Criar Equipe'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
