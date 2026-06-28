@@ -64,12 +64,13 @@ export default function Layout({ children, currentPageName }) {
 
   const SidebarContent = () => (
     <>
-      {/* Logo reservada para inserção manual */}
-      <div className="h-14 flex items-center px-6 border-b border-sidebar-border">
-        <div className="h-8 w-32 flex items-center">
-          {/* Espaço reservado para a logo da marca Nvion */}
-          <span className="text-lg font-extrabold text-white tracking-tight">Nvion</span>
-        </div>
+      {/* Logo Nvion */}
+      <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
+        <img
+          src="https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png"
+          alt="Nvion"
+          className="h-8 w-auto"
+        />
       </div>
 
       {/* Navigation */}
