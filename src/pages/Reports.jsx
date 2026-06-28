@@ -1,382 +1,149 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Target,
-  TrendingUp,
-  DollarSign,
-  Clock,
-  TrendingDown,
-  Users
-} from 'lucide-react';
-import { 
-  startOfDay, 
-  startOfWeek, 
-  startOfMonth, 
-  startOfYear,
-  isWithinInterval,
-  parseISO,
-  differenceInDays,
-  subMonths
-} from 'date-fns';
-import GlobalFilters from '../components/reports/GlobalFilters';
-import ReportKPICard from '../components/reports/ReportKPICard';
-import SalesOverviewTab from '../components/reports/SalesOverviewTab';
-import PipelineForecastTab from '../components/reports/PipelineForecastTab';
-import LeadSourcesTab from '../components/reports/LeadSourcesTab';
-import AccountHealthTab from '../components/reports/AccountHealthTab';
-import SavedReportsDialog from '../components/reports/SavedReportsDialog';
-import { Button } from '@/components/ui/button';
-import { Bookmark } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Download, Target, TrendingUp, Users, Building2, DollarSign } from 'lucide-react';
+
+function money(value) {
+  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function Indicador({ title, value, Icon }) {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-500">{title}</span>
+          <Icon className="w-4 h-4 text-primary" />
+        </div>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Reports() {
-  const [filters, setFilters] = useState({
-    dateRange: 'quarter',
-    stage: 'all',
-    source: 'all',
-    status: 'all',
-    owner: 'all',
-  });
-
-  const [savedReportsDialogOpen, setSavedReportsDialogOpen] = useState(false);
-  const [savedReports, setSavedReports] = useState(() => {
-    const saved = localStorage.getItem('crm_saved_reports');
-    return saved ? JSON.parse(saved) : [];
-  });
-
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
 
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['accounts', empresa],
-    queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
-    enabled: !!empresa,
-  });
+  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: clientes = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
 
-  const { data: contacts = [] } = useQuery({
-    queryKey: ['contacts', empresa],
-    queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
-    enabled: !!empresa,
-  });
+  const resumo = useMemo(() => {
+    const abertas = oportunidades.filter((item) => item.status === 'aberta');
+    const ganhas = oportunidades.filter((item) => item.status === 'ganha');
+    const perdidas = oportunidades.filter((item) => item.status === 'perdida');
+    const valorAberto = abertas.reduce((sum, item) => sum + (item.valor_carta || 0), 0);
+    const valorGanho = ganhas.reduce((sum, item) => sum + (item.valor_carta || 0), 0);
+    const conversao = oportunidades.length ? ((ganhas.length / oportunidades.length) * 100).toFixed(1) : '0.0';
+    return { abertas, ganhas, perdidas, valorAberto, valorGanho, conversao };
+  }, [oportunidades]);
 
-  const { data: leads = [] } = useQuery({
-    queryKey: ['leads', empresa],
-    queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
-    enabled: !!empresa,
-  });
-
-  const { data: opportunities = [] } = useQuery({
-    queryKey: ['opportunities', empresa],
-    queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
-    enabled: !!empresa,
-  });
-
-  // Get unique owners
-  const owners = useMemo(() => {
-    const ownerSet = new Set();
-    opportunities.forEach(opp => opp.owner && ownerSet.add(opp.owner));
-    return Array.from(ownerSet);
-  }, [opportunities]);
-
-  // Filter data based on global filters
-  const filteredData = useMemo(() => {
-    // Date range filtering
-    let dateStart = new Date(0);
-    const now = new Date();
-    
-    if (filters.dateRange === 'today') dateStart = startOfDay(now);
-    else if (filters.dateRange === 'thisWeek') dateStart = startOfWeek(now);
-    else if (filters.dateRange === 'thisMonth') dateStart = startOfMonth(now);
-    else if (filters.dateRange === 'quarter') dateStart = subMonths(now, 3);
-    else if (filters.dateRange === 'ytd') dateStart = startOfYear(now);
-    
-    const filteredOpportunities = opportunities.filter(opp => {
-      const dateMatch = filters.dateRange === 'all' || 
-        (opp.created_date && isWithinInterval(parseISO(opp.created_date), { start: dateStart, end: now }));
-      const stageMatch = filters.stage === 'all' || opp.stage === filters.stage;
-      const sourceMatch = filters.source === 'all' || opp.source === filters.source;
-      const ownerMatch = filters.owner === 'all' || opp.owner === filters.owner;
-      
-      let statusMatch = true;
-      if (filters.status === 'open') statusMatch = opp.stage !== 'closed_won' && opp.stage !== 'closed_lost';
-      else if (filters.status === 'won') statusMatch = opp.stage === 'closed_won';
-      else if (filters.status === 'lost') statusMatch = opp.stage === 'closed_lost';
-      
-      return dateMatch && stageMatch && sourceMatch && statusMatch && ownerMatch;
+  const rankingVendedores = useMemo(() => {
+    const map = {};
+    oportunidades.forEach((item) => {
+      const vendedor = item.vendedor || 'Sem vendedor';
+      if (!map[vendedor]) map[vendedor] = { nome: vendedor, quantidade: 0, valor: 0 };
+      map[vendedor].quantidade += 1;
+      map[vendedor].valor += item.valor_carta || 0;
     });
+    return Object.values(map).sort((a, b) => b.valor - a.valor).slice(0, 5);
+  }, [oportunidades]);
 
-    const filteredLeads = leads.filter(lead => {
-      const dateMatch = filters.dateRange === 'all' || 
-        (lead.created_date && isWithinInterval(parseISO(lead.created_date), { start: dateStart, end: now }));
-      const sourceMatch = filters.source === 'all' || lead.source === filters.source;
-      return dateMatch && sourceMatch;
+  const rankingAdministradoras = useMemo(() => {
+    const map = {};
+    oportunidades.forEach((item) => {
+      const administradora = item.administradora_pretendida || 'Não informada';
+      if (!map[administradora]) map[administradora] = { nome: administradora, quantidade: 0, valor: 0 };
+      map[administradora].quantidade += 1;
+      map[administradora].valor += item.valor_carta || 0;
     });
+    return Object.values(map).sort((a, b) => b.valor - a.valor).slice(0, 5);
+  }, [oportunidades]);
 
-    return { filteredOpportunities, filteredLeads, filteredContacts: contacts, filteredAccounts: accounts };
-  }, [opportunities, leads, contacts, accounts, filters]);
-
-  // KPI Calculations with sparkline data
-  const kpis = useMemo(() => {
-    const { filteredOpportunities, filteredLeads } = filteredData;
-    
-    const totalLeads = filteredLeads.length;
-    const openLeads = filteredLeads.filter(l => l.status === 'new' || l.status === 'contacted').length;
-    
-    const wonDeals = filteredOpportunities.filter(o => o.stage === 'closed_won');
-    const lostDeals = filteredOpportunities.filter(o => o.stage === 'closed_lost');
-    const openDeals = filteredOpportunities.filter(o => o.stage !== 'closed_won' && o.stage !== 'closed_lost');
-    
-    const wonDealsCount = wonDeals.length;
-    const wonDealsValue = wonDeals.reduce((sum, o) => sum + (o.amount || 0), 0);
-    
-    const lostDealsCount = lostDeals.length;
-    const lostDealsValue = lostDeals.reduce((sum, o) => sum + (o.amount || 0), 0);
-    
-    const conversionRate = wonDealsCount + lostDealsCount > 0
-      ? ((wonDealsCount / (wonDealsCount + lostDealsCount)) * 100).toFixed(1)
-      : 0;
-    
-    const pipelineValue = openDeals.reduce((sum, o) => sum + (o.amount || 0), 0);
-    
-    // Avg Sales Cycle
-    const avgSalesCycle = wonDeals.length > 0
-      ? Math.round(wonDeals.reduce((sum, deal) => {
-          if (deal.created_date && deal.close_date) {
-            return sum + differenceInDays(parseISO(deal.close_date), parseISO(deal.created_date));
-          }
-          return sum;
-        }, 0) / wonDeals.length)
-      : 0;
-
-    // Sparkline data for last 6 months
-    const generateSparkline = (data) => {
-      return [65, 72, 68, 85, 78, 92].map(value => ({ value }));
-    };
-
-    return {
-      totalLeads,
-      openLeads,
-      wonDealsCount,
-      wonDealsValue,
-      lostDealsCount,
-      lostDealsValue,
-      conversionRate,
-      pipelineValue,
-      avgSalesCycle,
-      sparklineLeads: generateSparkline(),
-      sparklineWon: generateSparkline(),
-      sparklineConversion: generateSparkline(),
-    };
-  }, [filteredData]);
-
-  const handleFilterChange = (key, value) => {
-    if (key === 'reset') {
-      setFilters({
-        dateRange: 'quarter',
-        stage: 'all',
-        source: 'all',
-        status: 'all',
-        owner: 'all',
-      });
-    } else {
-      setFilters(prev => ({ ...prev, [key]: value }));
-    }
-  };
-
-  const exportCSV = () => {
-    const { filteredOpportunities } = filteredData;
-    const headers = ['Deal Name', 'Account', 'Amount', 'Stage', 'Source', 'Owner', 'Close Date'];
-    const rows = filteredOpportunities.map(opp => [
-      opp.name || '',
-      opp.account_name || '',
-      opp.amount || 0,
-      opp.stage || '',
-      opp.source || '',
-      opp.owner || '',
-      opp.close_date || ''
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+  const exportarOportunidades = () => {
+    const headers = ['Nome', 'Cliente', 'Produto', 'Valor da Carta', 'Status', 'Etapa', 'Vendedor', 'Líder', 'Administradora'];
+    const rows = oportunidades.map((item) => [item.name || '', item.cliente_vinculado || '', item.produto || '', item.valor_carta || 0, item.status || '', item.stage || '', item.vendedor || '', item.lider || '', item.administradora_pretendida || '']);
+    const csv = [headers, ...rows].map((row) => row.map((cell) => '"' + String(cell).replaceAll('"', '') + '"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `crm_report_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'relatorio_oportunidades.csv';
+    link.click();
     window.URL.revokeObjectURL(url);
   };
 
-  const exportPDF = async () => {
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).default;
-      
-      const element = document.getElementById('reports-content');
-      if (!element) return;
-      
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= 297;
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= 297;
-      }
-      
-      pdf.save(`crm_reports_${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (error) {
-      console.error('PDF export failed:', error);
-      alert('Failed to export PDF. Please try again.');
-    }
-  };
-
-  const handleSaveReport = (report, isLoad = false) => {
-    if (isLoad) {
-      setFilters(report.filters);
-    } else {
-      const updated = [...savedReports, report];
-      setSavedReports(updated);
-      localStorage.setItem('crm_saved_reports', JSON.stringify(updated));
-    }
-  };
-
   return (
-    <div id="reports-content" className="p-4 sm:p-8 bg-gray-50 min-h-screen">
-      {/* Header */}
+    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Relatórios</h1>
-          <p className="text-gray-500 text-sm mt-1">Central de relatórios e análises do CRM</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Relatórios Gerenciais</h1>
+          <p className="text-gray-500 text-sm mt-1">Análises comerciais, operacionais e indicadores do sistema</p>
         </div>
-        <Button variant="outline" onClick={() => setSavedReportsDialogOpen(true)}>
-        <Bookmark className="w-4 h-4 mr-2" />
-        Relatórios Salvos ({savedReports.length})
+        <Button variant="outline" onClick={exportarOportunidades} disabled={oportunidades.length === 0}>
+          <Download className="w-4 h-4 mr-2" />
+          Exportar Oportunidades
         </Button>
       </div>
 
-      {/* Global Filters */}
-      <GlobalFilters
-        filters={filters}
-        owners={owners}
-        onFilterChange={handleFilterChange}
-        onExportCSV={exportCSV}
-        onExportPDF={exportPDF}
-      />
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-        <ReportKPICard
-          title="Total de Leads"
-          value={kpis.totalLeads.toLocaleString()}
-          icon={Target}
-          color="blue"
-          sparklineData={kpis.sparklineLeads}
-        />
-        <ReportKPICard
-          title="Leads Abertos"
-          value={kpis.openLeads.toLocaleString()}
-          icon={Users}
-          color="orange"
-          sparklineData={kpis.sparklineLeads}
-        />
-        <ReportKPICard
-          title="Negócios Ganhos"
-          value={`${kpis.wonDealsCount} R$${(kpis.wonDealsValue / 1000).toFixed(1)}K`}
-          icon={TrendingUp}
-          color="green"
-          sparklineData={kpis.sparklineWon}
-        />
-        <ReportKPICard
-          title="Negócios Perdidos"
-          value={`${kpis.lostDealsCount}`}
-          subtitle={`R$${(kpis.lostDealsValue / 1000).toFixed(0)}K`}
-          icon={TrendingDown}
-          color="red"
-        />
-        <ReportKPICard
-          title="Taxa de Conversão"
-          value={`${kpis.conversionRate}%`}
-          icon={Target}
-          color="purple"
-          sparklineData={kpis.sparklineConversion}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Indicador title="Total de Leads" value={leads.length} Icon={Target} />
+        <Indicador title="Clientes Cadastrados" value={clientes.length} Icon={Users} />
+        <Indicador title="Administradoras" value={administradoras.length} Icon={Building2} />
+        <Indicador title="Oportunidades" value={oportunidades.length} Icon={TrendingUp} />
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="sales" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto bg-white border">
-          <TabsTrigger value="sales" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Visão de Vendas
-          </TabsTrigger>
-          <TabsTrigger value="pipeline" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Pipeline e Previsão
-          </TabsTrigger>
-          <TabsTrigger value="sources" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Origens de Leads
-          </TabsTrigger>
-          <TabsTrigger value="accounts" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Saúde das Administradoras
-          </TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Resumo do Pipeline</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between"><span className="text-gray-600">Oportunidades abertas</span><strong>{resumo.abertas.length}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600">Oportunidades ganhas</span><strong>{resumo.ganhas.length}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600">Oportunidades perdidas</span><strong>{resumo.perdidas.length}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600">Taxa de conversão</span><strong>{resumo.conversao}%</strong></div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="sales">
-          <SalesOverviewTab 
-            filteredOpportunities={filteredData.filteredOpportunities} 
-            filteredLeads={filteredData.filteredLeads}
-          />
-        </TabsContent>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Valores Comerciais</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between"><span className="text-gray-600">Pipeline aberto</span><strong>{money(resumo.valorAberto)}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600">Valor ganho</span><strong>{money(resumo.valorGanho)}</strong></div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="pipeline">
-          <PipelineForecastTab
-            filteredOpportunities={filteredData.filteredOpportunities}
-            filteredActivities={[]}
-          />
-        </TabsContent>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Próximos Relatórios</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">Os relatórios de vendas, comissões, conciliação, recebíveis e antecipação serão adicionados após os próximos módulos financeiros.</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="sources">
-          <LeadSourcesTab 
-            filteredLeads={filteredData.filteredLeads}
-            filteredOpportunities={filteredData.filteredOpportunities}
-          />
-        </TabsContent>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Ranking de Vendedores</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {rankingVendedores.length === 0 ? <p className="text-sm text-gray-500">Sem dados.</p> : rankingVendedores.map((item, index) => (
+              <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0"><span>#{index + 1} {item.nome}</span><strong>{money(item.valor)}</strong></div>
+            ))}
+          </CardContent>
+        </Card>
 
-        <TabsContent value="accounts">
-          <AccountHealthTab
-            filteredAccounts={filteredData.filteredAccounts}
-            filteredActivities={[]}
-            filteredOpportunities={filteredData.filteredOpportunities}
-          />
-        </TabsContent>
-      </Tabs>
-
-      <SavedReportsDialog
-        open={savedReportsDialogOpen}
-        onOpenChange={setSavedReportsDialogOpen}
-        currentFilters={filters}
-        onSaveReport={handleSaveReport}
-        savedReports={savedReports}
-      />
+        <Card>
+          <CardHeader><CardTitle className="text-base">Ranking de Administradoras</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {rankingAdministradoras.length === 0 ? <p className="text-sm text-gray-500">Sem dados.</p> : rankingAdministradoras.map((item, index) => (
+              <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0"><span>#{index + 1} {item.nome}</span><strong>{money(item.valor)}</strong></div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
