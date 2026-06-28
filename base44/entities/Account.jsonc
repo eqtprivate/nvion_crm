@@ -4,40 +4,50 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Account name"
+      "description": "Nome da administradora"
     },
-    "industry": {
+    "cnpj": {
       "type": "string",
-      "description": "Industry type"
+      "description": "CNPJ da administradora"
     },
-    "website": {
+    "contato": {
       "type": "string",
-      "description": "Company website"
-    },
-    "phone": {
-      "type": "string",
-      "description": "Phone number"
+      "description": "Pessoa de contato"
     },
     "email": {
       "type": "string",
-      "description": "Email address"
+      "description": "Email de contato"
     },
-    "annual_revenue": {
-      "type": "number",
-      "description": "Annual revenue"
+    "telefone": {
+      "type": "string",
+      "description": "Telefone de contato"
     },
-    "employees": {
+    "prazo_medio_pagamento": {
       "type": "number",
-      "description": "Number of employees"
+      "description": "Prazo medio de pagamento (dias)"
+    },
+    "formato_relatorio": {
+      "type": "string",
+      "description": "Formato de relatorio"
     },
     "status": {
       "type": "string",
       "enum": [
-        "active",
-        "inactive",
-        "prospect"
+        "ativa",
+        "inativa",
+        "em_analise",
+        "suspensa"
       ],
-      "default": "active"
+      "default": "em_analise",
+      "description": "Status da administradora"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    },
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
     }
   },
   "required": [
@@ -45,19 +55,16 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
-    },
-    "update": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "read": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "update": {
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     },
     "delete": {
-      "created_by": "{{user.email}}"
-    },
-    "write": {
-      "created_by": "{{user.email}}"
+      "empresa_vinculada": "{{user.empresa_vinculada}}"
     }
   }
 }
