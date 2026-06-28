@@ -28,8 +28,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
 
-  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: () => base44.entities.Lead.filter({ empresa_vinculada: empresa }), enabled: !!empresa });
-  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: () => base44.entities.Opportunity.filter({ empresa_vinculada: empresa }), enabled: !!empresa });
+  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
 
   const kpis = useMemo(() => {
     const totalLeads = leads.length;

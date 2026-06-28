@@ -46,7 +46,7 @@ export default function EquipeComercial() {
 
   const { data: equipes = [], isLoading } = useQuery({
     queryKey: ['equipes', empresa],
-    queryFn: () => base44.entities.EquipeComercial.filter({ empresa_vinculada: empresa }),
+    queryFn: async () => { const all = await base44.entities.EquipeComercial.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 

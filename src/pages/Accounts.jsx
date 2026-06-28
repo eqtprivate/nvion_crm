@@ -38,13 +38,13 @@ export default function Accounts() {
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['accounts', empresa],
-    queryFn: () => base44.entities.Account.filter({ empresa_vinculada: empresa }),
+    queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 
   const { data: opportunities = [] } = useQuery({
     queryKey: ['opportunities', empresa],
-    queryFn: () => base44.entities.Opportunity.filter({ empresa_vinculada: empresa }),
+    queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 
