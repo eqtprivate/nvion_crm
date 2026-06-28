@@ -45,6 +45,10 @@
       ],
       "default": "pendente",
       "description": "Status do usuario"
+    },
+    "senha_temporaria": {
+      "type": "string",
+      "description": "Senha temporaria gerada para primeiro acesso — limpar apos usuario ativar conta"
     }
   },
   "required": [
