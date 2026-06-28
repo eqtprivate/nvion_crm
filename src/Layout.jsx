@@ -54,16 +54,18 @@ export default function Layout({ children, currentPageName }) {
   const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
   const isAdmin = isAdminRole(currentUser?.role);
 
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
   const menuItems = allMenuItems.filter((item) =>
-    !hasModules || modulosPermitidos.includes(item.path)
+    isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path)
   );
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
     if (item.path === 'GestaoAcessos') {
       if (!isAdmin) return false;
-      return !hasModules || modulosPermitidos.includes('GestaoAcessos');
+      return isSuperAdmin || !hasModules || modulosPermitidos.includes('GestaoAcessos');
     }
-    return !hasModules || modulosPermitidos.includes(item.path);
+    return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
   });
 
   const isActive = (itemName) => {
