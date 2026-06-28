@@ -20,7 +20,8 @@ import {
   Package,
   ReceiptText,
   Percent,
-  UserRound
+  UserRound,
+  Database
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -55,6 +56,7 @@ export default function Layout({ children, currentPageName }) {
 
   const allBottomMenuItems = [
     { name: 'Configurações', icon: Settings, path: 'Settings' },
+    { name: 'Dados de Teste', icon: Database, path: 'DadosTeste' },
     { name: 'Gestão de Acessos', icon: ShieldCheck, path: 'GestaoAcessos' }
   ];
 
@@ -68,9 +70,9 @@ export default function Layout({ children, currentPageName }) {
   );
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
-    if (item.path === 'GestaoAcessos') {
+    if (item.path === 'GestaoAcessos' || item.path === 'DadosTeste') {
       if (!isAdmin) return false;
-      return isSuperAdmin || !hasModules || modulosPermitidos.includes('GestaoAcessos');
+      return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
     }
     return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
   });
