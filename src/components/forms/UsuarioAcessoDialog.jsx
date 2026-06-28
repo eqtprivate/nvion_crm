@@ -67,6 +67,14 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
         <DialogHeader>
           <DialogTitle>{user ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
         </DialogHeader>
+        {!user && (
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-3">
+            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <p className="text-sm">
+              O usuário ficará com status Pendente até o primeiro acesso. Informe o email cadastrado e oriente-o a usar 'Esqueci minha senha' na tela de login para definir sua senha.
+            </p>
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-4 py-4">
             <div className="space-y-2">
