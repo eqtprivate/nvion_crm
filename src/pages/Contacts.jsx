@@ -270,25 +270,25 @@ export default function Contacts() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-              <p className="text-gray-500 mt-1">Manage your contacts</p>
+              <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
+              <p className="text-gray-500 mt-1">Gerencie seus clientes e leads</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={exportToCSV} disabled={contacts.length === 0}>
                 <Download className="w-4 h-4 mr-2" />
-                Export CSV
+                Exportar CSV
               </Button>
               <Button variant="outline" onClick={() => setScannerOpen(true)}>
                 <Scan className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Scan Card</span>
+                <span className="hidden sm:inline">Escanear Cartão</span>
               </Button>
               <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
                 <Download className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Import</span>
+                <span className="hidden sm:inline">Importar</span>
               </Button>
               <Button className="bg-primary hover:bg-primary-dark" onClick={() => { setScannedData(null); setDialogOpen(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
-                New Contact
+                Novo Cliente
               </Button>
             </div>
           </div>
@@ -296,13 +296,13 @@ export default function Contacts() {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <ContactKPICard
-              title="Total Contacts"
+              title="Total de Clientes"
               value={kpis.total}
               icon={Users}
               iconColor="bg-blue-500"
             />
             <ContactKPICard
-              title="New This Month"
+              title="Novos este Mês"
               value={kpis.thisMonth}
               trend="up"
               trendValue={`+${kpis.thisMonth}`}
@@ -310,13 +310,13 @@ export default function Contacts() {
               iconColor="bg-green-500"
             />
             <ContactKPICard
-              title="Top Decision Makers"
+              title="Clientes Ativos"
               value={kpis.decisionMakers}
               icon={Award}
               iconColor="bg-amber-500"
             />
             <ContactKPICard
-              title="No Recent Activity"
+              title="Sem Atividade Recente"
               value={kpis.noActivity}
               icon={AlertCircle}
               iconColor="bg-red-500"
@@ -330,7 +330,7 @@ export default function Contacts() {
                 <div className="relative flex-1 max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
-                    placeholder="Search contacts..."
+                    placeholder="Buscar clientes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -383,7 +383,7 @@ export default function Contacts() {
                       <TableCell colSpan={8} className="text-center py-12 text-gray-500">
                         <div className="flex flex-col items-center gap-2">
                           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                          <span>Loading contacts...</span>
+                          <span>Carregando clientes...</span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -392,8 +392,8 @@ export default function Contacts() {
                       <TableCell colSpan={8} className="text-center py-12 text-gray-500">
                         <div className="flex flex-col items-center gap-2">
                           <UserCircle className="w-12 h-12 text-gray-300" />
-                          <span className="font-medium">No contacts found</span>
-                          <span className="text-sm">Try adjusting your search or filters</span>
+                          <span className="font-medium">Nenhum cliente encontrado</span>
+                          <span className="text-sm">Tente ajustar sua busca ou filtros</span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -521,13 +521,13 @@ export default function Contacts() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEdit(contact)}>Edit</DropdownMenuItem>
-                                  <DropdownMenuItem>Log Activity</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEdit(contact)}>Editar</DropdownMenuItem>
+                                  <DropdownMenuItem>Registrar Atividade</DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="text-red-600"
                                     onClick={() => deleteMutation.mutate(contact.id)}
                                   >
-                                    Delete
+                                    Excluir
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

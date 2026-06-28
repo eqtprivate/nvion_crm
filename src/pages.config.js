@@ -52,7 +52,9 @@ import Activities from './pages/Activities';
 import Calendar from './pages/Calendar';
 import Contacts from './pages/Contacts';
 import Dashboard from './pages/Dashboard';
+import EquipeComercial from './pages/EquipeComercial';
 import Leads from './pages/Leads';
+import Oportunidades from './pages/Oportunidades';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -65,7 +67,9 @@ export const PAGES = {
     "Calendar": Calendar,
     "Contacts": Contacts,
     "Dashboard": Dashboard,
+    "EquipeComercial": EquipeComercial,
     "Leads": Leads,
+    "Oportunidades": Oportunidades,
     "Profile": Profile,
     "Reports": Reports,
     "Settings": Settings,

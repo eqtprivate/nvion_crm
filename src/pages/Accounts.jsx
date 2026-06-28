@@ -225,16 +225,16 @@ export default function Accounts() {
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Accounts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Administradoras</h1>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" onClick={exportToCSV} disabled={accounts.length === 0}>
             <Download className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Export CSV</span>
+            <span className="hidden sm:inline">Exportar CSV</span>
           </Button>
           <Button size="sm" className="bg-primary hover:bg-primary-dark" onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            New Account
+            Nova Administradora
           </Button>
         </div>
       </div>
@@ -242,7 +242,7 @@ export default function Accounts() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <AccountKPICard
-          title="Total Accounts"
+          title="Total de Administradoras"
           value={kpis.totalAccounts}
           trend="up"
           trendValue="+2%"
@@ -250,7 +250,7 @@ export default function Accounts() {
           color="blue"
         />
         <AccountKPICard
-          title="Active Accounts"
+          title="Ativas"
           value={kpis.activeAccounts}
           trend="up"
           trendValue="+2%"
@@ -258,7 +258,7 @@ export default function Accounts() {
           color="green"
         />
         <AccountKPICard
-          title="Key Accounts"
+          title="Principais Parceiras"
           value={kpis.keyAccounts}
           trend="up"
           trendValue="+5%"
@@ -266,15 +266,15 @@ export default function Accounts() {
           color="cyan"
         />
         <AccountKPICard
-          title="Total Revenue"
-          value={`$${(kpis.totalRevenue / 1000000).toFixed(1)}M`}
+          title="Volume Total"
+          value={`R$${(kpis.totalRevenue / 1000000).toFixed(1)}M`}
           trend="up"
           trendValue="+3.6%"
           chartData={[60, 65, 70, 75, 78, 82]}
           color="purple"
         />
         <AccountKPICard
-          title="Overdue Activities"
+          title="Atividades Vencidas"
           value={kpis.overdueAccounts}
           chartData={[30, 35, 40, 38, 42, 45]}
           color="red"
