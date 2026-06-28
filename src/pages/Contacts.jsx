@@ -250,12 +250,12 @@ export default function Contacts() {
   };
 
   const getDaysSinceActivity = (contact) => {
-    if (!contact.last_activity_date) return 'Never';
+    if (!contact.last_activity_date) return 'Nunca';
     const days = moment().diff(moment(contact.last_activity_date), 'days');
-    if (days === 0) return 'Today';
-    if (days === 1) return '1 day ago';
-    if (days < 30) return `${days} days ago`;
-    return `${Math.floor(days / 30)} months ago`;
+    if (days === 0) return 'Hoje';
+    if (days === 1) return 'Há 1 dia';
+    if (days < 30) return `Há ${days} dias`;
+    return `Há ${Math.floor(days / 30)} meses`;
   };
 
   return (
@@ -336,7 +336,7 @@ export default function Contacts() {
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   <Filter className="w-4 h-4 mr-2" />
-                  Filters
+                  Filtros
                 </Button>
               </div>
             </div>
@@ -350,26 +350,26 @@ export default function Contacts() {
                   <TableRow className="border-b-2 border-gray-200">
                     <TableHead className="cursor-pointer w-64 font-semibold text-gray-700" onClick={() => handleSort('name')}>
                       <div className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-                        Name
+                        Nome
                         {sortConfig.key === 'name' && (
                           sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-700">Role</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Priority</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Função</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Prioridade</TableHead>
                     <TableHead className="cursor-pointer font-semibold text-gray-700" onClick={() => handleSort('last_activity_date')}>
                       <div className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-                        Last Activity
+                        Última Atividade
                         {sortConfig.key === 'last_activity_date' && (
                           sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-700">Engagement</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Company</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Source</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Actions</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Engajamento</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Empresa</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Origem</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -433,7 +433,7 @@ export default function Contacts() {
                                 <p className="font-semibold text-gray-900 flex items-center gap-2">
                                   {contact.name}
                                 </p>
-                                <p className="text-sm text-gray-600">{contact.position || 'No position'}</p>
+                                <p className="text-sm text-gray-600">{contact.position || 'Sem cargo'}</p>
                               </div>
                             </div>
                           </TableCell>
@@ -443,7 +443,7 @@ export default function Contacts() {
                               onValueChange={(value) => handleInlineRoleChange(contact.id, value)}
                             >
                               <SelectTrigger className="h-9 w-[140px] border-gray-300 hover:border-blue-400 transition-colors">
-                                <SelectValue placeholder="Set role" />
+                                <SelectValue placeholder="Definir função" />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="Decision Maker">Decision Maker</SelectItem>
@@ -566,13 +566,13 @@ export default function Contacts() {
                     <p className="text-gray-600">{contact.company}</p>
                     <p className="text-gray-600">{contact.email}</p>
                     {contact.last_activity_date && (
-                      <p className="text-gray-500">Last activity: {getDaysSinceActivity(contact)}</p>
+                     <p className="text-gray-500">Última atividade: {getDaysSinceActivity(contact)}</p>
                     )}
                   </div>
                   <div className="flex gap-2 mt-3">
                     <Button variant="outline" size="sm" className="flex-1">
                       <Phone className="w-4 h-4 mr-1" />
-                      Call
+                      Ligar
                     </Button>
                     <Button variant="outline" size="sm" className="flex-1">
                       <Mail className="w-4 h-4 mr-1" />

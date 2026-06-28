@@ -258,12 +258,12 @@ export default function Reports() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-gray-500 text-sm mt-1">Comprehensive CRM reporting hub</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Relatórios Gerenciais</h1>
+          <p className="text-gray-500 text-sm mt-1">Central de relatórios e análises do CRM</p>
         </div>
         <Button variant="outline" onClick={() => setSavedReportsDialogOpen(true)}>
-          <Bookmark className="w-4 h-4 mr-2" />
-          Saved Reports ({savedReports.length})
+        <Bookmark className="w-4 h-4 mr-2" />
+        Relatórios Salvos ({savedReports.length})
         </Button>
       </div>
 
@@ -279,35 +279,35 @@ export default function Reports() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         <ReportKPICard
-          title="Total Leads"
+          title="Total de Leads"
           value={kpis.totalLeads.toLocaleString()}
           icon={Target}
           color="blue"
           sparklineData={kpis.sparklineLeads}
         />
         <ReportKPICard
-          title="Open Leads"
+          title="Leads Abertos"
           value={kpis.openLeads.toLocaleString()}
           icon={Users}
           color="orange"
           sparklineData={kpis.sparklineLeads}
         />
         <ReportKPICard
-          title="Won Deals"
-          value={`${kpis.wonDealsCount} $${(kpis.wonDealsValue / 1000).toFixed(1)}K`}
+          title="Negócios Ganhos"
+          value={`${kpis.wonDealsCount} R$${(kpis.wonDealsValue / 1000).toFixed(1)}K`}
           icon={TrendingUp}
           color="green"
           sparklineData={kpis.sparklineWon}
         />
         <ReportKPICard
-          title="Lost Deals"
+          title="Negócios Perdidos"
           value={`${kpis.lostDealsCount}`}
-          subtitle={`$${(kpis.lostDealsValue / 1000).toFixed(0)}K`}
+          subtitle={`R$${(kpis.lostDealsValue / 1000).toFixed(0)}K`}
           icon={TrendingDown}
           color="red"
         />
         <ReportKPICard
-          title="Conversion Rate"
+          title="Taxa de Conversão"
           value={`${kpis.conversionRate}%`}
           icon={Target}
           color="purple"
@@ -322,7 +322,7 @@ export default function Reports() {
             Visão de Vendas
           </TabsTrigger>
           <TabsTrigger value="pipeline" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            Pipeline & Forecast
+            Pipeline e Previsão
           </TabsTrigger>
           <TabsTrigger value="sources" className="text-xs sm:text-sm data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
             Origens de Leads

@@ -108,7 +108,7 @@ export default function Leads() {
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Leads</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Prospecção</h1>
           <p className="text-gray-500 mt-1">Gerencie seus leads e prospecções de consórcio</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
