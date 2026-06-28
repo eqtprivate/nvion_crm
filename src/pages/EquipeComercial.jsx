@@ -91,8 +91,8 @@ export default function EquipeComercial() {
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Equipe Comercial</h1>
-          <p className="text-gray-500 mt-1">Gerencie suas equipes e metas comerciais</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Equipe e Vendedores</h1>
+          <p className="text-gray-500 mt-1">Gestão de líderes, vendedores, equipes comerciais e metas</p>
         </div>
         <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -133,7 +133,7 @@ export default function EquipeComercial() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
-              placeholder="Buscar equipes..."
+              placeholder="Buscar equipes, líderes ou vendedores..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -164,7 +164,7 @@ export default function EquipeComercial() {
                     <div className="flex flex-col items-center gap-2">
                       <Users className="w-12 h-12 text-gray-300" />
                       <span className="font-medium">Nenhuma equipe encontrada</span>
-                      <span className="text-sm">Crie sua primeira equipe comercial acima</span>
+                      <span className="text-sm">Crie uma equipe comercial para organizar líderes e vendedores</span>
                     </div>
                   </TableCell>
                 </TableRow>
