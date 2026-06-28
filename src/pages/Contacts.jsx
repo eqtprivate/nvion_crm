@@ -270,7 +270,7 @@ export default function Contacts() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Contatos</h1>
               <p className="text-gray-500 mt-1">Gerencie seus clientes e leads</p>
             </div>
             <div className="flex gap-3">
@@ -296,7 +296,7 @@ export default function Contacts() {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <ContactKPICard
-              title="Total de Clientes"
+              title="Total de Contatos"
               value={kpis.total}
               icon={Users}
               iconColor="bg-blue-500"

@@ -91,7 +91,7 @@ export default function EquipeComercial() {
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Equipe e Vendedores</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Equipe Comercial</h1>
           <p className="text-gray-500 mt-1">Gerencie suas equipes e metas comerciais</p>
         </div>
         <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
