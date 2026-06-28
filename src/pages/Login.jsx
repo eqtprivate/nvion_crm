@@ -22,14 +22,14 @@ export default function Login() {
 
     try {
       const hash = await hashPassword(password);
-      const usuarios = await base44.entities.UsuarioAcesso.filter({ email: email.toLowerCase().trim(), status: 'ativo' });
+      const emailNorm = email.toLowerCase().trim();
+      const todos = await base44.entities.UsuarioAcesso.list();
+      const usuario = todos.find(u => u.email === emailNorm && u.status === 'ativo');
 
-      if (usuarios.length === 0) {
+      if (!usuario) {
         setError('Usuário não encontrado ou inativo.');
         return;
       }
-
-      const usuario = usuarios[0];
 
       if (usuario.senha_hash !== hash) {
         setError('Senha incorreta.');

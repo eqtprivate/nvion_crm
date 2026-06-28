@@ -126,7 +126,7 @@ export default function GestaoAcessos() {
 
   const { data: usuarios = [], isLoading } = useQuery({
     queryKey: ['usuariosAcesso', empresa],
-    queryFn: () => base44.entities.UsuarioAcesso.filter({ empresa_vinculada: empresa }),
+    queryFn: async () => { const all = await base44.entities.UsuarioAcesso.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 

@@ -47,7 +47,7 @@ export default function Leads() {
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['leads', empresa],
-    queryFn: () => base44.entities.Lead.filter({ empresa_vinculada: empresa }),
+    queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 

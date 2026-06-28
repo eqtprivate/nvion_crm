@@ -58,7 +58,7 @@ export default function Contacts() {
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['contacts', empresa],
-    queryFn: () => base44.entities.Contact.filter({ empresa_vinculada: empresa }),
+    queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 
