@@ -1,0 +1,85 @@
+{
+  "name": "Vendedores",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "nome": {
+      "type": "string",
+      "description": "Nome do vendedor"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email do vendedor"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone do vendedor"
+    },
+    "cpf_cnpj": {
+      "type": "string",
+      "description": "CPF ou CNPJ do vendedor"
+    },
+    "equipe": {
+      "type": "string",
+      "description": "Equipe comercial vinculada"
+    },
+    "lider": {
+      "type": "string",
+      "description": "Lider comercial vinculado"
+    },
+    "tipo_vendedor": {
+      "type": "string",
+      "enum": [
+        "interno",
+        "parceiro",
+        "corban",
+        "lider"
+      ],
+      "default": "interno",
+      "description": "Tipo de vendedor"
+    },
+    "meta_mensal": {
+      "type": "number",
+      "description": "Meta mensal (R$)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "inativo",
+        "suspenso"
+      ],
+      "default": "ativo",
+      "description": "Status do vendedor"
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de inicio"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": [
+    "nome"
+  ],
+  "rls": {
+    "create": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "read": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "update": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "delete": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    }
+  }
+}

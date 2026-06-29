@@ -1,0 +1,108 @@
+{
+  "properties": {
+    "administradora": {
+      "title": "Administradora",
+      "type": "string"
+    },
+    "cliente": {
+      "title": "Cliente",
+      "type": "string"
+    },
+    "data_confirmacao": {
+      "format": "date",
+      "title": "Data Confirma\u00e7\u00e3o",
+      "type": "string"
+    },
+    "data_pagamento": {
+      "format": "date",
+      "title": "Data Pagamento",
+      "type": "string"
+    },
+    "data_prevista_pagamento": {
+      "format": "date",
+      "title": "Data Prevista Pagamento",
+      "type": "string"
+    },
+    "empresa_vinculada": {
+      "title": "Empresa",
+      "type": "string"
+    },
+    "equipe": {
+      "title": "Equipe",
+      "type": "string"
+    },
+    "lider": {
+      "title": "L\u00edder",
+      "type": "string"
+    },
+    "observacoes": {
+      "title": "Observa\u00e7\u00f5es",
+      "type": "string"
+    },
+    "origem": {
+      "title": "Origem",
+      "type": "string"
+    },
+    "percentual_base": {
+      "title": "Percentual Base (%)",
+      "type": "number"
+    },
+    "percentual_lider": {
+      "title": "Percentual L\u00edder (%)",
+      "type": "number"
+    },
+    "percentual_vendedor": {
+      "title": "Percentual Vendedor (%)",
+      "type": "number"
+    },
+    "produto": {
+      "title": "Produto",
+      "type": "string"
+    },
+    "regra_comissao": {
+      "title": "Regra de Comiss\u00e3o",
+      "type": "string"
+    },
+    "status_comissao": {
+      "default": "prevista",
+      "enum": [
+        "prevista",
+        "confirmada",
+        "liberada",
+        "paga",
+        "bloqueada",
+        "estornada",
+        "cancelada"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "valor_carta": {
+      "title": "Valor da Carta",
+      "type": "number"
+    },
+    "valor_comissao_lider": {
+      "title": "Comiss\u00e3o L\u00edder",
+      "type": "number"
+    },
+    "valor_comissao_total": {
+      "title": "Comiss\u00e3o Total",
+      "type": "number"
+    },
+    "valor_comissao_vendedor": {
+      "title": "Comiss\u00e3o Vendedor",
+      "type": "number"
+    },
+    "venda_vinculada": {
+      "title": "ID da Venda",
+      "type": "string"
+    },
+    "vendedor": {
+      "title": "Vendedor",
+      "type": "string"
+    }
+  },
+  "type": "object",
+  "required": [],
+  "name": "Comissoes"
+}

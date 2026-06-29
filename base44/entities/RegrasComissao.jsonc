@@ -1,0 +1,79 @@
+{
+  "name": "RegrasComissao",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "nome_regra": {
+      "type": "string",
+      "description": "Nome da regra de comissao"
+    },
+    "administradora": {
+      "type": "string",
+      "description": "Administradora vinculada"
+    },
+    "produto": {
+      "type": "string",
+      "description": "Produto de consorcio vinculado"
+    },
+    "tipo_comissao": {
+      "type": "string",
+      "enum": [
+        "percentual",
+        "fixo",
+        "hibrido"
+      ],
+      "default": "percentual",
+      "description": "Tipo de comissao"
+    },
+    "percentual_base": {
+      "type": "number",
+      "description": "Percentual base da comissao"
+    },
+    "percentual_vendedor": {
+      "type": "number",
+      "description": "Percentual do vendedor"
+    },
+    "percentual_lider": {
+      "type": "number",
+      "description": "Percentual do lider"
+    },
+    "prazo_pagamento_dias": {
+      "type": "number",
+      "description": "Prazo de pagamento em dias"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativa",
+        "inativa",
+        "suspensa"
+      ],
+      "default": "ativa",
+      "description": "Status da regra"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": [
+    "nome_regra"
+  ],
+  "rls": {
+    "create": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "read": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "update": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "delete": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    }
+  }
+}

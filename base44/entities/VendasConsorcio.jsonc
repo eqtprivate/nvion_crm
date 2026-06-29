@@ -1,0 +1,124 @@
+{
+  "name": "VendasConsorcio",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "cliente": {
+      "type": "string",
+      "description": "Cliente"
+    },
+    "oportunidade_vinculada": {
+      "type": "string",
+      "description": "Oportunidade vinculada"
+    },
+    "vendedor": {
+      "type": "string",
+      "description": "Vendedor responsavel"
+    },
+    "lider": {
+      "type": "string",
+      "description": "Lider comercial"
+    },
+    "equipe": {
+      "type": "string",
+      "description": "Equipe comercial"
+    },
+    "administradora": {
+      "type": "string",
+      "description": "Administradora"
+    },
+    "produto": {
+      "type": "string",
+      "description": "Produto de consorcio"
+    },
+    "grupo": {
+      "type": "string",
+      "description": "Grupo"
+    },
+    "cota": {
+      "type": "string",
+      "description": "Cota"
+    },
+    "valor_carta": {
+      "type": "number",
+      "description": "Valor da carta de credito"
+    },
+    "data_venda": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da venda"
+    },
+    "percentual_comissao_prevista": {
+      "type": "number",
+      "description": "Percentual de comissao prevista"
+    },
+    "valor_comissao_prevista": {
+      "type": "number",
+      "description": "Valor da comissao prevista (calculado automaticamente)"
+    },
+    "data_prevista_pagamento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista de pagamento da comissao"
+    },
+    "status_operacional": {
+      "type": "string",
+      "enum": [
+        "lancada",
+        "documentacao",
+        "em_aprovacao",
+        "aprovada",
+        "concluida",
+        "cancelada"
+      ],
+      "default": "lancada",
+      "description": "Status operacional da venda"
+    },
+    "status_conciliacao": {
+      "type": "string",
+      "enum": [
+        "nao_conciliada",
+        "em_conciliacao",
+        "conciliada",
+        "divergente"
+      ],
+      "default": "nao_conciliada",
+      "description": "Status de conciliacao"
+    },
+    "status_financeiro": {
+      "type": "string",
+      "enum": [
+        "comissao_prevista",
+        "comissao_paga",
+        "comissao_cancelada"
+      ],
+      "default": "comissao_prevista",
+      "description": "Status financeiro"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": [
+    "cliente",
+    "valor_carta"
+  ],
+  "rls": {
+    "create": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "read": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "update": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    },
+    "delete": {
+      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
+    }
+  }
+}
