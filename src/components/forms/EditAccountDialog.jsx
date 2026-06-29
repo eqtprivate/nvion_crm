@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PhoneInput } from './MaskedInputs';
 
 const initialForm = {
   name: '',
@@ -68,7 +69,7 @@ export default function EditAccountDialog({ open, onOpenChange, account, onSubmi
             </div>
             <div>
               <Label>Telefone</Label>
-              <Input value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} disabled={readOnly} />
+              <PhoneInput value={formData.telefone} onChange={(value) => setFormData({ ...formData, telefone: value })} disabled={readOnly} />
             </div>
             <div>
               <Label>Prazo Médio de Pagamento (dias)</Label>

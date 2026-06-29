@@ -24,7 +24,7 @@ import EditAccountDialog from '../components/forms/EditAccountDialog';
 import AccountKPICard from '../components/accounts/AccountKPICard';
 import AccountInsightsDialog from '../components/accounts/AccountInsightsDialog';
 import { useAuth } from '@/lib/AuthContext';
-import { formatCurrency } from '@/components/forms/MaskedInputs';
+import { formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
 
 const statusLabel = {
   ativa: 'Ativa',
@@ -248,7 +248,7 @@ export default function Accounts() {
                         </div>
                         <div>
                           <p className="font-medium">{account.name}</p>
-                          <p className="text-xs text-gray-500">{account.telefone || ''}</p>
+                          <p className="text-xs text-gray-500">{formatPhone(account.telefone) || ''}</p>
                         </div>
                       </div>
                     </TableCell>

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import { Camera, X, User } from 'lucide-react';
+import { PhoneInput } from './MaskedInputs';
 
 export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading, initialData }) {
   const fileInputRef = useRef(null);
@@ -191,12 +192,11 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
-                <Input
+                <PhoneInput
                   id="phone"
-                  type="tel"
                   placeholder="(11) 99999-9999"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, phone: value })}
                 />
               </div>
             </div>

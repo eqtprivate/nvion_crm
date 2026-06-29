@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, UserRound, MoreVertical, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoneyInput, formatCurrency } from '@/components/forms/MaskedInputs';
+import { MoneyInput, PhoneInput, formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
 
 const emptyForm = {
   nome: '',
@@ -77,7 +77,7 @@ function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loadi
             </div>
             <div>
               <Label>Telefone</Label>
-              <Input value={form.telefone || ''} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+              <PhoneInput value={form.telefone || ''} onChange={(value) => setForm({ ...form, telefone: value })} />
             </div>
             <div>
               <Label>CPF/CNPJ</Label>
@@ -248,7 +248,7 @@ export default function Vendedores() {
             <TableBody>
               {isLoading ? <TableRow><TableCell colSpan={7} className="text-center py-8">Carregando vendedores...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500"><UserRound className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum vendedor encontrado</TableCell></TableRow> : filtered.map((vendedor) => (
                 <TableRow key={vendedor.id}>
-                  <TableCell><p className="font-medium">{vendedor.nome}</p><p className="text-xs text-gray-500">{vendedor.email || vendedor.telefone || '-'}</p></TableCell>
+                  <TableCell><p className="font-medium">{vendedor.nome}</p><p className="text-xs text-gray-500">{vendedor.email || formatPhone(vendedor.telefone) || '-'}</p></TableCell>
                   <TableCell>{vendedor.equipe || '-'}</TableCell>
                   <TableCell>{vendedor.lider || '-'}</TableCell>
                   <TableCell>{tipoLabel[vendedor.tipo_vendedor] || vendedor.tipo_vendedor || '-'}</TableCell>

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Target, TrendingUp, Users } from 'lucide-react';
-import { formatCurrency } from '@/components/forms/MaskedInputs';
+import { formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
 
 const STATUS_LABEL = {
   ativa: 'Ativa',
@@ -74,7 +74,7 @@ export default function AccountInsightsDialog({ account, open, onOpenChange, con
               <div><span className="text-gray-500">CNPJ:</span> <span className="font-medium">{account.cnpj || '-'}</span></div>
               <div><span className="text-gray-500">Contato:</span> <span className="font-medium">{account.contato || '-'}</span></div>
               <div><span className="text-gray-500">Email:</span> <span className="font-medium">{account.email || '-'}</span></div>
-              <div><span className="text-gray-500">Telefone:</span> <span className="font-medium">{account.telefone || '-'}</span></div>
+              <div><span className="text-gray-500">Telefone:</span> <span className="font-medium">{formatPhone(account.telefone) || '-'}</span></div>
               <div><span className="text-gray-500">Prazo médio:</span> <span className="font-medium">{account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento} dias` : '-'}</span></div>
             </div>
           </TabsContent>
@@ -91,7 +91,7 @@ export default function AccountInsightsDialog({ account, open, onOpenChange, con
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-500">{contact.email}</p>
-                    <p className="text-xs text-gray-500">{contact.phone}</p>
+                    <p className="text-xs text-gray-500">{formatPhone(contact.phone)}</p>
                   </div>
                 </div>
               ))

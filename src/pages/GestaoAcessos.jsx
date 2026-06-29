@@ -47,6 +47,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import KPICard from '@/components/shared/KPICard';
 import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
+import { PhoneInput } from '@/components/forms/MaskedInputs';
 import { ROLE_LABELS } from '@/lib/modules';
 import { useAuth } from '@/lib/AuthContext';
 import { hashPassword } from '@/lib/auth';
@@ -179,7 +180,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
             </div>
             <div className="space-y-1">
               <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={f('telefone')} />
+              <PhoneInput value={form.telefone} onChange={(value) => setForm(p => ({ ...p, telefone: value }))} />
             </div>
             <div className="space-y-1">
               <Label>Plano</Label>

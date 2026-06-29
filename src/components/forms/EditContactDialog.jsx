@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PhoneInput } from './MaskedInputs';
 
 export default function EditContactDialog({ open, onOpenChange, contact, onSubmit, isLoading, readOnly = false }) {
   const [formData, setFormData] = useState({
@@ -78,10 +79,9 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Telefone</Label>
-              <Input
-                type="tel"
+              <PhoneInput
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, phone: value })}
                 disabled={readOnly}
               />
             </div>

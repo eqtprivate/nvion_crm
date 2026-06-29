@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ORIGENS, TEMPERATURAS, LEAD_STATUSES } from './LeadDialog';
-import { MoneyInput } from './MaskedInputs';
+import { MoneyInput, PhoneInput } from './MaskedInputs';
 
 export default function EditLeadDialog({
   open,
@@ -66,7 +66,7 @@ export default function EditLeadDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1"><Label>Nome *</Label><Input required value={form.name || ''} onChange={e => set('name', e.target.value)} /></div>
             <div className="space-y-1"><Label>Email</Label><Input type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Telefone</Label><Input value={form.phone || ''} onChange={e => set('phone', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Telefone</Label><PhoneInput value={form.phone || ''} onChange={value => set('phone', value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Origem</Label><Select value={form.origem || 'base_propria'} onValueChange={v => set('origem', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ORIGENS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></div>

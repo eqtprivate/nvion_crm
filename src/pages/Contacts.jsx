@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PhoneInput, formatPhone } from '@/components/forms/MaskedInputs';
 
 const origemOptions = ['indicacao', 'instagram', 'google', 'site', 'whatsapp', 'campanha_paga', 'base_propria', 'parceiro', 'evento', 'outro'];
 const statusOptions = ['lead', 'em_negociacao', 'cliente_ativo', 'venda_concluida', 'perdido', 'inativo'];
@@ -73,7 +74,7 @@ function ClienteDialog({ open, onOpenChange, onSubmit, cliente, loading }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><Label>Nome *</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>Email *</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div><Label>Telefone</Label><Input value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+            <div><Label>Telefone</Label><PhoneInput value={form.phone || ''} onChange={(value) => setForm({ ...form, phone: value })} /></div>
             <div><Label>CPF/CNPJ</Label><Input value={form.cpf_cnpj || ''} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} /></div>
             <div><Label>Cidade</Label><Input value={form.cidade || ''} onChange={(e) => setForm({ ...form, cidade: e.target.value })} /></div>
             <div><Label>Estado</Label><Input maxLength={2} value={form.estado || ''} onChange={(e) => setForm({ ...form, estado: e.target.value.toUpperCase() })} /></div>
@@ -224,7 +225,7 @@ export default function Contacts() {
                 <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500"><Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum cliente encontrado</TableCell></TableRow>
               ) : filtered.map((cliente) => (
                 <TableRow key={cliente.id}>
-                  <TableCell><p className="font-medium">{cliente.name}</p><p className="text-xs text-gray-500">{cliente.email || cliente.phone || '-'}</p></TableCell>
+                  <TableCell><p className="font-medium">{cliente.name}</p><p className="text-xs text-gray-500">{cliente.email || formatPhone(cliente.phone) || '-'}</p></TableCell>
                   <TableCell>{cliente.cpf_cnpj || '-'}</TableCell>
                   <TableCell>{cliente.cidade || '-'}{cliente.estado ? `/${cliente.estado}` : ''}</TableCell>
                   <TableCell>{cliente.origem?.replaceAll('_', ' ') || '-'}</TableCell>

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { X, Phone, Mail, MessageCircle, Building2, MapPin, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { formatCurrency } from '@/components/forms/MaskedInputs';
+import { formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
 
 const statusLabels = {
   lead: 'Lead',
@@ -98,7 +98,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
                 <Phone className="w-4 h-4 text-gray-400 mt-1" />
                 <div>
                   <p className="text-sm text-gray-500">Telefone</p>
-                  <p className="font-medium">{contact.phone}</p>
+                  <p className="font-medium">{formatPhone(contact.phone)}</p>
                 </div>
               </div>
             )}

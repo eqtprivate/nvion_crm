@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PhoneInput } from './MaskedInputs';
 
 const initialForm = {
   name: '',
@@ -53,7 +54,7 @@ export default function AccountDialog({ open, onOpenChange, onSubmit, isLoading 
             </div>
             <div className="space-y-2">
               <Label htmlFor="telefone">Telefone</Label>
-              <Input id="telefone" value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} placeholder="(11) 99999-9999" />
+              <PhoneInput id="telefone" value={formData.telefone} onChange={(value) => setFormData({ ...formData, telefone: value })} placeholder="(11) 99999-9999" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="prazo_medio_pagamento">Prazo Médio de Pagamento (dias)</Label>

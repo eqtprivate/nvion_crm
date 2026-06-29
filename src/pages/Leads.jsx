@@ -26,7 +26,7 @@ import LeadFilters from '../components/leads/LeadFilters';
 import LeadsAnalytics from '../components/leads/LeadsAnalytics';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
-import { formatCurrency, formatPercent } from '@/components/forms/MaskedInputs';
+import { formatCurrency, formatPercent, formatPhone } from '@/components/forms/MaskedInputs';
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
@@ -117,7 +117,7 @@ function ImportCSVDialog({ open, onOpenChange, onImport, isLoading }) {
               <div className="overflow-x-auto border rounded">
                 <table className="text-xs w-full">
                   <thead className="bg-gray-50"><tr><th className="p-2 text-left">Nome</th><th className="p-2 text-left">Email</th><th className="p-2 text-left">Telefone</th><th className="p-2 text-left">Origem</th><th className="p-2 text-left">Produto</th><th className="p-2 text-left">Vendedor</th></tr></thead>
-                  <tbody>{rows.slice(0, 5).map((r, i) => <tr key={i} className="border-t"><td className="p-2">{r.name || '-'}</td><td className="p-2">{r.email || '-'}</td><td className="p-2">{r.phone || '-'}</td><td className="p-2">{r.origem || '-'}</td><td className="p-2">{r.produto_interesse || '-'}</td><td className="p-2">{r.vendedor_responsavel || '-'}</td></tr>)}</tbody>
+                  <tbody>{rows.slice(0, 5).map((r, i) => <tr key={i} className="border-t"><td className="p-2">{r.name || '-'}</td><td className="p-2">{r.email || '-'}</td><td className="p-2">{formatPhone(r.phone) || '-'}</td><td className="p-2">{r.origem || '-'}</td><td className="p-2">{r.produto_interesse || '-'}</td><td className="p-2">{r.vendedor_responsavel || '-'}</td></tr>)}</tbody>
                 </table>
                 {rows.length > 5 && <p className="text-xs text-gray-400 p-2">… e mais {rows.length - 5} linha(s)</p>}
               </div>
@@ -375,7 +375,7 @@ export default function Leads() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm">{lead.phone || '-'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">{formatPhone(lead.phone) || '-'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">{ORIGEM_LABELS[lead.origem] || '-'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">
                       <div>

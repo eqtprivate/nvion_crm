@@ -12,6 +12,14 @@ export function formatPercent(value) {
   })}%`;
 }
 
+export function formatPhone(value) {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 function digitsToCurrency(rawValue) {
   const digits = String(rawValue || '').replace(/\D/g, '');
   if (!digits) return '';
@@ -46,6 +54,18 @@ export function PercentInput({ value, onChange, ...props }) {
       inputMode="decimal"
       value={value === '' || value == null ? '' : formatPercent(value)}
       onChange={(event) => onChange(percentToNumber(event.target.value))}
+    />
+  );
+}
+
+export function PhoneInput({ value, onChange, ...props }) {
+  return (
+    <Input
+      {...props}
+      inputMode="tel"
+      value={formatPhone(value)}
+      onChange={(event) => onChange(formatPhone(event.target.value))}
+      maxLength={15}
     />
   );
 }
