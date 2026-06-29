@@ -20,6 +20,10 @@ const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliac
 const statusOperacionalLabel = { lancada: 'Lançada', documentacao: 'Documentação', em_aprovacao: 'Em aprovação', aprovada: 'Aprovada', concluida: 'Concluída', cancelada: 'Cancelada' };
 function money(value) { return formatCurrency(value); }
 function calcComissao(valor, percentual) { return Number(valor || 0) * Number(percentual || 0) / 100; }
+function fallbackNumber(value, fallback = 0) {
+  const parsed = Number(value || 0);
+  return parsed || Number(fallback || 0);
+}
 
 function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
@@ -109,6 +113,14 @@ export default function VendasConsorcio() {
 
   const gerarComissao = async (vendaId, data) => {
     const regra = regras.find((r) => r.status === 'ativa' && r.produto === data.produto && (!r.administradora || r.administradora === data.administradora));
+    const valorCarta = Number(data.valor_carta || 0);
+    const percentualBase = fallbackNumber(data.percentual_comissao_prevista, regra?.percentual_base);
+    const valorComissaoTotal = fallbackNumber(data.valor_comissao_prevista, calcComissao(valorCarta, percentualBase));
+    const percentualVendedor = fallbackNumber(data.percentual_vendedor, regra?.percentual_vendedor);
+    const percentualLider = fallbackNumber(data.percentual_lider, regra?.percentual_lider);
+    const valorComissaoVendedor = fallbackNumber(data.valor_comissao_vendedor, calcComissao(valorComissaoTotal, percentualVendedor));
+    const valorComissaoLider = fallbackNumber(data.valor_comissao_lider, calcComissao(valorComissaoTotal, percentualLider));
+
     await base44.entities.Comissoes.create({
       empresa_vinculada: empresa,
       venda_vinculada: vendaId,
@@ -118,14 +130,14 @@ export default function VendasConsorcio() {
       vendedor: data.vendedor,
       lider: data.lider,
       equipe: data.equipe,
-      valor_carta: data.valor_carta,
+      valor_carta: valorCarta,
       regra_comissao: regra?.nome_regra || '',
-      percentual_base: data.percentual_comissao_prevista,
-      valor_comissao_total: data.valor_comissao_prevista,
-      percentual_vendedor: data.percentual_vendedor,
-      valor_comissao_vendedor: data.valor_comissao_vendedor,
-      percentual_lider: data.percentual_lider,
-      valor_comissao_lider: data.valor_comissao_lider,
+      percentual_base: percentualBase,
+      valor_comissao_total: valorComissaoTotal,
+      percentual_vendedor: percentualVendedor,
+      valor_comissao_vendedor: valorComissaoVendedor,
+      percentual_lider: percentualLider,
+      valor_comissao_lider: valorComissaoLider,
       data_prevista_pagamento: data.data_prevista_pagamento,
       status_comissao: 'prevista',
       origem: 'venda',
