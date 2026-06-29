@@ -38,18 +38,5 @@
   "required": [
     "nome_equipe"
   ],
-  "rls": {
-    "create": {
-      "empresa_vinculada": "{{user.empresa_vinculada}}"
-    },
-    "read": {
-      "empresa_vinculada": "{{user.empresa_vinculada}}"
-    },
-    "update": {
-      "empresa_vinculada": "{{user.empresa_vinculada}}"
-    },
-    "delete": {
-      "empresa_vinculada": "{{user.empresa_vinculada}}"
-    }
-  }
+  "rls": {}
 }
