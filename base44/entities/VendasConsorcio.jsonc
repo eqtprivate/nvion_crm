@@ -107,18 +107,5 @@
     "cliente",
     "valor_carta"
   ],
-  "rls": {
-    "create": {
-      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
-    },
-    "read": {
-      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
-    },
-    "update": {
-      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
-    },
-    "delete": {
-      "data.empresa_vinculada": "{{user.empresa_vinculada}}"
-    }
-  }
+  "rls": {}
 }
