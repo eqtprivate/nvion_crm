@@ -230,7 +230,9 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentU
   };
 
   const usuarios = useMemo(() => {
-    const base = isSuperAdmin ? todosUsuarios : todosUsuarios.filter(u => u.empresa_vinculada === empresa);
+    const base = isSuperAdmin
+      ? todosUsuarios
+      : todosUsuarios.filter(u => u.role !== 'super_admin' && u.empresa_vinculada === empresa);
     if (isSuperAdmin && empresaFiltro !== 'all') return base.filter(u => u.empresa_vinculada === empresaFiltro);
     return base;
   }, [todosUsuarios, isSuperAdmin, empresa, empresaFiltro]);
