@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 
 function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -27,9 +28,13 @@ function KPI({ title, value, Icon }) {
 export default function Dashboard() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
+  const teamMembers = useTeamMembers(user);
 
-  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
-  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+  const { data: allLeads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+  const { data: allOportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+
+  const leads = useMemo(() => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }), [allLeads, user, teamMembers]);
+  const oportunidades = useMemo(() => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }), [allOportunidades, user, teamMembers]);
 
   const kpis = useMemo(() => {
     const totalLeads = leads.length;
@@ -62,21 +67,22 @@ export default function Dashboard() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Oportunidades Recentes</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Oportunidades Recentes</CardTitle></CardHeader>
         <CardContent>
           {recentes.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-6">Sem oportunidades cadastradas.</p>
+            <p className="text-gray-400 text-sm text-center py-4">Nenhuma oportunidade encontrada</p>
           ) : (
             <div className="space-y-3">
-              {recentes.map((item) => (
-                <div key={item.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+              {recentes.map((op) => (
+                <div key={op.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.produto || '-'} · {money(item.valor_carta)}</p>
+                    <p className="font-medium text-gray-900">{op.name}</p>
+                    <p className="text-sm text-gray-500">{op.cliente_vinculado || '-'}</p>
                   </div>
-                  <Badge>{item.status || '-'}</Badge>
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">{money(op.valor_carta)}</p>
+                    <Badge className="text-xs">{op.status}</Badge>
+                  </div>
                 </div>
               ))}
             </div>
