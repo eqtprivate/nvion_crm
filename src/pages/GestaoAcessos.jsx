@@ -256,6 +256,21 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
     },
   });
 
+  const handleResetSenha = async (user) => {
+    const senha = generateTempPassword();
+    const senha_hash = await hashPassword(senha);
+    updateMutation.mutate(
+      { id: user.id, data: { senha_hash, senha_temporaria: senha } },
+      {
+        onSuccess: () => {
+          setLastCreatedUser({ name: user.display_name, senha });
+          setSenhaDialogOpen(true);
+        },
+        onError: () => toast.error('Erro ao resetar senha.'),
+      }
+    );
+  };
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.UsuarioAcesso.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todosUsuarios'] }),
@@ -371,6 +386,9 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
                               <KeyRound className="w-4 h-4 mr-2" /> Ver senha temporária
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuItem onClick={() => handleResetSenha(user)}>
+                            <KeyRound className="w-4 h-4 mr-2" /> Resetar Senha
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleStatus(user)}>
                             {user.status === 'ativo'
                               ? <><UserX className="w-4 h-4 mr-2" /> Suspender</>
