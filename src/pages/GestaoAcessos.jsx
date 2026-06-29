@@ -211,8 +211,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
   );
 }
 
-// ── Aba Usuários ────────────────────────────────────────────────────────────
-function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
+// ── Aba Usuários ──────────────────────────────────────────────────────────────────────────
+function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentUser }) {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -221,6 +221,13 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [lastCreatedUser, setLastCreatedUser] = useState({ name: '', senha: '' });
   const [empresaFiltro, setEmpresaFiltro] = useState('all');
+
+  // Returns true if the current user is allowed to perform actions on target
+  const canManage = (target) => {
+    if (isSuperAdmin) return true;
+    if (target.role === 'super_admin') return false;
+    return target.empresa_vinculada === empresa;
+  };
 
   const usuarios = useMemo(() => {
     const base = isSuperAdmin ? todosUsuarios : todosUsuarios.filter(u => u.empresa_vinculada === empresa);
@@ -375,35 +382,43 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
                       <Badge className={STATUS_COLORS[user.status] || 'bg-gray-100 text-gray-800'}>{user.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setSelectedUser(user); setEditDialogOpen(true); }}>
-                            <Pencil className="w-4 h-4 mr-2" /> Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setSelectedUser(user); setModulesDialogOpen(true); }}>
-                            <LayoutGrid className="w-4 h-4 mr-2" /> Gerenciar Módulos
-                          </DropdownMenuItem>
-                          {user.senha_temporaria && (
-                            <DropdownMenuItem onClick={() => { setLastCreatedUser({ name: user.display_name, senha: user.senha_temporaria }); setSenhaDialogOpen(true); }}>
-                              <KeyRound className="w-4 h-4 mr-2" /> Ver senha temporária
+                      {canManage(user) ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setSelectedUser(user); setEditDialogOpen(true); }}>
+                              <Pencil className="w-4 h-4 mr-2" /> Editar
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleResetSenha(user)}>
-                            <KeyRound className="w-4 h-4 mr-2" /> Resetar Senha
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleStatus(user)}>
-                            {user.status === 'ativo'
-                              ? <><UserX className="w-4 h-4 mr-2" /> Suspender</>
-                              : <><UserCheck className="w-4 h-4 mr-2" /> Ativar</>}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(user.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem onClick={() => { setSelectedUser(user); setModulesDialogOpen(true); }}>
+                              <LayoutGrid className="w-4 h-4 mr-2" /> Gerenciar Módulos
+                            </DropdownMenuItem>
+                            {user.senha_temporaria && (
+                              <DropdownMenuItem onClick={() => { setLastCreatedUser({ name: user.display_name, senha: user.senha_temporaria }); setSenhaDialogOpen(true); }}>
+                                <KeyRound className="w-4 h-4 mr-2" /> Ver senha temporária
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => handleResetSenha(user)}>
+                              <KeyRound className="w-4 h-4 mr-2" /> Resetar Senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleStatus(user)}>
+                              {user.status === 'ativo'
+                                ? <><UserX className="w-4 h-4 mr-2" /> Suspender</>
+                                : <><UserCheck className="w-4 h-4 mr-2" /> Ativar</>}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(user.id)}>
+                              <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <span title="Sem permissão para gerenciar este usuário">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-30 cursor-not-allowed" disabled>
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -441,7 +456,7 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
   );
 }
 
-// ── Aba Empresas (super_admin only) ────────────────────────────────────────
+// ── Aba Empresas (super_admin only) ──────────────────────────────────────────────────────
 function EmpresasTab({ todosUsuarios }) {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -591,7 +606,7 @@ function EmpresasTab({ todosUsuarios }) {
   );
 }
 
-// ── Página principal ────────────────────────────────────────────────────────
+// ── Página principal ──────────────────────────────────────────────────────────────────────────
 export default function GestaoAcessos() {
   const { user: currentUser } = useAuth();
   const empresa = currentUser?.empresa_vinculada;
@@ -620,14 +635,14 @@ export default function GestaoAcessos() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="usuarios">
-            <UsuariosTab isSuperAdmin={isSuperAdmin} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} />
+            <UsuariosTab isSuperAdmin={isSuperAdmin} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} currentUser={currentUser} />
           </TabsContent>
           <TabsContent value="empresas">
             <EmpresasTab todosUsuarios={todosUsuarios} />
           </TabsContent>
         </Tabs>
       ) : (
-        <UsuariosTab isSuperAdmin={false} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} />
+        <UsuariosTab isSuperAdmin={false} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} currentUser={currentUser} />
       )}
     </div>
   );
