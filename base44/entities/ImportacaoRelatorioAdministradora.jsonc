@@ -1,0 +1,64 @@
+{
+  "name": "ImportacaoRelatorioAdministradora",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "administradora": {
+      "type": "string",
+      "description": "Administradora do relatorio"
+    },
+    "arquivo_nome": {
+      "type": "string",
+      "description": "Nome do arquivo importado"
+    },
+    "data_importacao": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da importacao"
+    },
+    "competencia": {
+      "type": "string",
+      "description": "Competencia do relatorio"
+    },
+    "total_linhas": {
+      "type": "number",
+      "description": "Total de linhas importadas"
+    },
+    "total_conciliado": {
+      "type": "number",
+      "description": "Total de linhas conciliadas"
+    },
+    "total_divergente": {
+      "type": "number",
+      "description": "Total de linhas divergentes"
+    },
+    "total_nao_encontrado": {
+      "type": "number",
+      "description": "Total de linhas sem venda encontrada"
+    },
+    "status_importacao": {
+      "type": "string",
+      "enum": [
+        "importada",
+        "processada",
+        "confirmada",
+        "cancelada"
+      ],
+      "default": "importada",
+      "description": "Status da importacao"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": [
+    "empresa_vinculada",
+    "administradora",
+    "arquivo_nome"
+  ],
+  "rls": {}
+}

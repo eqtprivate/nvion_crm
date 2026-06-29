@@ -1,0 +1,135 @@
+{
+  "name": "ConciliacaoVenda",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "importacao_vinculada": {
+      "type": "string",
+      "description": "ID da importacao vinculada"
+    },
+    "venda_vinculada": {
+      "type": "string",
+      "description": "ID da venda vinculada"
+    },
+    "comissao_vinculada": {
+      "type": "string",
+      "description": "ID da comissao vinculada"
+    },
+    "administradora": {
+      "type": "string",
+      "description": "Administradora"
+    },
+    "cliente_relatorio": {
+      "type": "string",
+      "description": "Cliente informado no relatorio"
+    },
+    "cliente_interno": {
+      "type": "string",
+      "description": "Cliente da venda interna"
+    },
+    "grupo": {
+      "type": "string",
+      "description": "Grupo"
+    },
+    "cota": {
+      "type": "string",
+      "description": "Cota"
+    },
+    "cpf_cnpj": {
+      "type": "string",
+      "description": "CPF ou CNPJ"
+    },
+    "produto_relatorio": {
+      "type": "string",
+      "description": "Produto informado no relatorio"
+    },
+    "produto_interno": {
+      "type": "string",
+      "description": "Produto da venda interna"
+    },
+    "vendedor": {
+      "type": "string",
+      "description": "Vendedor da venda interna"
+    },
+    "lider": {
+      "type": "string",
+      "description": "Lider da venda interna"
+    },
+    "valor_carta_relatorio": {
+      "type": "number",
+      "description": "Valor da carta no relatorio"
+    },
+    "valor_carta_interno": {
+      "type": "number",
+      "description": "Valor da carta na venda interna"
+    },
+    "comissao_relatorio": {
+      "type": "number",
+      "description": "Valor da comissao no relatorio"
+    },
+    "comissao_interna": {
+      "type": "number",
+      "description": "Valor da comissao interna"
+    },
+    "data_venda_relatorio": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da venda no relatorio"
+    },
+    "data_prevista_pagamento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista de pagamento"
+    },
+    "status_conciliacao": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "conciliada",
+        "divergente",
+        "nao_encontrada",
+        "duplicada",
+        "ignorada"
+      ],
+      "default": "pendente",
+      "description": "Status da conciliacao"
+    },
+    "divergencia_tipo": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "valor_carta",
+        "valor_comissao",
+        "cliente",
+        "grupo_cota",
+        "produto",
+        "duplicidade",
+        "nao_encontrada",
+        "outro"
+      ],
+      "default": "nenhuma",
+      "description": "Tipo de divergencia"
+    },
+    "diferenca_valor_carta": {
+      "type": "number",
+      "description": "Diferenca entre valor de carta interno e relatorio"
+    },
+    "diferenca_comissao": {
+      "type": "number",
+      "description": "Diferenca entre comissao interna e relatorio"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": [
+    "empresa_vinculada",
+    "importacao_vinculada",
+    "administradora"
+  ],
+  "rls": {}
+}

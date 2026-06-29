@@ -20,6 +20,7 @@ import {
   Package,
   ReceiptText,
   HandCoins,
+  FileCheck,
   Percent,
   UserRound,
   Database
@@ -54,6 +55,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Vendedores', icon: UserRound, path: 'Vendedores' },
     { name: 'Vendas de Consórcio', icon: ReceiptText, path: 'VendasConsorcio' },
     { name: 'Comissões', icon: HandCoins, path: 'Comissoes' },
+    { name: 'Conciliação', icon: FileCheck, path: 'ConciliacaoAdministradora' },
     { name: 'Regras de Comissão', icon: Percent, path: 'RegrasComissao' },
     { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
   ];
