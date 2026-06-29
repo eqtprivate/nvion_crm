@@ -238,7 +238,10 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['todosUsuarios'] });
       setCreateDialogOpen(false);
-      setLastCreatedUser({ name: variables.display_name, senha: variables.senha_temporaria });
+      setLastCreatedUser(prev => ({
+        name: variables.display_name || prev.name,
+        senha: variables.senha_temporaria || prev.senha,
+      }));
       setSenhaDialogOpen(true);
     },
     onError: (err) => {
@@ -286,6 +289,8 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
   const handleCreate = async (data) => {
     const senha = generateTempPassword();
     const senha_hash = await hashPassword(senha);
+    // Store before mutate so onSuccess can always read it
+    setLastCreatedUser({ name: data.display_name, senha });
     createMutation.mutate({
       ...data,
       status: 'ativo',
