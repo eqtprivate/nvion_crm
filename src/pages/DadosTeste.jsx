@@ -4,9 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Database, CheckCircle2, Loader2 } from 'lucide-react';
-
-const empresaPadrao = 'EQT CONSORCIO';
+import { Database, CheckCircle2, Loader2, ShieldAlert } from 'lucide-react';
 
 async function createIfMissing(entity, findField, payload) {
   const list = await base44.entities[entity].list('-created_date');
@@ -16,9 +14,12 @@ async function createIfMissing(entity, findField, payload) {
   return { created: true, item };
 }
 
+const ALLOWED_ROLES = ['super_admin', 'admin_empresa'];
+
 export default function DadosTeste() {
   const { user } = useAuth();
-  const empresa = user?.empresa_vinculada || empresaPadrao;
+  const empresa = user?.empresa_vinculada;
+  const canAccess = ALLOWED_ROLES.includes(user?.role);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [done, setDone] = useState(false);
@@ -119,6 +120,30 @@ export default function DadosTeste() {
     setDone(true);
     setLoading(false);
   };
+
+  if (!canAccess) {
+    return (
+      <div className="p-4 sm:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <ShieldAlert className="w-12 h-12 text-gray-300 mx-auto" />
+          <p className="text-gray-500 font-medium">Acesso restrito</p>
+          <p className="text-sm text-gray-400">Apenas administradores podem acessar esta área.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!empresa) {
+    return (
+      <div className="p-4 sm:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <ShieldAlert className="w-12 h-12 text-yellow-400 mx-auto" />
+          <p className="text-gray-700 font-medium">Empresa não vinculada</p>
+          <p className="text-sm text-gray-500">Seu usuário não possui <code>empresa_vinculada</code> definida. Vincule uma empresa antes de popular dados.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
