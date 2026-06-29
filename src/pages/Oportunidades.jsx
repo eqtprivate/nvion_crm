@@ -36,12 +36,19 @@ export default function Oportunidades() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
   const teamMembers = useTeamMembers(user);
+  const filterEmpresa = (items) => items.filter((item) => item.empresa_vinculada === empresa);
 
   const { data: allOportunidades = [], isLoading } = useQuery({
     queryKey: ['opportunities', empresa],
     queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
+  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => filterEmpresa(await base44.entities.Lead.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: contacts = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Contact.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
 
   const oportunidades = useMemo(
     () => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }),
@@ -254,8 +261,32 @@ export default function Oportunidades() {
         </div>
       </div>
 
-      <OpportunityDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} />
-      <OpportunityDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} opportunity={selectedOportunidade} onSubmit={data => updateMutation.mutate({ id: selectedOportunidade.id, data })} isLoading={updateMutation.isPending} />
+      <OpportunityDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={data => createMutation.mutate(data)}
+        isLoading={createMutation.isPending}
+        currentUser={user}
+        leads={leads}
+        contacts={contacts}
+        produtos={produtos}
+        administradoras={administradoras}
+        vendedores={vendedores}
+        equipes={equipes}
+      />
+      <OpportunityDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        opportunity={selectedOportunidade}
+        onSubmit={data => updateMutation.mutate({ id: selectedOportunidade.id, data })}
+        isLoading={updateMutation.isPending}
+        leads={leads}
+        contacts={contacts}
+        produtos={produtos}
+        administradoras={administradoras}
+        vendedores={vendedores}
+        equipes={equipes}
+      />
     </div>
   );
 }

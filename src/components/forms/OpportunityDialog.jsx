@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,9 +26,30 @@ export const OPP_STATUSES = [
 
 const emptyForm = { name: '', cliente_vinculado: '', lead_vinculado: '', vendedor: '', lider: '', administradora_pretendida: '', produto: '', valor_carta: '', previsao_fechamento: '', probabilidade: '', motivo_perda: '', status: 'aberta', stage: 'novo_contato' };
 
-export default function OpportunityDialog({ open, onOpenChange, onSubmit, isLoading, opportunity, currentUser }) {
+export default function OpportunityDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  isLoading,
+  opportunity,
+  currentUser,
+  leads = [],
+  contacts = [],
+  produtos = [],
+  administradoras = [],
+  vendedores = [],
+  equipes = [],
+}) {
   const [form, setForm] = useState(emptyForm);
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
+
+  const lideres = useMemo(() => {
+    const nomes = new Set([
+      ...vendedores.filter(v => v.tipo_vendedor === 'lider').map(v => v.nome).filter(Boolean),
+      ...equipes.map(e => e.lider_responsavel).filter(Boolean),
+    ]);
+    return Array.from(nomes).sort();
+  }, [vendedores, equipes]);
 
   useEffect(() => {
     if (opportunity) {
@@ -47,6 +68,33 @@ export default function OpportunityDialog({ open, onOpenChange, onSubmit, isLoad
     if (!opportunity) setForm(emptyForm);
   };
 
+  const handleLeadChange = (leadId) => {
+    const lead = leads.find(item => item.id === leadId);
+    if (!lead) return set('lead_vinculado', leadId);
+    setForm(prev => ({
+      ...prev,
+      name: prev.name || `Oportunidade - ${lead.name}`,
+      cliente_vinculado: prev.cliente_vinculado || lead.name || '',
+      lead_vinculado: lead.id,
+      vendedor: prev.vendedor || lead.vendedor_responsavel || '',
+      lider: prev.lider || lead.lider_vinculado || '',
+      administradora_pretendida: prev.administradora_pretendida || lead.administradora_interesse || '',
+      produto: prev.produto || lead.produto_interesse || '',
+      valor_carta: prev.valor_carta || lead.valor_estimado_carta || '',
+      probabilidade: prev.probabilidade || (lead.temperatura === 'quente' ? 70 : lead.temperatura === 'frio' ? 30 : 50),
+      stage: prev.stage === 'novo_contato' && lead.status && !['novo_contato', 'venda_concluida', 'perdida'].includes(lead.status) ? lead.status : prev.stage,
+    }));
+  };
+
+  const handleProdutoChange = (nomeProduto) => {
+    const produto = produtos.find(item => item.nome_produto === nomeProduto);
+    setForm(prev => ({
+      ...prev,
+      produto: nomeProduto,
+      administradora_pretendida: produto?.administradora_vinculada || prev.administradora_pretendida,
+    }));
+  };
+
   const isEdit = !!opportunity;
 
   return (
@@ -56,16 +104,16 @@ export default function OpportunityDialog({ open, onOpenChange, onSubmit, isLoad
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-1"><Label>Nome da Oportunidade *</Label><Input required value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ex: João Silva — Imóvel 350k" /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Cliente Vinculado</Label><Input value={form.cliente_vinculado} onChange={e => set('cliente_vinculado', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Lead de Origem</Label><Input value={form.lead_vinculado} onChange={e => set('lead_vinculado', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Cliente Vinculado</Label><Select value={form.cliente_vinculado || ''} onValueChange={v => set('cliente_vinculado', v)}><SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger><SelectContent>{contacts.filter(c => c.name).map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1"><Label>Lead de Origem</Label><Select value={form.lead_vinculado || ''} onValueChange={handleLeadChange}><SelectTrigger><SelectValue placeholder="Selecione o lead" /></SelectTrigger><SelectContent>{leads.filter(l => l.id && l.name).map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Vendedor</Label><Input value={form.vendedor} onChange={e => set('vendedor', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Líder Comercial</Label><Input value={form.lider} onChange={e => set('lider', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Vendedor</Label><Select value={form.vendedor || ''} onValueChange={v => set('vendedor', v)}><SelectTrigger><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger><SelectContent>{vendedores.filter(v => v.nome).map(v => <SelectItem key={v.id} value={v.nome}>{v.nome}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1"><Label>Líder Comercial</Label><Select value={form.lider || ''} onValueChange={v => set('lider', v)}><SelectTrigger><SelectValue placeholder="Selecione o líder" /></SelectTrigger><SelectContent>{lideres.map(nome => <SelectItem key={nome} value={nome}>{nome}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Administradora Pretendida</Label><Input value={form.administradora_pretendida} onChange={e => set('administradora_pretendida', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Produto</Label><Input value={form.produto} onChange={e => set('produto', e.target.value)} placeholder="Imóvel, Veículo, Serviço..." /></div>
+            <div className="space-y-1"><Label>Administradora Pretendida</Label><Select value={form.administradora_pretendida || ''} onValueChange={v => set('administradora_pretendida', v)}><SelectTrigger><SelectValue placeholder="Selecione a administradora" /></SelectTrigger><SelectContent>{administradoras.filter(a => a.name).map(a => <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1"><Label>Produto</Label><Select value={form.produto || ''} onValueChange={handleProdutoChange}><SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger><SelectContent>{produtos.filter(p => p.nome_produto).map(p => <SelectItem key={p.id} value={p.nome_produto}>{p.nome_produto}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Valor da Carta (R$) *</Label><Input required type="number" value={form.valor_carta} onChange={e => set('valor_carta', e.target.value)} /></div>
