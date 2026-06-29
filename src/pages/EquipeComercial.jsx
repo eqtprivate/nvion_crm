@@ -28,6 +28,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { MoneyInput, formatCurrency } from '@/components/forms/MaskedInputs';
 
@@ -38,7 +39,6 @@ export default function EquipeComercial() {
   const [form, setForm] = useState({
     nome_equipe: '',
     lider_responsavel: '',
-    vendedores_texto: '',
     meta_mensal: '',
     status: 'ativo',
   });
@@ -59,7 +59,21 @@ export default function EquipeComercial() {
     ? allEquipes.filter(e => e.lider_responsavel === user.display_name)
     : allEquipes;
 
-  const resetForm = () => setForm({ nome_equipe: '', lider_responsavel: '', vendedores_texto: '', meta_mensal: '', status: 'ativo' });
+  const { data: vendedores = [] } = useQuery({
+    queryKey: ['vendedores', empresa],
+    queryFn: async () => {
+      const all = await base44.entities.Vendedores.list('-created_date');
+      return all.filter((item) => item.empresa_vinculada === empresa);
+    },
+    enabled: !!empresa,
+  });
+
+  const resetForm = () => setForm({ nome_equipe: '', lider_responsavel: '', meta_mensal: '', status: 'ativo' });
+
+  const getVendedoresEquipe = (nomeEquipe) => vendedores
+    .filter((vendedor) => vendedor.equipe === nomeEquipe)
+    .map((vendedor) => vendedor.nome)
+    .filter(Boolean);
 
   const openCreateDialog = () => {
     setSelectedEquipe(null);
@@ -72,7 +86,6 @@ export default function EquipeComercial() {
     setForm({
       nome_equipe: equipe.nome_equipe || '',
       lider_responsavel: equipe.lider_responsavel || '',
-      vendedores_texto: equipe.vendedores_vinculados?.join(', ') || '',
       meta_mensal: equipe.meta_mensal || '',
       status: equipe.status || 'ativo',
     });
@@ -98,9 +111,22 @@ export default function EquipeComercial() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.EquipeComercial.update(id, data),
+    mutationFn: async ({ id, data, previousName }) => {
+      const equipe = await base44.entities.EquipeComercial.update(id, data);
+      if (previousName && data.nome_equipe && data.nome_equipe !== previousName) {
+        const allVendedores = await base44.entities.Vendedores.list('-created_date');
+        const vinculados = allVendedores.filter((vendedor) =>
+          vendedor.empresa_vinculada === empresa && vendedor.equipe === previousName
+        );
+        await Promise.all(vinculados.map((vendedor) =>
+          base44.entities.Vendedores.update(vendedor.id, { equipe: data.nome_equipe })
+        ));
+      }
+      return equipe;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
+      queryClient.invalidateQueries({ queryKey: ['vendedores', empresa] });
       setDialogOpen(false);
       setSelectedEquipe(null);
       resetForm();
@@ -117,32 +143,27 @@ export default function EquipeComercial() {
   const filtered = equipes.filter(e =>
     e.nome_equipe?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.lider_responsavel?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.vendedores_vinculados?.some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
+    getVendedoresEquipe(e.nome_equipe).some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const kpis = {
     total: equipes.length,
     ativas: equipes.filter(e => e.status === 'ativo').length,
-    totalVendedores: equipes.reduce((sum, e) => sum + (e.vendedores_vinculados?.length || 0), 0),
+    totalVendedores: vendedores.filter((vendedor) => vendedor.equipe).length,
     metaTotal: equipes.reduce((sum, e) => sum + (e.meta_mensal || 0), 0),
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const vendedores = form.vendedores_texto
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-
     const payload = {
       nome_equipe: form.nome_equipe,
       lider_responsavel: form.lider_responsavel,
       meta_mensal: form.meta_mensal ? parseFloat(form.meta_mensal) : undefined,
       status: form.status,
-      vendedores_vinculados: vendedores,
+      vendedores_vinculados: getVendedoresEquipe(selectedEquipe?.nome_equipe || form.nome_equipe),
     };
 
-    if (selectedEquipe?.id) updateMutation.mutate({ id: selectedEquipe.id, data: payload });
+    if (selectedEquipe?.id) updateMutation.mutate({ id: selectedEquipe.id, data: payload, previousName: selectedEquipe.nome_equipe });
     else createMutation.mutate(payload);
   };
 
@@ -196,18 +217,21 @@ export default function EquipeComercial() {
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Users className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma equipe encontrada</span><span className="text-sm">Crie uma equipe comercial para organizar líderes e vendedores</span></div></TableCell></TableRow>
               ) : (
-                filtered.map((equipe) => (
-                  <TableRow key={equipe.id} className="hover:bg-gray-50">
-                    <TableCell><div className="flex items-center gap-3"><div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div><p className="font-medium">{equipe.nome_equipe}</p></div></TableCell>
-                    <TableCell><div className="flex items-center gap-2"><UserCircle className="w-4 h-4 text-gray-400" /><span className="text-sm">{equipe.lider_responsavel || '-'}</span></div></TableCell>
-                    <TableCell><div className="flex flex-wrap gap-1">{equipe.vendedores_vinculados?.length ? equipe.vendedores_vinculados.map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>) : <Badge variant="outline">0 vendedor(es)</Badge>}</div></TableCell>
-                    <TableCell><span className="font-medium">{equipe.meta_mensal ? formatCurrency(equipe.meta_mensal) : '-'}</span></TableCell>
-                    <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
-                    {canManageTeams && (
-                    <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => openEditDialog(equipe)}>Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
-                    )}
-                  </TableRow>
-                ))
+                filtered.map((equipe) => {
+                  const vendedoresEquipe = getVendedoresEquipe(equipe.nome_equipe);
+                  return (
+                    <TableRow key={equipe.id} className="hover:bg-gray-50">
+                      <TableCell><div className="flex items-center gap-3"><div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div><p className="font-medium">{equipe.nome_equipe}</p></div></TableCell>
+                      <TableCell><div className="flex items-center gap-2"><UserCircle className="w-4 h-4 text-gray-400" /><span className="text-sm">{equipe.lider_responsavel || '-'}</span></div></TableCell>
+                      <TableCell><div className="flex flex-wrap gap-1">{vendedoresEquipe.length ? vendedoresEquipe.map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>) : <Badge variant="outline">0 vendedor(es)</Badge>}</div></TableCell>
+                      <TableCell><span className="font-medium">{equipe.meta_mensal ? formatCurrency(equipe.meta_mensal) : '-'}</span></TableCell>
+                      <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
+                      {canManageTeams && (
+                      <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => openEditDialog(equipe)}>Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -219,8 +243,29 @@ export default function EquipeComercial() {
           <DialogHeader><DialogTitle>{selectedEquipe ? 'Editar Equipe Comercial' : 'Nova Equipe Comercial'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div><Label htmlFor="nome_equipe">Nome da Equipe *</Label><Input id="nome_equipe" value={form.nome_equipe} onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))} placeholder="Ex: Equipe Sul" required /></div>
-            <div><Label htmlFor="lider">Líder Responsável</Label><Input id="lider" value={form.lider_responsavel} onChange={(e) => setForm(prev => ({ ...prev, lider_responsavel: e.target.value }))} placeholder="Nome do líder" /></div>
-            <div><Label htmlFor="vendedores">Vendedores Vinculados</Label><Input id="vendedores" value={form.vendedores_texto} onChange={(e) => setForm(prev => ({ ...prev, vendedores_texto: e.target.value }))} placeholder="Ex: Ana Lima, Marcos Oliveira, Bruno Ferreira" /><p className="text-xs text-gray-500 mt-1">Separe os vendedores por vírgula.</p></div>
+            <div>
+              <Label htmlFor="lider">Líder Responsável</Label>
+              <Select value={form.lider_responsavel || ''} onValueChange={(value) => setForm(prev => ({ ...prev, lider_responsavel: value }))}>
+                <SelectTrigger id="lider"><SelectValue placeholder="Selecione um vendedor" /></SelectTrigger>
+                <SelectContent>
+                  {vendedores.filter((vendedor) => vendedor.nome).map((vendedor) => (
+                    <SelectItem key={vendedor.id} value={vendedor.nome}>{vendedor.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Vendedores Vinculados</Label>
+              <div className="min-h-10 rounded-md border border-input bg-gray-50 px-3 py-2">
+                <div className="flex flex-wrap gap-1">
+                  {getVendedoresEquipe(selectedEquipe?.nome_equipe || form.nome_equipe).length ? (
+                    getVendedoresEquipe(selectedEquipe?.nome_equipe || form.nome_equipe).map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>)
+                  ) : (
+                    <span className="text-sm text-gray-500">Nenhum vendedor vinculado</span>
+                  )}
+                </div>
+              </div>
+            </div>
             <div><Label htmlFor="meta">Meta Mensal</Label><MoneyInput id="meta" value={form.meta_mensal} onChange={(value) => setForm(prev => ({ ...prev, meta_mensal: value }))} /></div>
             <div>
               <Label htmlFor="status">Status</Label>
