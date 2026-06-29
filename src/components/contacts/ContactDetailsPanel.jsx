@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { X, Phone, Mail, MessageCircle, Building2, MapPin, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { formatCurrency } from '@/components/forms/MaskedInputs';
 
 const statusLabels = {
   lead: 'Lead',
@@ -149,7 +150,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
                       <div>
                         <p className="font-medium">{opp.name}</p>
                         {opp.valor_carta && (
-                          <p className="text-sm text-gray-600">R$ {opp.valor_carta.toLocaleString('pt-BR')}</p>
+                          <p className="text-sm text-gray-600">{formatCurrency(opp.valor_carta)}</p>
                         )}
                       </div>
                       <Badge>{opp.status}</Badge>

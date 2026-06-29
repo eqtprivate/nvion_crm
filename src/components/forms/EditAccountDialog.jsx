@@ -1,152 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const initialForm = {
+  name: '',
+  cnpj: '',
+  contato: '',
+  email: '',
+  telefone: '',
+  prazo_medio_pagamento: '',
+  status: 'ativa',
+};
+
 export default function EditAccountDialog({ open, onOpenChange, account, onSubmit, isLoading, readOnly = false }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    industry: '',
-    website: '',
-    phone: '',
-    email: '',
-    annual_revenue: '',
-    employees: '',
-    status: 'active'
-  });
+  const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => {
     if (account) {
       setFormData({
         name: account.name || '',
-        industry: account.industry || '',
-        website: account.website || '',
-        phone: account.phone || '',
+        cnpj: account.cnpj || '',
+        contato: account.contato || '',
         email: account.email || '',
-        annual_revenue: account.annual_revenue || '',
-        employees: account.employees || '',
-        status: account.status || 'active'
+        telefone: account.telefone || '',
+        prazo_medio_pagamento: account.prazo_medio_pagamento || '',
+        status: account.status || 'ativa',
       });
     }
   }, [account]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
     if (readOnly) return;
-    
-    const dataToSubmit = {
+
+    onSubmit({
       ...formData,
-      annual_revenue: formData.annual_revenue ? Number(formData.annual_revenue) : undefined,
-      employees: formData.employees ? Number(formData.employees) : undefined
-    };
-    onSubmit(dataToSubmit);
+      prazo_medio_pagamento: formData.prazo_medio_pagamento ? Number(formData.prazo_medio_pagamento) : undefined,
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{readOnly ? 'Account Details' : 'Edit Account'}</DialogTitle>
+          <DialogTitle>{readOnly ? 'Detalhes da Administradora' : 'Editar Administradora'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Account Name *</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                disabled={readOnly}
-              />
+              <Label>Nome da Administradora *</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required disabled={readOnly} />
             </div>
             <div>
-              <Label>Industry</Label>
-              <Input
-                value={formData.industry}
-                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                disabled={readOnly}
-              />
+              <Label>CNPJ</Label>
+              <Input value={formData.cnpj} onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })} disabled={readOnly} />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Phone</Label>
-              <Input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                disabled={readOnly}
-              />
+              <Label>Contato Principal</Label>
+              <Input value={formData.contato} onChange={(e) => setFormData({ ...formData, contato: e.target.value })} disabled={readOnly} />
             </div>
             <div>
               <Label>Email</Label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={readOnly}
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label>Website</Label>
-            <Input
-              type="url"
-              placeholder="https://example.com"
-              value={formData.website}
-              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              disabled={readOnly}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Annual Revenue</Label>
-              <Input
-                type="number"
-                placeholder="100000"
-                value={formData.annual_revenue}
-                onChange={(e) => setFormData({ ...formData, annual_revenue: e.target.value })}
-                disabled={readOnly}
-              />
+              <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} disabled={readOnly} />
             </div>
             <div>
-              <Label>Employees</Label>
-              <Input
-                type="number"
-                placeholder="50"
-                value={formData.employees}
-                onChange={(e) => setFormData({ ...formData, employees: e.target.value })}
-                disabled={readOnly}
-              />
+              <Label>Telefone</Label>
+              <Input value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} disabled={readOnly} />
+            </div>
+            <div>
+              <Label>Prazo Médio de Pagamento (dias)</Label>
+              <Input inputMode="numeric" value={formData.prazo_medio_pagamento} onChange={(e) => setFormData({ ...formData, prazo_medio_pagamento: e.target.value.replace(/\D/g, '') })} disabled={readOnly} />
             </div>
           </div>
 
           <div>
             <Label>Status</Label>
             <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })} disabled={readOnly}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="prospect">Prospect</SelectItem>
+                <SelectItem value="ativa">Ativa</SelectItem>
+                <SelectItem value="inativa">Inativa</SelectItem>
+                <SelectItem value="em_analise">Em análise</SelectItem>
+                <SelectItem value="suspensa">Suspensa</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {readOnly ? 'Close' : 'Cancel'}
+              {readOnly ? 'Fechar' : 'Cancelar'}
             </Button>
             {!readOnly && (
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             )}
           </div>

@@ -63,7 +63,7 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file (JPG or PNG)');
+      alert('Envie uma imagem JPG ou PNG.');
       return;
     }
 
@@ -72,8 +72,8 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFormData({ ...formData, photo_url: file_url });
     } catch (error) {
-      console.error('Failed to upload photo:', error);
-      alert('Failed to upload photo. Please try again.');
+      console.error('Erro ao enviar foto:', error);
+      alert('Não foi possível enviar a foto. Tente novamente.');
     } finally {
       setUploadingPhoto(false);
     }
@@ -118,7 +118,7 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Contact</DialogTitle>
+          <DialogTitle>Novo Cliente</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 py-4">
@@ -160,14 +160,14 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
                 />
               </div>
               {uploadingPhoto && (
-                <p className="text-xs text-gray-500">Uploading photo...</p>
+                <p className="text-xs text-gray-500">Enviando foto...</p>
               )}
               <div className="w-full space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Nome *</Label>
                 <Input
                   id="name"
                   required
-                  placeholder="John Doe"
+                  placeholder="João Silva"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="text-center font-medium"
@@ -177,7 +177,7 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
 
             {/* Contact Details Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Contact Details</h3>
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dados de Contato</h3>
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
@@ -190,11 +190,11 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Telefone</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="(11) 99999-9999"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
@@ -203,21 +203,21 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
 
             {/* Professional Details Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Professional Details</h3>
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dados Comerciais</h3>
               <div className="space-y-2">
-                <Label htmlFor="company">Company</Label>
+                <Label htmlFor="company">Empresa</Label>
                 <Input
                   id="company"
-                  placeholder="Acme Inc."
+                  placeholder="Empresa"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
+                <Label htmlFor="position">Cargo</Label>
                 <Input
                   id="position"
-                  placeholder="Sales Manager"
+                  placeholder="Gerente comercial"
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                 />
@@ -226,27 +226,27 @@ export default function ContactDialog({ open, onOpenChange, onSubmit, isLoading,
 
             {/* Source */}
             <div className="space-y-2">
-              <Label htmlFor="source">How did you meet?</Label>
+              <Label htmlFor="source">Origem</Label>
               <Select value={formData.source} onValueChange={(value) => setFormData({ ...formData, source: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="call">📞 Phone Call</SelectItem>
-                  <SelectItem value="email">✉️ Email</SelectItem>
-                  <SelectItem value="website">🌐 Website</SelectItem>
-                  <SelectItem value="partner">🤝 Partner Referral</SelectItem>
-                  <SelectItem value="referral">👥 Personal Referral</SelectItem>
+                  <SelectItem value="call">Ligação</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="website">Site</SelectItem>
+                  <SelectItem value="partner">Parceiro</SelectItem>
+                  <SelectItem value="referral">Indicação</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" disabled={isLoading || uploadingPhoto}>
-              {isLoading ? 'Creating...' : 'Create Contact'}
+              {isLoading ? 'Criando...' : 'Criar Cliente'}
             </Button>
           </DialogFooter>
         </form>

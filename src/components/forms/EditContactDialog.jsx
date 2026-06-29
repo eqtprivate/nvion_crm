@@ -50,12 +50,12 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{readOnly ? 'Contact Details' : 'Edit Contact'}</DialogTitle>
+          <DialogTitle>{readOnly ? 'Detalhes do Cliente' : 'Editar Cliente'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Name *</Label>
+              <Label>Nome *</Label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -77,7 +77,7 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Phone</Label>
+              <Label>Telefone</Label>
               <Input
                 type="tel"
                 value={formData.phone}
@@ -86,7 +86,7 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
               />
             </div>
             <div>
-              <Label>Company</Label>
+              <Label>Empresa</Label>
               <Input
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
@@ -96,7 +96,7 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
           </div>
 
           <div>
-            <Label>Position</Label>
+            <Label>Cargo</Label>
             <Input
               value={formData.position}
               onChange={(e) => setFormData({ ...formData, position: e.target.value })}
@@ -112,23 +112,23 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Source</Label>
+              <Label>Origem</Label>
               <Select value={formData.source} onValueChange={(value) => setFormData({ ...formData, source: value })} disabled={readOnly}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="call">Call</SelectItem>
+                  <SelectItem value="call">Ligação</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="partner">Partner</SelectItem>
-                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="website">Site</SelectItem>
+                  <SelectItem value="partner">Parceiro</SelectItem>
+                  <SelectItem value="referral">Indicação</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -136,11 +136,11 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSubmi
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {readOnly ? 'Close' : 'Cancel'}
+              {readOnly ? 'Fechar' : 'Cancelar'}
             </Button>
             {!readOnly && (
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             )}
           </div>

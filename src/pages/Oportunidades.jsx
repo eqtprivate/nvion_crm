@@ -22,6 +22,7 @@ import {
 import OpportunityDialog from '../components/forms/OpportunityDialog';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
+import { formatCurrency, formatPercent } from '@/components/forms/MaskedInputs';
 
 const stageLabels = {
   novo_contato: 'Novo Contato', qualificacao: 'Qualificação', simulacao: 'Simulação',
@@ -169,7 +170,7 @@ export default function Oportunidades() {
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total</p><p className="text-2xl font-bold text-gray-900">{kpis.total}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Em Aberto</p><p className="text-2xl font-bold text-blue-600">{kpis.abertas}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Ganhas</p><p className="text-2xl font-bold text-green-600">{kpis.ganhas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pipeline (R$)</p><p className="text-2xl font-bold text-primary">{kpis.pipeline.toLocaleString('pt-BR')}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pipeline</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.pipeline)}</p></CardContent></Card>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -238,7 +239,7 @@ export default function Oportunidades() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{op.produto || '-'}</TableCell>
                     <TableCell>
-                      <span className="font-medium">{op.valor_carta ? `R$ ${op.valor_carta.toLocaleString('pt-BR')}` : '-'}</span>
+                      <span className="font-medium">{op.valor_carta ? formatCurrency(op.valor_carta) : '-'}</span>
                     </TableCell>
                     <TableCell>
                       <Select value={op.stage || 'novo_contato'} onValueChange={v => handleQuickUpdate(op.id, 'stage', v)}>
@@ -257,7 +258,7 @@ export default function Oportunidades() {
                       {op.previsao_fechamento ? new Date(op.previsao_fechamento).toLocaleDateString('pt-BR') : '-'}
                     </TableCell>
                     <TableCell className="hidden xl:table-cell text-sm">
-                      {op.probabilidade != null ? `${op.probabilidade}%` : '-'}
+                      {op.probabilidade != null ? formatPercent(op.probabilidade) : '-'}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

@@ -2,109 +2,92 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Phone, Calendar, TrendingUp, Users, Target } from 'lucide-react';
+import { Calendar, Target, TrendingUp, Users } from 'lucide-react';
+import { formatCurrency } from '@/components/forms/MaskedInputs';
 
-export default function AccountInsightsDialog({ account, open, onOpenChange, activities = [], contacts = [], opportunities = [] }) {
+const STATUS_LABEL = {
+  ativa: 'Ativa',
+  inativa: 'Inativa',
+  em_analise: 'Em análise',
+  suspensa: 'Suspensa',
+};
+
+export default function AccountInsightsDialog({ account, open, onOpenChange, contacts = [], opportunities = [] }) {
   if (!account) return null;
 
-  const accountActivities = activities.filter(a => a.related_to_name === account.name);
-  const accountContacts = contacts.filter(c => c.company === account.name);
-  const accountOpps = opportunities.filter(o => o.account_name === account.name);
-  
-  const totalRevenue = accountOpps
-    .filter(o => o.stage === 'closed_won')
-    .reduce((sum, o) => sum + (o.amount || 0), 0);
+  const accountContacts = contacts.filter((contact) => contact.administradora === account.name || contact.company === account.name);
+  const accountOpps = opportunities.filter((opportunity) => opportunity.administradora_pretendida === account.name);
+  const wonValue = accountOpps
+    .filter((opportunity) => opportunity.status === 'ganha')
+    .reduce((sum, opportunity) => sum + (opportunity.valor_carta || 0), 0);
+  const openOpps = accountOpps.filter((opportunity) => opportunity.status === 'aberta');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <DialogTitle className="text-xl">{account.name}</DialogTitle>
-              <p className="text-sm text-gray-500">{account.industry}</p>
+              <p className="text-sm text-gray-500">{account.contato || account.email || 'Administradora'}</p>
             </div>
-            <Badge className={
-              account.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }>
-              {account.status}
+            <Badge className={account.status === 'ativa' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+              {STATUS_LABEL[account.status] || account.status || '-'}
             </Badge>
           </div>
         </DialogHeader>
 
-        {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 text-center">
               <TrendingUp className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-              <div className="text-2xl font-bold">${(totalRevenue / 1000000).toFixed(1)}M</div>
-              <div className="text-xs text-gray-500">Total Revenue</div>
+              <div className="text-2xl font-bold">{formatCurrency(wonValue)}</div>
+              <div className="text-xs text-gray-500">Valor Ganho</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Target className="w-6 h-6 mx-auto mb-2 text-green-600" />
-              <div className="text-2xl font-bold">{accountOpps.filter(o => o.stage !== 'closed_lost').length}</div>
-              <div className="text-xs text-gray-500">Open Deals</div>
+              <div className="text-2xl font-bold">{openOpps.length}</div>
+              <div className="text-xs text-gray-500">Oportunidades Abertas</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Users className="w-6 h-6 mx-auto mb-2 text-purple-600" />
               <div className="text-2xl font-bold">{accountContacts.length}</div>
-              <div className="text-xs text-gray-500">Contacts</div>
+              <div className="text-xs text-gray-500">Contatos</div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="activities">
+        <Tabs defaultValue="dados">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="activities">Recent Activities</TabsTrigger>
-            <TabsTrigger value="contacts">Contacts</TabsTrigger>
-            <TabsTrigger value="deals">Open Deals</TabsTrigger>
+            <TabsTrigger value="dados">Dados</TabsTrigger>
+            <TabsTrigger value="contacts">Contatos</TabsTrigger>
+            <TabsTrigger value="opportunities">Oportunidades</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="activities" className="space-y-3 mt-4">
-            {accountActivities.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No recent activities</p>
-            ) : (
-              accountActivities.slice(0, 5).map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    activity.type === 'Email' ? 'bg-blue-100 text-blue-600' :
-                    activity.type === 'Call' ? 'bg-green-100 text-green-600' :
-                    'bg-purple-100 text-purple-600'
-                  }`}>
-                    {activity.type === 'Email' ? <Mail className="w-5 h-5" /> :
-                     activity.type === 'Call' ? <Phone className="w-5 h-5" /> :
-                     <Calendar className="w-5 h-5" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(activity.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">{activity.type}</Badge>
-                </div>
-              ))
-            )}
+
+          <TabsContent value="dados" className="space-y-3 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div><span className="text-gray-500">CNPJ:</span> <span className="font-medium">{account.cnpj || '-'}</span></div>
+              <div><span className="text-gray-500">Contato:</span> <span className="font-medium">{account.contato || '-'}</span></div>
+              <div><span className="text-gray-500">Email:</span> <span className="font-medium">{account.email || '-'}</span></div>
+              <div><span className="text-gray-500">Telefone:</span> <span className="font-medium">{account.telefone || '-'}</span></div>
+              <div><span className="text-gray-500">Prazo médio:</span> <span className="font-medium">{account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento} dias` : '-'}</span></div>
+            </div>
           </TabsContent>
-          
+
           <TabsContent value="contacts" className="space-y-3 mt-4">
             {accountContacts.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No contacts found</p>
+              <p className="text-center text-gray-500 py-8">Nenhum contato encontrado</p>
             ) : (
-              accountContacts.map((contact, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Avatar className="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-semibold">
-                    {contact.name.split(' ').map(n => n[0]).join('')}
-                  </Avatar>
+              accountContacts.map((contact) => (
+                <div key={contact.id} className="flex items-center gap-3 p-3 border rounded-lg">
                   <div className="flex-1">
                     <p className="text-sm font-medium">{contact.name}</p>
-                    <p className="text-xs text-gray-500">{contact.position || 'Contact'}</p>
+                    <p className="text-xs text-gray-500">{contact.position || 'Contato'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-500">{contact.email}</p>
@@ -114,24 +97,23 @@ export default function AccountInsightsDialog({ account, open, onOpenChange, act
               ))
             )}
           </TabsContent>
-          
-          <TabsContent value="deals" className="space-y-3 mt-4">
-            {accountOpps.filter(o => o.stage !== 'closed_lost' && o.stage !== 'closed_won').length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No open deals</p>
+
+          <TabsContent value="opportunities" className="space-y-3 mt-4">
+            {accountOpps.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">Nenhuma oportunidade vinculada</p>
             ) : (
-              accountOpps.filter(o => o.stage !== 'closed_lost' && o.stage !== 'closed_won').map((opp, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+              accountOpps.map((opportunity) => (
+                <div key={opportunity.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="text-sm font-medium">{opp.name}</p>
+                    <p className="text-sm font-medium">{opportunity.name}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Close Date: {new Date(opp.close_date).toLocaleDateString()}
+                      <Calendar className="inline w-3 h-3 mr-1" />
+                      {opportunity.previsao_fechamento ? new Date(opportunity.previsao_fechamento).toLocaleDateString('pt-BR') : 'Sem previsão'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">${(opp.amount || 0).toLocaleString()}</p>
-                    <Badge className="mt-1 text-xs">
-                      {opp.stage}
-                    </Badge>
+                    <p className="text-sm font-semibold">{formatCurrency(opportunity.valor_carta)}</p>
+                    <Badge className="mt-1 text-xs">{opportunity.status || '-'}</Badge>
                   </div>
                 </div>
               ))

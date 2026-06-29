@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, ReceiptText, MoreVertical, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoneyInput, PercentInput, formatCurrency } from '@/components/forms/MaskedInputs';
 
 const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
 const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliacao: 'Em conciliação', conciliada: 'Conciliada', divergente: 'Divergente' };
-function money(value) { return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function money(value) { return formatCurrency(value); }
 function calcComissao(valor, percentual) { return Number(valor || 0) * Number(percentual || 0) / 100; }
 
 function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, onSubmit, loading }) {
@@ -64,12 +65,12 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
             <div><Label>Equipe</Label><Select value={form.equipe || ''} onValueChange={(value) => setForm({ ...form, equipe: value })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{equipes.map((item) => <SelectItem key={item.id} value={item.nome_equipe}>{item.nome_equipe}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Vendedor</Label><Input value={form.vendedor || ''} onChange={(e) => setForm({ ...form, vendedor: e.target.value })} /></div>
             <div><Label>Líder</Label><Input value={form.lider || ''} onChange={(e) => setForm({ ...form, lider: e.target.value })} /></div>
-            <div><Label>Valor da carta *</Label><Input required type="number" value={form.valor_carta || ''} onChange={(e) => setForm({ ...form, valor_carta: e.target.value })} /></div>
+            <div><Label>Valor da carta *</Label><MoneyInput required value={form.valor_carta || ''} onChange={(value) => setForm({ ...form, valor_carta: value })} /></div>
             <div><Label>Grupo</Label><Input value={form.grupo || ''} onChange={(e) => setForm({ ...form, grupo: e.target.value })} /></div>
             <div><Label>Cota</Label><Input value={form.cota || ''} onChange={(e) => setForm({ ...form, cota: e.target.value })} /></div>
-            <div><Label>Comissão base (%)</Label><Input type="number" step="0.01" value={form.percentual_comissao_prevista || ''} onChange={(e) => setForm({ ...form, percentual_comissao_prevista: e.target.value })} /></div>
-            <div><Label>% Vendedor (da comissão)</Label><Input type="number" step="0.01" value={form.percentual_vendedor || ''} onChange={(e) => setForm({ ...form, percentual_vendedor: e.target.value })} /></div>
-            <div><Label>% Líder (da comissão)</Label><Input type="number" step="0.01" value={form.percentual_lider || ''} onChange={(e) => setForm({ ...form, percentual_lider: e.target.value })} /></div>
+            <div><Label>Comissão base</Label><PercentInput value={form.percentual_comissao_prevista || ''} onChange={(value) => setForm({ ...form, percentual_comissao_prevista: value })} /></div>
+            <div><Label>Percentual do vendedor</Label><PercentInput value={form.percentual_vendedor || ''} onChange={(value) => setForm({ ...form, percentual_vendedor: value })} /></div>
+            <div><Label>Percentual do líder</Label><PercentInput value={form.percentual_lider || ''} onChange={(value) => setForm({ ...form, percentual_lider: value })} /></div>
             <div><Label>Comissão total prevista</Label><Input value={money(valorComissao)} disabled /></div>
             <div><Label>Comissão vendedor</Label><Input value={money(valorVendedor)} disabled /></div>
             <div><Label>Comissão líder</Label><Input value={money(valorLider)} disabled /></div>

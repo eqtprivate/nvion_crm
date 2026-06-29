@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PercentInput, formatPercent } from '@/components/forms/MaskedInputs';
 
 const categorias = ['imovel', 'veiculo', 'pesados', 'servicos', 'agro', 'outros'];
 
@@ -98,8 +99,8 @@ function ProdutoDialog({ open, onOpenChange, produto, administradoras, onSubmit,
               </Select>
             </div>
             <div>
-              <Label>Comissão Padrão (%)</Label>
-              <Input type="number" step="0.01" value={form.percentual_comissao_padrao || ''} onChange={(e) => setForm({ ...form, percentual_comissao_padrao: e.target.value })} placeholder="Ex: 3.5" />
+              <Label>Comissão Padrão</Label>
+              <PercentInput value={form.percentual_comissao_padrao || ''} onChange={(value) => setForm({ ...form, percentual_comissao_padrao: value })} placeholder="Ex: 3,50%" />
             </div>
             <div>
               <Label>Prazo Médio de Pagamento (dias)</Label>
@@ -220,7 +221,7 @@ export default function ProdutoConsorcio() {
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Produtos</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Produtos Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Administradoras Vinculadas</p><p className="text-2xl font-bold text-blue-700">{kpis.administradoras}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Média</p><p className="text-2xl font-bold text-primary">{kpis.comissaoMedia}%</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Média</p><p className="text-2xl font-bold text-primary">{formatPercent(kpis.comissaoMedia)}</p></CardContent></Card>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -253,7 +254,7 @@ export default function ProdutoConsorcio() {
                   <TableCell><p className="font-medium">{produto.nome_produto}</p><p className="text-xs text-gray-500">{produto.observacoes || ''}</p></TableCell>
                   <TableCell>{produto.administradora_vinculada || '-'}</TableCell>
                   <TableCell>{categoriaLabel[produto.categoria] || produto.categoria || '-'}</TableCell>
-                  <TableCell>{produto.percentual_comissao_padrao ? `${produto.percentual_comissao_padrao}%` : '-'}</TableCell>
+                  <TableCell>{produto.percentual_comissao_padrao ? formatPercent(produto.percentual_comissao_padrao) : '-'}</TableCell>
                   <TableCell>{produto.prazo_medio_pagamento ? `${produto.prazo_medio_pagamento} dias` : '-'}</TableCell>
                   <TableCell><Badge>{produto.status === 'ativo' ? 'Ativo' : 'Inativo'}</Badge></TableCell>
                   <TableCell>

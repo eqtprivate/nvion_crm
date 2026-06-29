@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ORIGENS, TEMPERATURAS, LEAD_STATUSES } from './LeadDialog';
+import { MoneyInput } from './MaskedInputs';
 
 export default function EditLeadDialog({
   open,
@@ -73,7 +74,7 @@ export default function EditLeadDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Produto de Interesse</Label><Select value={form.produto_interesse || ''} onValueChange={handleProdutoChange}><SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger><SelectContent>{produtos.filter(p => p.nome_produto).map(p => <SelectItem key={p.id} value={p.nome_produto}>{p.nome_produto}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-1"><Label>Valor Estimado da Carta (R$)</Label><Input type="number" value={form.valor_estimado_carta || ''} onChange={e => set('valor_estimado_carta', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Valor Estimado da Carta</Label><MoneyInput value={form.valor_estimado_carta || ''} onChange={value => set('valor_estimado_carta', value)} /></div>
           </div>
           <div className="space-y-1"><Label>Administradora de Interesse</Label><Select value={form.administradora_interesse || ''} onValueChange={v => set('administradora_interesse', v)}><SelectTrigger><SelectValue placeholder="Selecione a administradora" /></SelectTrigger><SelectContent>{administradoras.filter(a => a.name).map(a => <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="grid grid-cols-2 gap-4">

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MoneyInput, PercentInput } from './MaskedInputs';
 
 export const OPP_STAGES = [
   { value: 'novo_contato', label: 'Novo Contato' },
@@ -116,8 +117,8 @@ export default function OpportunityDialog({
             <div className="space-y-1"><Label>Produto</Label><Select value={form.produto || ''} onValueChange={handleProdutoChange}><SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger><SelectContent>{produtos.filter(p => p.nome_produto).map(p => <SelectItem key={p.id} value={p.nome_produto}>{p.nome_produto}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Valor da Carta (R$) *</Label><Input required type="number" value={form.valor_carta} onChange={e => set('valor_carta', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Probabilidade (%)</Label><Input type="number" min="0" max="100" value={form.probabilidade} onChange={e => set('probabilidade', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Valor da Carta *</Label><MoneyInput required value={form.valor_carta} onChange={value => set('valor_carta', value)} /></div>
+            <div className="space-y-1"><Label>Probabilidade</Label><PercentInput value={form.probabilidade} onChange={value => set('probabilidade', value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Etapa</Label><Select value={form.stage} onValueChange={v => set('stage', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{OPP_STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>

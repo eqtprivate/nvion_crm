@@ -29,6 +29,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { MoneyInput, formatCurrency } from '@/components/forms/MaskedInputs';
 
 export default function EquipeComercial() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,7 +124,7 @@ export default function EquipeComercial() {
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Equipes</p><p className="text-2xl font-bold text-gray-900">{kpis.total}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Equipes Ativas</p><p className="text-2xl font-bold text-green-600">{kpis.ativas}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendedores</p><p className="text-2xl font-bold text-blue-600">{kpis.totalVendedores}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Meta Total (R$)</p><p className="text-2xl font-bold text-primary">{kpis.metaTotal.toLocaleString('pt-BR')}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Meta Total</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.metaTotal)}</p></CardContent></Card>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -141,7 +142,7 @@ export default function EquipeComercial() {
                 <TableHead>Nome da Equipe</TableHead>
                 <TableHead>Líder Responsável</TableHead>
                 <TableHead>Vendedores</TableHead>
-                <TableHead>Meta Mensal (R$)</TableHead>
+                <TableHead>Meta Mensal</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
@@ -157,7 +158,7 @@ export default function EquipeComercial() {
                     <TableCell><div className="flex items-center gap-3"><div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div><p className="font-medium">{equipe.nome_equipe}</p></div></TableCell>
                     <TableCell><div className="flex items-center gap-2"><UserCircle className="w-4 h-4 text-gray-400" /><span className="text-sm">{equipe.lider_responsavel || '-'}</span></div></TableCell>
                     <TableCell><div className="flex flex-wrap gap-1">{equipe.vendedores_vinculados?.length ? equipe.vendedores_vinculados.map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>) : <Badge variant="outline">0 vendedor(es)</Badge>}</div></TableCell>
-                    <TableCell><span className="font-medium">{equipe.meta_mensal ? `R$ ${equipe.meta_mensal.toLocaleString('pt-BR')}` : '-'}</span></TableCell>
+                    <TableCell><span className="font-medium">{equipe.meta_mensal ? formatCurrency(equipe.meta_mensal) : '-'}</span></TableCell>
                     <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
                     {canManageTeams && (
                     <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
@@ -177,7 +178,7 @@ export default function EquipeComercial() {
             <div><Label htmlFor="nome_equipe">Nome da Equipe *</Label><Input id="nome_equipe" value={form.nome_equipe} onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))} placeholder="Ex: Equipe Sul" required /></div>
             <div><Label htmlFor="lider">Líder Responsável</Label><Input id="lider" value={form.lider_responsavel} onChange={(e) => setForm(prev => ({ ...prev, lider_responsavel: e.target.value }))} placeholder="Nome do líder" /></div>
             <div><Label htmlFor="vendedores">Vendedores Vinculados</Label><Input id="vendedores" value={form.vendedores_texto} onChange={(e) => setForm(prev => ({ ...prev, vendedores_texto: e.target.value }))} placeholder="Ex: Ana Lima, Marcos Oliveira, Bruno Ferreira" /><p className="text-xs text-gray-500 mt-1">Separe os vendedores por vírgula.</p></div>
-            <div><Label htmlFor="meta">Meta Mensal (R$)</Label><Input id="meta" type="number" value={form.meta_mensal} onChange={(e) => setForm(prev => ({ ...prev, meta_mensal: e.target.value }))} placeholder="0,00" /></div>
+            <div><Label htmlFor="meta">Meta Mensal</Label><MoneyInput id="meta" value={form.meta_mensal} onChange={(value) => setForm(prev => ({ ...prev, meta_mensal: value }))} /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button type="submit" className="bg-primary hover:bg-primary-dark" disabled={createMutation.isPending}>{createMutation.isPending ? 'Salvando...' : 'Criar Equipe'}</Button></DialogFooter>
           </form>
         </DialogContent>

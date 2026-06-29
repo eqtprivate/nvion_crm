@@ -80,7 +80,7 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
           setResult({
             success: true,
             count: validContacts.length,
-            message: `Successfully imported ${validContacts.length} contact${validContacts.length > 1 ? 's' : ''}`
+            message: `${validContacts.length} cliente(s) importado(s) com sucesso.`
           });
 
           setTimeout(() => {
@@ -92,20 +92,20 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
         } else {
           setResult({
             success: false,
-            message: 'No valid contacts found. Make sure your file has name and email columns.'
+            message: 'Nenhum cliente válido encontrado. Verifique se o arquivo tem colunas de nome e email.'
           });
         }
       } else {
         setResult({
           success: false,
-          message: extractResult.details || 'Failed to extract contacts from file'
+          message: extractResult.details || 'Não foi possível extrair clientes do arquivo.'
         });
       }
     } catch (error) {
       setExtracting(false);
       setResult({
         success: false,
-        message: 'Failed to import contacts. Please try again.'
+        message: 'Não foi possível importar os clientes. Tente novamente.'
       });
     }
   };
@@ -122,9 +122,9 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Import Contacts</DialogTitle>
+          <DialogTitle>Importar Clientes</DialogTitle>
           <DialogDescription>
-            Upload a CSV or Excel file with contact information
+            Envie um arquivo CSV ou Excel com os dados dos clientes.
           </DialogDescription>
         </DialogHeader>
 
@@ -132,13 +132,13 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
           {!result ? (
             <>
               <div className="space-y-2">
-                <Label>Select File</Label>
+                <Label>Selecionar Arquivo</Label>
                 <div className="flex flex-col gap-3">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Upload className="w-8 h-8 text-gray-400" />
                       <p className="text-sm text-gray-600">
-                        {file ? file.name : 'Click to upload CSV or Excel'}
+                        {file ? file.name : 'Clique para enviar CSV ou Excel'}
                       </p>
                       <p className="text-xs text-gray-400">CSV, XLS, XLSX</p>
                     </div>
@@ -159,12 +159,12 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
               </div>
 
               <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
-                <p className="font-semibold">Required columns:</p>
+                <p className="font-semibold">Colunas obrigatórias:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
                   <li>name</li>
                   <li>email</li>
                 </ul>
-                <p className="font-semibold mt-2">Optional columns:</p>
+                <p className="font-semibold mt-2">Colunas opcionais:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
                   <li>phone, company, position, source</li>
                 </ul>
@@ -186,14 +186,14 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleClose}>
-            {result?.success ? 'Close' : 'Cancel'}
+            {result?.success ? 'Fechar' : 'Cancelar'}
           </Button>
           {!result && (
             <Button 
               onClick={handleImport} 
               disabled={!file || uploading || extracting}
             >
-              {uploading ? 'Uploading...' : extracting ? 'Processing...' : 'Import'}
+              {uploading ? 'Enviando...' : extracting ? 'Processando...' : 'Importar'}
             </Button>
           )}
         </DialogFooter>

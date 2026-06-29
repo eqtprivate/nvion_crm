@@ -24,6 +24,14 @@ import EditAccountDialog from '../components/forms/EditAccountDialog';
 import AccountKPICard from '../components/accounts/AccountKPICard';
 import AccountInsightsDialog from '../components/accounts/AccountInsightsDialog';
 import { useAuth } from '@/lib/AuthContext';
+import { formatCurrency } from '@/components/forms/MaskedInputs';
+
+const statusLabel = {
+  ativa: 'Ativa',
+  inativa: 'Inativa',
+  em_analise: 'Em análise',
+  suspensa: 'Suspensa',
+};
 
 export default function Accounts() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -176,7 +184,7 @@ export default function Accounts() {
         />
         <AccountKPICard
           title="Volume Total"
-          value={`R$${(kpis.totalRevenue / 1000000).toFixed(1)}M`}
+          value={formatCurrency(kpis.totalRevenue)}
           trend="up"
           trendValue="+3.6%"
           chartData={[60, 65, 70, 75, 78, 82]}
@@ -211,7 +219,7 @@ export default function Accounts() {
                 <TableHead className="hidden md:table-cell">CNPJ</TableHead>
                 <TableHead className="hidden lg:table-cell">Contato</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden lg:table-cell">Prazo Médio (dias)</TableHead>
+                <TableHead className="hidden lg:table-cell">Prazo Médio</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
@@ -248,11 +256,11 @@ export default function Accounts() {
                     <TableCell className="hidden lg:table-cell text-sm">{account.contato || '-'}</TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{account.email || '-'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">
-                      {account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento}d` : '-'}
+                        {account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento} dias` : '-'}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusColors[account.status] || 'bg-gray-100 text-gray-800'}>
-                        {account.status || '-'}
+                        {statusLabel[account.status] || account.status || '-'}
                       </Badge>
                     </TableCell>
                     <TableCell>

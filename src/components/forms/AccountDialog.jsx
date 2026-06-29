@@ -2,142 +2,79 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const initialForm = {
+  name: '',
+  cnpj: '',
+  contato: '',
+  email: '',
+  telefone: '',
+  prazo_medio_pagamento: '',
+  status: 'ativa',
+};
 
 export default function AccountDialog({ open, onOpenChange, onSubmit, isLoading }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    industry: '',
-    website: '',
-    phone: '',
-    email: '',
-    annual_revenue: '',
-    employees: '',
-    status: 'active',
-  });
+  const [formData, setFormData] = useState(initialForm);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const data = {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSubmit({
       ...formData,
-      annual_revenue: formData.annual_revenue ? parseFloat(formData.annual_revenue) : undefined,
-      employees: formData.employees ? parseInt(formData.employees) : undefined,
-    };
-    onSubmit(data);
-    setFormData({
-      name: '',
-      industry: '',
-      website: '',
-      phone: '',
-      email: '',
-      annual_revenue: '',
-      employees: '',
-      status: 'active',
+      prazo_medio_pagamento: formData.prazo_medio_pagamento ? Number(formData.prazo_medio_pagamento) : undefined,
     });
+    setFormData(initialForm);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create New Account</DialogTitle>
+          <DialogTitle>Nova Administradora</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Account Name *</Label>
-              <Input
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+              <Label htmlFor="name">Nome da Administradora *</Label>
+              <Input id="name" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input
-                id="industry"
-                value={formData.industry}
-                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-              />
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <Input id="cnpj" value={formData.cnpj} onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contato">Contato Principal</Label>
+              <Input id="contato" value={formData.contato} onChange={(e) => setFormData({ ...formData, contato: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+              <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input id="telefone" value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} placeholder="(11) 99999-9999" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                value={formData.website}
-                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="revenue">Annual Revenue</Label>
-              <Input
-                id="revenue"
-                type="number"
-                value={formData.annual_revenue}
-                onChange={(e) => setFormData({ ...formData, annual_revenue: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="employees">Employees</Label>
-              <Input
-                id="employees"
-                type="number"
-                value={formData.employees}
-                onChange={(e) => setFormData({ ...formData, employees: e.target.value })}
-              />
+              <Label htmlFor="prazo_medio_pagamento">Prazo Médio de Pagamento (dias)</Label>
+              <Input id="prazo_medio_pagamento" inputMode="numeric" value={formData.prazo_medio_pagamento} onChange={(e) => setFormData({ ...formData, prazo_medio_pagamento: e.target.value.replace(/\D/g, '') })} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="prospect">Prospect</SelectItem>
+                  <SelectItem value="ativa">Ativa</SelectItem>
+                  <SelectItem value="inativa">Inativa</SelectItem>
+                  <SelectItem value="em_analise">Em análise</SelectItem>
+                  <SelectItem value="suspensa">Suspensa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Account'}
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Criando...' : 'Criar Administradora'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, UserRound, MoreVertical, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoneyInput, formatCurrency } from '@/components/forms/MaskedInputs';
 
 const emptyForm = {
   nome: '',
@@ -31,7 +32,7 @@ const statusLabel = { ativo: 'Ativo', inativo: 'Inativo', suspenso: 'Suspenso' }
 const tipoLabel = { interno: 'Interno', parceiro: 'Parceiro', corban: 'Corban', lider: 'Líder' };
 
 function money(value) {
-  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return formatCurrency(value);
 }
 
 function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loading }) {
@@ -106,8 +107,8 @@ function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loadi
               </Select>
             </div>
             <div>
-              <Label>Meta Mensal (R$)</Label>
-              <Input type="number" value={form.meta_mensal || ''} onChange={(e) => setForm({ ...form, meta_mensal: e.target.value })} />
+              <Label>Meta Mensal</Label>
+              <MoneyInput value={form.meta_mensal || ''} onChange={(value) => setForm({ ...form, meta_mensal: value })} />
             </div>
             <div>
               <Label>Status</Label>

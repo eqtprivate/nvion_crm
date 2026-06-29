@@ -26,6 +26,7 @@ import LeadFilters from '../components/leads/LeadFilters';
 import LeadsAnalytics from '../components/leads/LeadsAnalytics';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
+import { formatCurrency, formatPercent } from '@/components/forms/MaskedInputs';
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
@@ -321,8 +322,8 @@ export default function Leads() {
         <KPICard title="Em Andamento" value={kpis.ativos} Icon={Target} color="orange" />
         <KPICard title="Vendas Concluídas" value={kpis.concluidos} Icon={Target} color="green" />
         <KPICard title="Perdidos" value={kpis.perdidos} Icon={Target} color="red" />
-        <KPICard title="Valor em Carteira" value={`R$${(kpis.valorTotal / 1000).toFixed(0)}k`} Icon={Target} color="purple" />
-        <KPICard title="Taxa de Conversão" value={`${kpis.taxa}%`} Icon={Target} color="cyan" />
+        <KPICard title="Valor em Carteira" value={formatCurrency(kpis.valorTotal)} Icon={Target} color="purple" />
+        <KPICard title="Taxa de Conversão" value={formatPercent(kpis.taxa)} Icon={Target} color="cyan" />
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -380,7 +381,7 @@ export default function Leads() {
                       <div>
                         <p>{lead.produto_interesse || '-'}</p>
                         {lead.valor_estimado_carta && (
-                          <p className="text-xs text-gray-500">R$ {lead.valor_estimado_carta.toLocaleString('pt-BR')}</p>
+                          <p className="text-xs text-gray-500">{formatCurrency(lead.valor_estimado_carta)}</p>
                         )}
                       </div>
                     </TableCell>
