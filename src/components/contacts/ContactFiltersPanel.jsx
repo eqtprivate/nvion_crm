@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { X } from 'lucide-react';
 
 export default function ContactFiltersPanel({ filters, onFilterChange, onClose }) {
   const handleCheckboxChange = (category, value) => {

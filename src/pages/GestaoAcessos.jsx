@@ -44,7 +44,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import KPICard from '@/components/shared/KPICard';
 import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
