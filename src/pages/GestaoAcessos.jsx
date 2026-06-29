@@ -51,6 +51,7 @@ import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
 import { ROLE_LABELS } from '@/lib/modules';
 import { useAuth } from '@/lib/AuthContext';
 import { hashPassword } from '@/lib/auth';
+import { toast } from 'sonner';
 
 function generateTempPassword() {
   const digits = Math.floor(1000 + Math.random() * 9000);
@@ -240,6 +241,10 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
       setLastCreatedUser({ name: variables.display_name, senha: variables.senha_temporaria });
       setSenhaDialogOpen(true);
     },
+    onError: (err) => {
+      console.error('Erro ao criar usuário:', err);
+      toast.error('Erro ao criar usuário. Verifique os dados e tente novamente.');
+    },
   });
 
   const updateMutation = useMutation({
@@ -266,7 +271,13 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
   const handleCreate = async (data) => {
     const senha = generateTempPassword();
     const senha_hash = await hashPassword(senha);
-    createMutation.mutate({ ...data, empresa_vinculada: isSuperAdmin ? (data.empresa_vinculada || empresa) : empresa, senha_temporaria: senha, senha_hash });
+    createMutation.mutate({
+      ...data,
+      status: 'ativo',
+      empresa_vinculada: isSuperAdmin ? (data.empresa_vinculada || empresa) : empresa,
+      senha_temporaria: senha,
+      senha_hash,
+    });
   };
 
   const toggleStatus = (user) => {

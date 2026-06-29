@@ -80,7 +80,7 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-3">
             <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <p className="text-sm">
-              O usuário ficará com status Pendente até o primeiro acesso. Informe o email cadastrado e oriente-o a usar 'Esqueci minha senha' na tela de login para definir sua senha.
+              Uma senha temporária será gerada automaticamente. Anote e repasse ao usuário — ela é exibida uma única vez.
             </p>
           </div>
         )}
@@ -152,15 +152,6 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
               </Select>
             </div>
           </div>
-          {!user && (
-            <div className="flex gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 mb-2">
-              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <p>
-                O usuário ficará com status <strong>Pendente</strong> até o primeiro acesso.
-                Informe o email cadastrado e oriente-o a usar <strong>"Esqueci minha senha"</strong> na tela de login para definir sua senha.
-              </p>
-            </div>
-          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar

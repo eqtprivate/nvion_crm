@@ -58,8 +58,8 @@ export default function Login() {
         return;
       }
 
-      if (usuario.status !== 'ativo') {
-        setError('Usuário encontrado, mas não está ativo. Ative o usuário em Gestão de Acessos.');
+      if (usuario.status === 'suspenso') {
+        setError('Usuário suspenso. Entre em contato com o administrador.');
         return;
       }
 
