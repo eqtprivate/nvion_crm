@@ -103,8 +103,65 @@ export default function VendasConsorcio() {
   const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
   const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
 
-  const createMutation = useMutation({ mutationFn: (data) => base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa }), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); setDialogOpen(false); setSelectedVenda(null); } });
-  const updateMutation = useMutation({ mutationFn: ({ id, data }) => base44.entities.VendasConsorcio.update(id, data), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); setDialogOpen(false); setSelectedVenda(null); } });
+  const gerarComissao = async (vendaId, data) => {
+    const regra = regras.find((r) => r.status === 'ativa' && r.produto === data.produto && (!r.administradora || r.administradora === data.administradora));
+    await base44.entities.Comissoes.create({
+      empresa_vinculada: empresa,
+      venda_vinculada: vendaId,
+      cliente: data.cliente,
+      administradora: data.administradora,
+      produto: data.produto,
+      vendedor: data.vendedor,
+      lider: data.lider,
+      equipe: data.equipe,
+      valor_carta: data.valor_carta,
+      regra_comissao: regra?.nome_regra || '',
+      percentual_base: data.percentual_comissao_prevista,
+      valor_comissao_total: data.valor_comissao_prevista,
+      percentual_vendedor: data.percentual_vendedor,
+      valor_comissao_vendedor: data.valor_comissao_vendedor,
+      percentual_lider: data.percentual_lider,
+      valor_comissao_lider: data.valor_comissao_lider,
+      data_prevista_pagamento: data.data_prevista_pagamento,
+      status_comissao: 'prevista',
+      origem: 'venda',
+    });
+  };
+
+  const atualizarComissao = async (vendaId, data) => {
+    const todas = await base44.entities.Comissoes.list('-created_date');
+    const existente = todas.find((c) => c.venda_vinculada === vendaId);
+    const payload = {
+      cliente: data.cliente, administradora: data.administradora, produto: data.produto,
+      vendedor: data.vendedor, lider: data.lider, equipe: data.equipe, valor_carta: data.valor_carta,
+      percentual_base: data.percentual_comissao_prevista, valor_comissao_total: data.valor_comissao_prevista,
+      percentual_vendedor: data.percentual_vendedor, valor_comissao_vendedor: data.valor_comissao_vendedor,
+      percentual_lider: data.percentual_lider, valor_comissao_lider: data.valor_comissao_lider,
+      data_prevista_pagamento: data.data_prevista_pagamento,
+    };
+    if (existente) {
+      await base44.entities.Comissoes.update(existente.id, payload);
+    } else {
+      await gerarComissao(vendaId, data);
+    }
+  };
+
+  const createMutation = useMutation({
+    mutationFn: async (data) => {
+      const venda = await base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
+      await gerarComissao(venda.id, data);
+      return venda;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
+  });
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const venda = await base44.entities.VendasConsorcio.update(id, data);
+      await atualizarComissao(id, data);
+      return venda;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
+  });
   const deleteMutation = useMutation({ mutationFn: (id) => base44.entities.VendasConsorcio.delete(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }) });
 
   const filtered = useMemo(() => { const term = searchTerm.toLowerCase(); return vendas.filter((item) => item.cliente?.toLowerCase().includes(term) || item.vendedor?.toLowerCase().includes(term) || item.administradora?.toLowerCase().includes(term) || item.produto?.toLowerCase().includes(term)); }, [vendas, searchTerm]);
