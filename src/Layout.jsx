@@ -19,6 +19,7 @@ import {
   X,
   Package,
   ReceiptText,
+  HandCoins,
   Percent,
   UserRound,
   Database
@@ -52,6 +53,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Equipes Comerciais', icon: UserCircle, path: 'EquipeComercial' },
     { name: 'Vendedores', icon: UserRound, path: 'Vendedores' },
     { name: 'Vendas de Consórcio', icon: ReceiptText, path: 'VendasConsorcio' },
+    { name: 'Comissões', icon: HandCoins, path: 'Comissoes' },
     { name: 'Regras de Comissão', icon: Percent, path: 'RegrasComissao' },
     { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
   ];

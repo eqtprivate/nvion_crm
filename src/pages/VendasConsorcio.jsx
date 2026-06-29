@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
@@ -17,6 +17,7 @@ import { MoneyInput, PercentInput, formatCurrency } from '@/components/forms/Mas
 
 const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
 const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliacao: 'Em conciliação', conciliada: 'Conciliada', divergente: 'Divergente' };
+const statusOperacionalLabel = { lancada: 'Lançada', documentacao: 'Documentação', em_aprovacao: 'Em aprovação', aprovada: 'Aprovada', concluida: 'Concluída', cancelada: 'Cancelada' };
 function money(value) { return formatCurrency(value); }
 function calcComissao(valor, percentual) { return Number(valor || 0) * Number(percentual || 0) / 100; }
 
@@ -92,6 +93,7 @@ export default function VendasConsorcio() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedVenda, setSelectedVenda] = useState(null);
+  const backfillKeyRef = useRef('');
   const filterEmpresa = (items) => items.filter((item) => item.empresa_vinculada === empresa);
 
   const { data: allVendas = [], isLoading } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
@@ -103,6 +105,7 @@ export default function VendasConsorcio() {
   const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
   const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
   const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: comissoes = [], isLoading: isLoadingComissoes } = useQuery({ queryKey: ['comissoes', empresa], queryFn: async () => filterEmpresa(await base44.entities.Comissoes.list('-created_date')), enabled: Boolean(empresa) });
 
   const gerarComissao = async (vendaId, data) => {
     const regra = regras.find((r) => r.status === 'ativa' && r.produto === data.produto && (!r.administradora || r.administradora === data.administradora));
@@ -129,9 +132,42 @@ export default function VendasConsorcio() {
     });
   };
 
+  const cancelarComissoesDaVenda = async (vendaId) => {
+    const todas = await base44.entities.Comissoes.list('-created_date');
+    const vinculadas = filterEmpresa(todas).filter((comissao) => comissao.venda_vinculada === vendaId);
+    await Promise.all(vinculadas.map((comissao) =>
+      base44.entities.Comissoes.update(comissao.id, { status_comissao: 'cancelada' })
+    ));
+  };
+
+  const concluirOportunidadeVinculada = async (data) => {
+    if (!data.oportunidade_vinculada) return;
+
+    const oportunidade = oportunidades.find((item) =>
+      item.id === data.oportunidade_vinculada || item.name === data.oportunidade_vinculada
+    );
+    if (!oportunidade) return;
+
+    await base44.entities.Opportunity.update(oportunidade.id, {
+      status: 'ganha',
+      stage: 'venda_concluida',
+    });
+
+    if (!oportunidade.lead_vinculado) return;
+
+    const leads = filterEmpresa(await base44.entities.Lead.list('-created_date'));
+    const lead = leads.find((item) =>
+      item.id === oportunidade.lead_vinculado || item.name === oportunidade.lead_vinculado
+    );
+
+    if (lead) {
+      await base44.entities.Lead.update(lead.id, { status: 'venda_concluida' });
+    }
+  };
+
   const atualizarComissao = async (vendaId, data) => {
     const todas = await base44.entities.Comissoes.list('-created_date');
-    const existente = todas.find((c) => c.venda_vinculada === vendaId);
+    const existente = filterEmpresa(todas).find((c) => c.venda_vinculada === vendaId);
     const payload = {
       cliente: data.cliente, administradora: data.administradora, produto: data.produto,
       vendedor: data.vendedor, lider: data.lider, equipe: data.equipe, valor_carta: data.valor_carta,
@@ -147,13 +183,33 @@ export default function VendasConsorcio() {
     }
   };
 
+  useEffect(() => {
+    if (!empresa || isLoading || isLoadingComissoes || vendas.length === 0) return;
+
+    const backfillKey = `${empresa}:${vendas.length}:${comissoes.length}`;
+    if (backfillKeyRef.current === backfillKey) return;
+
+    const vendasComComissao = new Set(comissoes.map((comissao) => comissao.venda_vinculada).filter(Boolean));
+    const vendasSemComissao = vendas.filter((venda) =>
+      venda.id && venda.status_operacional !== 'cancelada' && !vendasComComissao.has(venda.id)
+    );
+
+    backfillKeyRef.current = backfillKey;
+    if (vendasSemComissao.length === 0) return;
+
+    Promise.all(vendasSemComissao.map((venda) => gerarComissao(venda.id, venda)))
+      .then(() => queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }))
+      .catch((error) => console.error('Erro ao gerar comissões retroativas:', error));
+  }, [comissoes, empresa, isLoading, isLoadingComissoes, queryClient, regras, vendas]);
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const venda = await base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
       await gerarComissao(venda.id, data);
+      await concluirOportunidadeVinculada(data);
       return venda;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
   });
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
@@ -163,7 +219,23 @@ export default function VendasConsorcio() {
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
   });
-  const deleteMutation = useMutation({ mutationFn: (id) => base44.entities.VendasConsorcio.delete(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }) });
+  const cancelMutation = useMutation({
+    mutationFn: async (venda) => {
+      await base44.entities.VendasConsorcio.update(venda.id, {
+        status_operacional: 'cancelada',
+        status_financeiro: 'comissao_cancelada',
+      });
+      await cancelarComissoesDaVenda(venda.id);
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await cancelarComissoesDaVenda(id);
+      return base44.entities.VendasConsorcio.delete(id);
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); },
+  });
 
   const filtered = useMemo(() => { const term = searchTerm.toLowerCase(); return vendas.filter((item) => item.cliente?.toLowerCase().includes(term) || item.vendedor?.toLowerCase().includes(term) || item.administradora?.toLowerCase().includes(term) || item.produto?.toLowerCase().includes(term)); }, [vendas, searchTerm]);
   const kpis = useMemo(() => ({ total: vendas.length, valorCartas: vendas.reduce((sum, item) => sum + (item.valor_carta || 0), 0), comissaoPrevista: vendas.reduce((sum, item) => sum + (item.valor_comissao_prevista || 0), 0), comissaoVendedores: vendas.reduce((sum, item) => sum + (item.valor_comissao_vendedor || 0), 0), naoConciliadas: vendas.filter((item) => item.status_conciliacao === 'nao_conciliada').length }), [vendas]);
@@ -174,8 +246,8 @@ export default function VendasConsorcio() {
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"><div><h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vendas de Consórcio</h1><p className="text-gray-500 mt-1">Registro das vendas realizadas e comissão prevista</p></div><div className="flex gap-2"><Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}><Download className="w-4 h-4 mr-2" />Exportar CSV</Button><Button onClick={() => { setSelectedVenda(null); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nova Venda</Button></div></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendas</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Valor Total de Cartas</p><p className="text-2xl font-bold text-blue-700">{money(kpis.valorCartas)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Prevista</p><p className="text-2xl font-bold text-green-700">{money(kpis.comissaoPrevista)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Repasse Vendedores</p><p className="text-2xl font-bold text-primary">{money(kpis.comissaoVendedores)}</p></CardContent></Card></div>
-      <div className="bg-white rounded-lg shadow"><div className="p-4 border-b"><div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar vendas..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" /></div></div><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Produto</TableHead><TableHead>Administradora</TableHead><TableHead>Vendedor</TableHead><TableHead>Valor Carta</TableHead><TableHead>Comissão</TableHead><TableHead>Conciliação</TableHead><TableHead></TableHead></TableRow></TableHeader><TableBody>{isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando vendas...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-12 text-gray-500"><ReceiptText className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma venda encontrada</TableCell></TableRow> : filtered.map((venda) => <TableRow key={venda.id}><TableCell>{venda.cliente}</TableCell><TableCell>{venda.produto || '-'}</TableCell><TableCell>{venda.administradora || '-'}</TableCell><TableCell>{venda.vendedor || '-'}</TableCell><TableCell>{money(venda.valor_carta)}</TableCell><TableCell>{money(venda.valor_comissao_prevista)}</TableCell><TableCell><Badge>{statusConciliacaoLabel[venda.status_conciliacao] || venda.status_conciliacao}</Badge></TableCell><TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedVenda(venda); setDialogOpen(true); }}>Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(venda.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell></TableRow>)}</TableBody></Table></div></div>
-      <VendaDialog open={dialogOpen} onOpenChange={setDialogOpen} venda={selectedVenda} oportunidades={oportunidades} produtos={produtos} equipes={equipes} regras={regras} onSubmit={handleSubmit} loading={createMutation.isPending || updateMutation.isPending} />
+      <div className="bg-white rounded-lg shadow"><div className="p-4 border-b"><div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar vendas..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" /></div></div><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Produto</TableHead><TableHead>Administradora</TableHead><TableHead>Vendedor</TableHead><TableHead>Valor Carta</TableHead><TableHead>Comissão</TableHead><TableHead>Status</TableHead><TableHead>Conciliação</TableHead><TableHead></TableHead></TableRow></TableHeader><TableBody>{isLoading ? <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando vendas...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500"><ReceiptText className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma venda encontrada</TableCell></TableRow> : filtered.map((venda) => <TableRow key={venda.id}><TableCell>{venda.cliente}</TableCell><TableCell>{venda.produto || '-'}</TableCell><TableCell>{venda.administradora || '-'}</TableCell><TableCell>{venda.vendedor || '-'}</TableCell><TableCell>{money(venda.valor_carta)}</TableCell><TableCell>{money(venda.valor_comissao_prevista)}</TableCell><TableCell><Badge variant={venda.status_operacional === 'cancelada' ? 'secondary' : 'default'}>{statusOperacionalLabel[venda.status_operacional] || venda.status_operacional || '-'}</Badge></TableCell><TableCell><Badge>{statusConciliacaoLabel[venda.status_conciliacao] || venda.status_conciliacao}</Badge></TableCell><TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedVenda(venda); setDialogOpen(true); }}>Editar</DropdownMenuItem>{venda.status_operacional !== 'cancelada' && <DropdownMenuItem onClick={() => cancelMutation.mutate(venda)}>Cancelar venda</DropdownMenuItem>}<DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(venda.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell></TableRow>)}</TableBody></Table></div></div>
+      <VendaDialog open={dialogOpen} onOpenChange={setDialogOpen} venda={selectedVenda} oportunidades={oportunidades} produtos={produtos} equipes={equipes} regras={regras} onSubmit={handleSubmit} loading={createMutation.isPending || updateMutation.isPending || cancelMutation.isPending} />
     </div>
   );
 }
