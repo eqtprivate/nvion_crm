@@ -14,6 +14,7 @@ import KPICard from '../components/leads/KPICard';
 import LeadFilters from '../components/leads/LeadFilters';
 import LeadsAnalytics from '../components/leads/LeadsAnalytics';
 import { useAuth } from '@/lib/AuthContext';
+import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 
 const STATUS_LABELS = Object.fromEntries(LEAD_STATUSES.map(s => [s.value, s.label]));
 const ORIGEM_LABELS = Object.fromEntries(ORIGENS.map(o => [o.value, o.label]));
@@ -44,12 +45,18 @@ export default function Leads() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
+  const teamMembers = useTeamMembers(user);
 
-  const { data: leads = [], isLoading } = useQuery({
+  const { data: allLeads = [], isLoading } = useQuery({
     queryKey: ['leads', empresa],
     queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
+
+  const leads = useMemo(
+    () => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }),
+    [allLeads, user, teamMembers]
+  );
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Lead.create({ ...data, empresa_vinculada: empresa }),

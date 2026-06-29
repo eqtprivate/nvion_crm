@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import OpportunityDialog from '../components/forms/OpportunityDialog';
 import { useAuth } from '@/lib/AuthContext';
+import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 
 const stageLabels = {
   novo_contato: 'Novo Contato', qualificacao: 'Qualificação', simulacao: 'Simulação',
@@ -34,12 +35,18 @@ export default function Oportunidades() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
+  const teamMembers = useTeamMembers(user);
 
-  const { data: oportunidades = [], isLoading } = useQuery({
+  const { data: allOportunidades = [], isLoading } = useQuery({
     queryKey: ['opportunities', empresa],
     queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
+
+  const oportunidades = useMemo(
+    () => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }),
+    [allOportunidades, user, teamMembers]
+  );
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Opportunity.create({ ...data, empresa_vinculada: empresa }),

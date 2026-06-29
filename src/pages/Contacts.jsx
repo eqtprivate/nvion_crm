@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
+import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,12 +95,13 @@ function ClienteDialog({ open, onOpenChange, onSubmit, cliente, loading }) {
 export default function Contacts() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
+  const teamMembers = useTeamMembers(user);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: clientes = [], isLoading } = useQuery({
+  const { data: allClientes = [], isLoading } = useQuery({
     queryKey: ['contacts', empresa],
     queryFn: async () => {
       const all = await base44.entities.Contact.list('-created_date');
@@ -107,6 +109,11 @@ export default function Contacts() {
     },
     enabled: Boolean(empresa),
   });
+
+  const clientes = useMemo(
+    () => applyAccessFilter(allClientes, user, { vendedorField: 'vendedor_responsavel', teamMembers }),
+    [allClientes, user, teamMembers]
+  );
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Contact.create({ ...data, empresa_vinculada: empresa }),
