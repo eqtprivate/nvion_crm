@@ -44,12 +44,18 @@ export default function EquipeComercial() {
 
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
+  const isLider = user?.role === 'lider_comercial';
+  const canManageTeams = ['super_admin', 'admin_empresa', 'gestor_comercial'].includes(user?.role);
 
-  const { data: equipes = [], isLoading } = useQuery({
+  const { data: allEquipes = [], isLoading } = useQuery({
     queryKey: ['equipes', empresa],
     queryFn: async () => { const all = await base44.entities.EquipeComercial.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
+
+  const equipes = isLider
+    ? allEquipes.filter(e => e.lider_responsavel === user.display_name)
+    : allEquipes;
 
   const resetForm = () => setForm({ nome_equipe: '', lider_responsavel: '', vendedores_texto: '', meta_mensal: '', status: 'ativo' });
 
@@ -105,10 +111,12 @@ export default function EquipeComercial() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Equipe e Vendedores</h1>
           <p className="text-gray-500 mt-1">Gestão de líderes, vendedores, equipes comerciais e metas</p>
         </div>
-        <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Equipe
-        </Button>
+        {canManageTeams && (
+          <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Equipe
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -151,7 +159,9 @@ export default function EquipeComercial() {
                     <TableCell><div className="flex flex-wrap gap-1">{equipe.vendedores_vinculados?.length ? equipe.vendedores_vinculados.map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>) : <Badge variant="outline">0 vendedor(es)</Badge>}</div></TableCell>
                     <TableCell><span className="font-medium">{equipe.meta_mensal ? `R$ ${equipe.meta_mensal.toLocaleString('pt-BR')}` : '-'}</span></TableCell>
                     <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
+                    {canManageTeams && (
                     <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
