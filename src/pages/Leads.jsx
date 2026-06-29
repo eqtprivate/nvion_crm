@@ -9,6 +9,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import LeadDialog, { LEAD_STATUSES, ORIGENS } from '../components/forms/LeadDialog';
 import EditLeadDialog from '../components/forms/EditLeadDialog';
 import KPICard from '../components/leads/KPICard';
@@ -148,6 +158,7 @@ export default function Leads() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [pendingOpportunityLead, setPendingOpportunityLead] = useState(null);
   const [filters, setFilters] = useState({ status: 'all', origem: 'all', temperatura: 'all' });
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -241,6 +252,11 @@ export default function Leads() {
   const handleEdit = (lead) => { setSelectedLead(lead); setEditDialogOpen(true); };
   const handleFilterChange = (key, value) => setFilters(p => ({ ...p, [key]: value }));
   const handleClearFilters = () => setFilters({ status: 'all', origem: 'all', temperatura: 'all' });
+  const handleConfirmOpportunityFromLead = () => {
+    if (!pendingOpportunityLead) return;
+    convertToOpportunityMutation.mutate(pendingOpportunityLead);
+    setPendingOpportunityLead(null);
+  };
 
   const filtered = useMemo(() => {
     return leads.filter(lead => {
@@ -398,7 +414,7 @@ export default function Leads() {
                           <DropdownMenuItem onClick={() => handleEdit(lead)}>Editar</DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={convertToOpportunityMutation.isPending}
-                            onClick={() => convertToOpportunityMutation.mutate(lead)}
+                            onClick={() => setPendingOpportunityLead(lead)}
                           >
                             Criar oportunidade
                           </DropdownMenuItem>
@@ -439,6 +455,22 @@ export default function Leads() {
         equipes={equipes}
       />
       <ImportCSVDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} isLoading={importMutation.isPending} />
+      <AlertDialog open={Boolean(pendingOpportunityLead)} onOpenChange={(open) => { if (!open) setPendingOpportunityLead(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar criação da oportunidade?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Será criada uma oportunidade para {pendingOpportunityLead?.name || 'este lead'} usando os dados comerciais do lead. O status do lead será atualizado após a criação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmOpportunityFromLead} disabled={convertToOpportunityMutation.isPending}>
+              {convertToOpportunityMutation.isPending ? 'Criando...' : 'Confirmar criação'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

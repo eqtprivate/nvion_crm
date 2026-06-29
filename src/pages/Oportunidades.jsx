@@ -9,6 +9,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import OpportunityDialog from '../components/forms/OpportunityDialog';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -29,6 +39,7 @@ export default function Oportunidades() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedOportunidade, setSelectedOportunidade] = useState(null);
+  const [pendingOpportunity, setPendingOpportunity] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortColumn, setSortColumn] = useState('created_date');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -87,6 +98,12 @@ export default function Oportunidades() {
 
   const handleQuickUpdate = (id, field, value) => {
     updateMutation.mutate({ id, data: { [field]: value } });
+  };
+
+  const handleConfirmCreate = () => {
+    if (!pendingOpportunity) return;
+    createMutation.mutate(pendingOpportunity);
+    setPendingOpportunity(null);
   };
 
   const filteredAndSorted = useMemo(() => {
@@ -264,7 +281,7 @@ export default function Oportunidades() {
       <OpportunityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSubmit={data => createMutation.mutate(data)}
+        onSubmit={setPendingOpportunity}
         isLoading={createMutation.isPending}
         currentUser={user}
         leads={leads}
@@ -287,6 +304,22 @@ export default function Oportunidades() {
         vendedores={vendedores}
         equipes={equipes}
       />
+      <AlertDialog open={Boolean(pendingOpportunity)} onOpenChange={(open) => { if (!open) setPendingOpportunity(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar criação da oportunidade?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Será criada a oportunidade {pendingOpportunity?.name ? `"${pendingOpportunity.name}"` : 'informada'} para esta empresa. Confirme apenas se os dados principais foram revisados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCreate} disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Criando...' : 'Confirmar criação'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
