@@ -11,6 +11,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CheckCircle2, Download, FileCheck, MoreVertical, Search, Upload } from 'lucide-react';
 import { formatCurrency } from '@/components/forms/MaskedInputs';
 
@@ -223,6 +233,7 @@ export default function ConciliacaoAdministradora() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [filterAdministradora, setFilterAdministradora] = useState('todos');
   const [filterCompetencia, setFilterCompetencia] = useState('todos');
+  const [pendingConfirmacao, setPendingConfirmacao] = useState(null);
 
   const filterEmpresa = (items) => items.filter((item) => item.empresa_vinculada === empresa);
 
@@ -383,6 +394,7 @@ export default function ConciliacaoAdministradora() {
       queryClient.invalidateQueries({ queryKey: ['conciliacoesVenda', empresa] });
       queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] });
       queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] });
+      setPendingConfirmacao(null);
     },
   });
 
@@ -521,7 +533,7 @@ export default function ConciliacaoAdministradora() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled={!item.venda_vinculada} onClick={() => confirmMutation.mutate(item)}>
+                        <DropdownMenuItem disabled={!item.venda_vinculada} onClick={() => setPendingConfirmacao(item)}>
                           <CheckCircle2 className="w-4 h-4 mr-2" />Confirmar conciliação
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => ignoreMutation.mutate(item)}>Ignorar</DropdownMenuItem>
@@ -535,6 +547,23 @@ export default function ConciliacaoAdministradora() {
           </Table>
         </div>
       </div>
+
+      <AlertDialog open={Boolean(pendingConfirmacao)} onOpenChange={(open) => { if (!open) setPendingConfirmacao(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar conciliação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação marcará a venda como conciliada e atualizará a comissão vinculada para confirmada com data de confirmação de hoje.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmMutation.mutate(pendingConfirmacao)} disabled={confirmMutation.isPending}>
+              {confirmMutation.isPending ? 'Confirmando...' : 'Confirmar conciliação'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
