@@ -250,6 +250,12 @@ export default function ConciliacaoAdministradora() {
     enabled: Boolean(empresa),
   });
 
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts', empresa],
+    queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')),
+    enabled: Boolean(empresa),
+  });
+
   const conciliacoes = useMemo(
     () => applyAccessFilter(allConciliacoes, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }),
     [allConciliacoes, user, teamMembers]
@@ -426,7 +432,16 @@ export default function ConciliacaoAdministradora() {
           </div>
           <div>
             <Label>Administradora</Label>
-            <Input value={administradora} onChange={(event) => setAdministradora(event.target.value)} placeholder="Nome da administradora" />
+            <Select value={administradora} onValueChange={setAdministradora}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.name}>{account.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Competência</Label>
