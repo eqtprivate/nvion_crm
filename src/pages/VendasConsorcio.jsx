@@ -230,9 +230,9 @@ export default function VendasConsorcio() {
   };
 
   useEffect(() => {
-    if (!empresa || isLoading || isLoadingComissoes || vendas.length === 0) return;
+    if (!empresa || isLoading || isLoadingComissoes || vendas.length === 0 || regras.length === 0) return;
 
-    const backfillKey = `${empresa}:${vendas.length}:${comissoes.length}`;
+    const backfillKey = `${empresa}:${vendas.length}:${comissoes.length}:${regras.length}`;
     if (backfillKeyRef.current === backfillKey) return;
 
     const comissoesPorVenda = new Map(comissoes.map((comissao) => [comissao.venda_vinculada, comissao]).filter(([vendaId]) => Boolean(vendaId)));
