@@ -20,9 +20,10 @@ import { Info } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
 
-const ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
+const ALL_ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
 
 export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLoading, user, empresaVinculada, isSuperAdmin }) {
+  const ROLES = isSuperAdmin ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'super_admin');
   const [formData, setFormData] = useState({
     display_name: '',
     email: '',
