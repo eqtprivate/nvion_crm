@@ -52,7 +52,7 @@ const statusLabel = {
   inativo: 'Inativo',
 };
 
-function ClienteDialog({ open, onOpenChange, onSubmit, cliente, loading }) {
+function ClienteDialog({ open, onOpenChange, onSubmit, cliente, vendedores, loading }) {
   const [form, setForm] = useState(emptyForm);
 
   React.useEffect(() => {
@@ -80,7 +80,17 @@ function ClienteDialog({ open, onOpenChange, onSubmit, cliente, loading }) {
             <div><Label>Estado</Label><Input maxLength={2} value={form.estado || ''} onChange={(e) => setForm({ ...form, estado: e.target.value.toUpperCase() })} /></div>
             <div><Label>Origem</Label><Select value={form.origem} onValueChange={(value) => setForm({ ...form, origem: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{origemOptions.map((item) => <SelectItem key={item} value={item}>{item.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Status</Label><Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{statusOptions.map((item) => <SelectItem key={item} value={item}>{statusLabel[item]}</SelectItem>)}</SelectContent></Select></div>
-            <div className="md:col-span-2"><Label>Vendedor Responsável</Label><Input value={form.vendedor_responsavel || ''} onChange={(e) => setForm({ ...form, vendedor_responsavel: e.target.value })} /></div>
+            <div className="md:col-span-2">
+              <Label>Vendedor Responsável</Label>
+              <Select value={form.vendedor_responsavel || ''} onValueChange={(value) => setForm({ ...form, vendedor_responsavel: value })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger>
+                <SelectContent>
+                  {vendedores.filter((vendedor) => vendedor.nome).map((vendedor) => (
+                    <SelectItem key={vendedor.id} value={vendedor.nome}>{vendedor.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="md:col-span-2"><Label>Observações</Label><Input value={form.observacoes || ''} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
           </div>
           <DialogFooter>
@@ -115,6 +125,15 @@ export default function Contacts() {
     () => applyAccessFilter(allClientes, user, { vendedorField: 'vendedor_responsavel', teamMembers }),
     [allClientes, user, teamMembers]
   );
+
+  const { data: vendedores = [] } = useQuery({
+    queryKey: ['vendedores', empresa],
+    queryFn: async () => {
+      const all = await base44.entities.Vendedores.list('-created_date');
+      return all.filter((item) => item.empresa_vinculada === empresa);
+    },
+    enabled: Boolean(empresa),
+  });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Contact.create({ ...data, empresa_vinculada: empresa }),
@@ -251,6 +270,7 @@ export default function Contacts() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         cliente={selectedCliente}
+        vendedores={vendedores}
         onSubmit={handleSubmit}
         loading={createMutation.isPending || updateMutation.isPending}
       />
