@@ -24,6 +24,9 @@ function fallbackNumber(value, fallback = 0) {
   const parsed = Number(value || 0);
   return parsed || Number(fallback || 0);
 }
+function isMissingNumber(value) {
+  return value === null || value === undefined || value === '' || Number(value || 0) === 0;
+}
 
 function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
@@ -111,8 +114,11 @@ export default function VendasConsorcio() {
   const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
   const { data: comissoes = [], isLoading: isLoadingComissoes } = useQuery({ queryKey: ['comissoes', empresa], queryFn: async () => filterEmpresa(await base44.entities.Comissoes.list('-created_date')), enabled: Boolean(empresa) });
 
+  const encontrarRegraAtiva = (venda) =>
+    regras.find((r) => r.status === 'ativa' && r.produto === venda.produto && (!r.administradora || r.administradora === venda.administradora));
+
   const gerarComissao = async (vendaId, data) => {
-    const regra = regras.find((r) => r.status === 'ativa' && r.produto === data.produto && (!r.administradora || r.administradora === data.administradora));
+    const regra = encontrarRegraAtiva(data);
     const valorCarta = Number(data.valor_carta || 0);
     const percentualBase = fallbackNumber(data.percentual_comissao_prevista, regra?.percentual_base);
     const valorComissaoTotal = fallbackNumber(data.valor_comissao_prevista, calcComissao(valorCarta, percentualBase));
@@ -142,6 +148,34 @@ export default function VendasConsorcio() {
       status_comissao: 'prevista',
       origem: 'venda',
     });
+  };
+
+  const repararComissaoExistente = async (venda, comissao) => {
+    const camposReparaveis = [
+      'percentual_vendedor',
+      'valor_comissao_vendedor',
+      'percentual_lider',
+      'valor_comissao_lider',
+    ];
+    const precisaReparo = camposReparaveis.some((campo) => isMissingNumber(comissao[campo]));
+    if (!precisaReparo) return false;
+
+    const regra = encontrarRegraAtiva(venda);
+    const valorCarta = Number(venda.valor_carta || comissao.valor_carta || 0);
+    const percentualBase = fallbackNumber(comissao.percentual_base, fallbackNumber(venda.percentual_comissao_prevista, regra?.percentual_base));
+    const valorComissaoTotal = fallbackNumber(comissao.valor_comissao_total, fallbackNumber(venda.valor_comissao_prevista, calcComissao(valorCarta, percentualBase)));
+    const percentualVendedor = fallbackNumber(comissao.percentual_vendedor, regra?.percentual_vendedor);
+    const percentualLider = fallbackNumber(comissao.percentual_lider, regra?.percentual_lider);
+    const valorComissaoVendedor = fallbackNumber(comissao.valor_comissao_vendedor, calcComissao(valorComissaoTotal, percentualVendedor));
+    const valorComissaoLider = fallbackNumber(comissao.valor_comissao_lider, calcComissao(valorComissaoTotal, percentualLider));
+
+    await base44.entities.Comissoes.update(comissao.id, {
+      percentual_vendedor: percentualVendedor,
+      valor_comissao_vendedor: valorComissaoVendedor,
+      percentual_lider: percentualLider,
+      valor_comissao_lider: valorComissaoLider,
+    });
+    return true;
   };
 
   const cancelarComissoesDaVenda = async (vendaId) => {
@@ -201,16 +235,28 @@ export default function VendasConsorcio() {
     const backfillKey = `${empresa}:${vendas.length}:${comissoes.length}`;
     if (backfillKeyRef.current === backfillKey) return;
 
-    const vendasComComissao = new Set(comissoes.map((comissao) => comissao.venda_vinculada).filter(Boolean));
+    const comissoesPorVenda = new Map(comissoes.map((comissao) => [comissao.venda_vinculada, comissao]).filter(([vendaId]) => Boolean(vendaId)));
+    const vendasComComissao = new Set(comissoesPorVenda.keys());
     const vendasSemComissao = vendas.filter((venda) =>
       venda.id && venda.status_operacional !== 'cancelada' && !vendasComComissao.has(venda.id)
     );
+    const reparos = vendas
+      .filter((venda) => venda.id && venda.status_operacional !== 'cancelada' && comissoesPorVenda.has(venda.id))
+      .map((venda) => repararComissaoExistente(venda, comissoesPorVenda.get(venda.id)));
 
     backfillKeyRef.current = backfillKey;
-    if (vendasSemComissao.length === 0) return;
+    const operacoes = [
+      ...vendasSemComissao.map((venda) => gerarComissao(venda.id, venda)),
+      ...reparos,
+    ];
+    if (operacoes.length === 0) return;
 
-    Promise.all(vendasSemComissao.map((venda) => gerarComissao(venda.id, venda)))
-      .then(() => queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }))
+    Promise.all(operacoes)
+      .then((resultados) => {
+        if (vendasSemComissao.length > 0 || resultados.some(Boolean)) {
+          queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] });
+        }
+      })
       .catch((error) => console.error('Erro ao gerar comissões retroativas:', error));
   }, [comissoes, empresa, isLoading, isLoadingComissoes, queryClient, regras, vendas]);
 
