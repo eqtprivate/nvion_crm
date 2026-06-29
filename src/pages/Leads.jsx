@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Target, MoreVertical, Download, Flame, Thermometer, Snowflake } from 'lucide-react';
+import { Plus, Search, Target, MoreVertical, Download, Flame, Thermometer, Snowflake, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import LeadDialog, { LEAD_STATUSES, ORIGENS, TEMPERATURAS } from '../components/forms/LeadDialog';
 import EditLeadDialog from '../components/forms/EditLeadDialog';
 import KPICard from '../components/leads/KPICard';
@@ -15,6 +16,111 @@ import LeadFilters from '../components/leads/LeadFilters';
 import LeadsAnalytics from '../components/leads/LeadsAnalytics';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const values = [];
+    let current = '';
+    let inQuote = false;
+    for (const char of line) {
+      if (char === '"') { inQuote = !inQuote; }
+      else if (char === ',' && !inQuote) { values.push(current.trim()); current = ''; }
+      else { current += char; }
+    }
+    values.push(current.trim());
+    const row = {};
+    headers.forEach((h, i) => { row[h] = values[i] || ''; });
+    return row;
+  }).filter(row => Object.values(row).some(v => v));
+}
+
+const CSV_FIELD_MAP = {
+  nome: 'name', name: 'name',
+  email: 'email',
+  telefone: 'phone', phone: 'phone', fone: 'phone',
+  origem: 'origem',
+  campanha: 'campanha',
+  produto: 'produto_interesse', 'produto de interesse': 'produto_interesse',
+  'valor estimado': 'valor_estimado_carta', valor: 'valor_estimado_carta',
+  administradora: 'administradora_interesse',
+  vendedor: 'vendedor_responsavel', 'vendedor responsavel': 'vendedor_responsavel',
+  lider: 'lider_vinculado', 'lider vinculado': 'lider_vinculado',
+  temperatura: 'temperatura',
+  status: 'status',
+  observacoes: 'observacoes', 'observações': 'observacoes',
+};
+
+function ImportCSVDialog({ open, onOpenChange, onImport, isLoading }) {
+  const fileRef = useRef(null);
+  const [rows, setRows] = useState([]);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  const handleFile = (e) => {
+    setError(''); setRows([]); setDone(false);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = parseCSV(ev.target.result);
+        if (parsed.length === 0) { setError('Arquivo vazio ou formato inválido.'); return; }
+        const mapped = parsed.map(row => {
+          const lead = {};
+          Object.entries(row).forEach(([k, v]) => {
+            const field = CSV_FIELD_MAP[k.toLowerCase()];
+            if (field && v) lead[field] = v;
+          });
+          return lead;
+        }).filter(l => l.name);
+        if (mapped.length === 0) { setError('Nenhum lead com nome encontrado. Verifique se o CSV tem coluna "nome" ou "name".'); return; }
+        setRows(mapped);
+      } catch {
+        setError('Erro ao processar o arquivo CSV.');
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const handleImport = () => {
+    onImport(rows, () => { setDone(true); setRows([]); if (fileRef.current) fileRef.current.value = ''; });
+  };
+
+  const handleClose = () => { setRows([]); setError(''); setDone(false); if (fileRef.current) fileRef.current.value = ''; onOpenChange(false); };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Importar Leads via CSV</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">O arquivo deve ter cabeçalhos em português ou inglês. Colunas reconhecidas: <strong>nome, email, telefone, origem, campanha, produto, valor estimado, administradora, vendedor, lider, temperatura, status, observacoes</strong>.</p>
+          <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
+          {error && <div className="flex items-center gap-2 text-red-600 text-sm"><AlertCircle className="w-4 h-4" />{error}</div>}
+          {done && <div className="flex items-center gap-2 text-green-700 text-sm"><CheckCircle2 className="w-4 h-4" />{rows.length || 'Os'} leads importados com sucesso!</div>}
+          {rows.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-2">{rows.length} lead(s) encontrado(s) — prévia:</p>
+              <div className="overflow-x-auto border rounded">
+                <table className="text-xs w-full">
+                  <thead className="bg-gray-50"><tr><th className="p-2 text-left">Nome</th><th className="p-2 text-left">Email</th><th className="p-2 text-left">Telefone</th><th className="p-2 text-left">Origem</th><th className="p-2 text-left">Produto</th><th className="p-2 text-left">Vendedor</th></tr></thead>
+                  <tbody>{rows.slice(0, 5).map((r, i) => <tr key={i} className="border-t"><td className="p-2">{r.name || '-'}</td><td className="p-2">{r.email || '-'}</td><td className="p-2">{r.phone || '-'}</td><td className="p-2">{r.origem || '-'}</td><td className="p-2">{r.produto_interesse || '-'}</td><td className="p-2">{r.vendedor_responsavel || '-'}</td></tr>)}</tbody>
+                </table>
+                {rows.length > 5 && <p className="text-xs text-gray-400 p-2">… e mais {rows.length - 5} linha(s)</p>}
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>Fechar</Button>
+          {rows.length > 0 && <Button onClick={handleImport} disabled={isLoading}>{isLoading ? 'Importando...' : `Importar ${rows.length} lead(s)`}</Button>}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const STATUS_LABELS = Object.fromEntries(LEAD_STATUSES.map(s => [s.value, s.label]));
 const ORIGEM_LABELS = Object.fromEntries(ORIGENS.map(o => [o.value, o.label]));
@@ -40,6 +146,7 @@ export default function Leads() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [filters, setFilters] = useState({ status: 'all', origem: 'all', temperatura: 'all' });
   const queryClient = useQueryClient();
@@ -62,6 +169,19 @@ export default function Leads() {
     mutationFn: (data) => base44.entities.Lead.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setDialogOpen(false); },
   });
+
+  const importMutation = useMutation({
+    mutationFn: async (rows) => {
+      for (const row of rows) {
+        await base44.entities.Lead.create({ ...row, status: row.status || 'novo_contato', temperatura: row.temperatura || 'morno', origem: row.origem || 'outro', empresa_vinculada: empresa });
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads', empresa] }),
+  });
+
+  const handleImport = (rows, onDone) => {
+    importMutation.mutate(rows, { onSuccess: onDone });
+  };
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
@@ -125,6 +245,9 @@ export default function Leads() {
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" onClick={exportToCSV} disabled={filtered.length === 0}>
             <Download className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Exportar CSV</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Importar CSV</span>
           </Button>
           <Button size="sm" className="bg-primary hover:bg-primary-dark" onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />Novo Lead
@@ -244,6 +367,7 @@ export default function Leads() {
 
       <LeadDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} />
       <EditLeadDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} lead={selectedLead} onSubmit={data => updateMutation.mutate({ id: selectedLead.id, data })} isLoading={updateMutation.isPending} />
+      <ImportCSVDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} isLoading={importMutation.isPending} />
     </div>
   );
 }
