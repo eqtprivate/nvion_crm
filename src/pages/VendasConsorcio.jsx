@@ -14,29 +14,40 @@ import { Plus, Search, ReceiptText, MoreVertical, Download } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
+const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
 const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliacao: 'Em conciliação', conciliada: 'Conciliada', divergente: 'Divergente' };
 function money(value) { return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 function calcComissao(valor, percentual) { return Number(valor || 0) * Number(percentual || 0) / 100; }
 
-function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, onSubmit, loading }) {
+function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
   React.useEffect(() => { setForm(venda ? { ...emptyForm, ...venda } : emptyForm); }, [venda, open]);
+
   const valorComissao = calcComissao(form.valor_carta, form.percentual_comissao_prevista);
+  const valorVendedor = calcComissao(valorComissao, form.percentual_vendedor);
+  const valorLider = calcComissao(valorComissao, form.percentual_lider);
+
+  const applyRegra = (nomeProduto, administradora, currentForm) => {
+    const regra = regras.find(r => r.status === 'ativa' && r.produto === nomeProduto && (!r.administradora || r.administradora === administradora));
+    if (!regra) return currentForm;
+    return { ...currentForm, percentual_comissao_prevista: regra.percentual_base || currentForm.percentual_comissao_prevista, percentual_vendedor: regra.percentual_vendedor || '', percentual_lider: regra.percentual_lider || '' };
+  };
 
   const handleOpportunity = (id) => {
     const oportunidade = oportunidades.find((item) => item.id === id);
-    setForm({ ...form, oportunidade_vinculada: id, cliente: oportunidade?.cliente_vinculado || form.cliente, vendedor: oportunidade?.vendedor || form.vendedor, lider: oportunidade?.lider || form.lider, administradora: oportunidade?.administradora_pretendida || form.administradora, produto: oportunidade?.produto || form.produto, valor_carta: oportunidade?.valor_carta || form.valor_carta });
+    const next = { ...form, oportunidade_vinculada: id, cliente: oportunidade?.cliente_vinculado || form.cliente, vendedor: oportunidade?.vendedor || form.vendedor, lider: oportunidade?.lider || form.lider, administradora: oportunidade?.administradora_pretendida || form.administradora, produto: oportunidade?.produto || form.produto, valor_carta: oportunidade?.valor_carta || form.valor_carta };
+    setForm(applyRegra(next.produto, next.administradora, next));
   };
 
   const handleProduto = (nome) => {
     const produto = produtos.find((item) => item.nome_produto === nome);
-    setForm({ ...form, produto: nome, administradora: produto?.administradora_vinculada || form.administradora, percentual_comissao_prevista: produto?.percentual_comissao_padrao || form.percentual_comissao_prevista });
+    const next = { ...form, produto: nome, administradora: produto?.administradora_vinculada || form.administradora };
+    setForm(applyRegra(nome, next.administradora, next));
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit({ ...form, valor_carta: Number(form.valor_carta || 0), percentual_comissao_prevista: Number(form.percentual_comissao_prevista || 0), valor_comissao_prevista: valorComissao });
+    onSubmit({ ...form, valor_carta: Number(form.valor_carta || 0), percentual_comissao_prevista: Number(form.percentual_comissao_prevista || 0), percentual_vendedor: Number(form.percentual_vendedor || 0), percentual_lider: Number(form.percentual_lider || 0), valor_comissao_prevista: valorComissao, valor_comissao_vendedor: valorVendedor, valor_comissao_lider: valorLider });
   };
 
   return (
@@ -56,10 +67,14 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
             <div><Label>Valor da carta *</Label><Input required type="number" value={form.valor_carta || ''} onChange={(e) => setForm({ ...form, valor_carta: e.target.value })} /></div>
             <div><Label>Grupo</Label><Input value={form.grupo || ''} onChange={(e) => setForm({ ...form, grupo: e.target.value })} /></div>
             <div><Label>Cota</Label><Input value={form.cota || ''} onChange={(e) => setForm({ ...form, cota: e.target.value })} /></div>
-            <div><Label>Comissão prevista (%)</Label><Input type="number" step="0.01" value={form.percentual_comissao_prevista || ''} onChange={(e) => setForm({ ...form, percentual_comissao_prevista: e.target.value })} /></div>
-            <div><Label>Valor comissão prevista</Label><Input value={money(valorComissao)} disabled /></div>
+            <div><Label>Comissão base (%)</Label><Input type="number" step="0.01" value={form.percentual_comissao_prevista || ''} onChange={(e) => setForm({ ...form, percentual_comissao_prevista: e.target.value })} /></div>
+            <div><Label>% Vendedor (da comissão)</Label><Input type="number" step="0.01" value={form.percentual_vendedor || ''} onChange={(e) => setForm({ ...form, percentual_vendedor: e.target.value })} /></div>
+            <div><Label>% Líder (da comissão)</Label><Input type="number" step="0.01" value={form.percentual_lider || ''} onChange={(e) => setForm({ ...form, percentual_lider: e.target.value })} /></div>
+            <div><Label>Comissão total prevista</Label><Input value={money(valorComissao)} disabled /></div>
+            <div><Label>Comissão vendedor</Label><Input value={money(valorVendedor)} disabled /></div>
+            <div><Label>Comissão líder</Label><Input value={money(valorLider)} disabled /></div>
             <div><Label>Data prevista pagamento</Label><Input type="date" value={form.data_prevista_pagamento || ''} onChange={(e) => setForm({ ...form, data_prevista_pagamento: e.target.value })} /></div>
-            <div className="md:col-span-3"><Label>Observações</Label><Input value={form.observacoes || ''} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
+            <div className="md:col-span-2"><Label>Observações</Label><Input value={form.observacoes || ''} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
           </div>
           <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button><Button type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar Venda'}</Button></DialogFooter>
         </form>
@@ -86,22 +101,23 @@ export default function VendasConsorcio() {
   const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await base44.entities.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
   const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
   const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
 
   const createMutation = useMutation({ mutationFn: (data) => base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa }), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); setDialogOpen(false); setSelectedVenda(null); } });
   const updateMutation = useMutation({ mutationFn: ({ id, data }) => base44.entities.VendasConsorcio.update(id, data), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); setDialogOpen(false); setSelectedVenda(null); } });
   const deleteMutation = useMutation({ mutationFn: (id) => base44.entities.VendasConsorcio.delete(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }) });
 
   const filtered = useMemo(() => { const term = searchTerm.toLowerCase(); return vendas.filter((item) => item.cliente?.toLowerCase().includes(term) || item.vendedor?.toLowerCase().includes(term) || item.administradora?.toLowerCase().includes(term) || item.produto?.toLowerCase().includes(term)); }, [vendas, searchTerm]);
-  const kpis = useMemo(() => ({ total: vendas.length, valorCartas: vendas.reduce((sum, item) => sum + (item.valor_carta || 0), 0), comissaoPrevista: vendas.reduce((sum, item) => sum + (item.valor_comissao_prevista || 0), 0), naoConciliadas: vendas.filter((item) => item.status_conciliacao === 'nao_conciliada').length }), [vendas]);
+  const kpis = useMemo(() => ({ total: vendas.length, valorCartas: vendas.reduce((sum, item) => sum + (item.valor_carta || 0), 0), comissaoPrevista: vendas.reduce((sum, item) => sum + (item.valor_comissao_prevista || 0), 0), comissaoVendedores: vendas.reduce((sum, item) => sum + (item.valor_comissao_vendedor || 0), 0), naoConciliadas: vendas.filter((item) => item.status_conciliacao === 'nao_conciliada').length }), [vendas]);
   const handleSubmit = (data) => { selectedVenda?.id ? updateMutation.mutate({ id: selectedVenda.id, data }) : createMutation.mutate(data); };
   const exportCSV = () => { const headers = ['Cliente', 'Produto', 'Administradora', 'Vendedor', 'Valor Carta', 'Comissão Prevista']; const rows = filtered.map((item) => [item.cliente, item.produto, item.administradora, item.vendedor, item.valor_carta, item.valor_comissao_prevista]); const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell || ''}"`).join(',')).join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const url = window.URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'vendas_consorcio.csv'; link.click(); window.URL.revokeObjectURL(url); };
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"><div><h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vendas de Consórcio</h1><p className="text-gray-500 mt-1">Registro das vendas realizadas e comissão prevista</p></div><div className="flex gap-2"><Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}><Download className="w-4 h-4 mr-2" />Exportar CSV</Button><Button onClick={() => { setSelectedVenda(null); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nova Venda</Button></div></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendas</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Valor Total de Cartas</p><p className="text-2xl font-bold text-blue-700">{money(kpis.valorCartas)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Prevista</p><p className="text-2xl font-bold text-green-700">{money(kpis.comissaoPrevista)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Não Conciliadas</p><p className="text-2xl font-bold text-primary">{kpis.naoConciliadas}</p></CardContent></Card></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendas</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Valor Total de Cartas</p><p className="text-2xl font-bold text-blue-700">{money(kpis.valorCartas)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Prevista</p><p className="text-2xl font-bold text-green-700">{money(kpis.comissaoPrevista)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Repasse Vendedores</p><p className="text-2xl font-bold text-primary">{money(kpis.comissaoVendedores)}</p></CardContent></Card></div>
       <div className="bg-white rounded-lg shadow"><div className="p-4 border-b"><div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar vendas..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" /></div></div><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Produto</TableHead><TableHead>Administradora</TableHead><TableHead>Vendedor</TableHead><TableHead>Valor Carta</TableHead><TableHead>Comissão</TableHead><TableHead>Conciliação</TableHead><TableHead></TableHead></TableRow></TableHeader><TableBody>{isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando vendas...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-12 text-gray-500"><ReceiptText className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma venda encontrada</TableCell></TableRow> : filtered.map((venda) => <TableRow key={venda.id}><TableCell>{venda.cliente}</TableCell><TableCell>{venda.produto || '-'}</TableCell><TableCell>{venda.administradora || '-'}</TableCell><TableCell>{venda.vendedor || '-'}</TableCell><TableCell>{money(venda.valor_carta)}</TableCell><TableCell>{money(venda.valor_comissao_prevista)}</TableCell><TableCell><Badge>{statusConciliacaoLabel[venda.status_conciliacao] || venda.status_conciliacao}</Badge></TableCell><TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedVenda(venda); setDialogOpen(true); }}>Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(venda.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell></TableRow>)}</TableBody></Table></div></div>
-      <VendaDialog open={dialogOpen} onOpenChange={setDialogOpen} venda={selectedVenda} oportunidades={oportunidades} produtos={produtos} equipes={equipes} onSubmit={handleSubmit} loading={createMutation.isPending || updateMutation.isPending} />
+      <VendaDialog open={dialogOpen} onOpenChange={setDialogOpen} venda={selectedVenda} oportunidades={oportunidades} produtos={produtos} equipes={equipes} regras={regras} onSubmit={handleSubmit} loading={createMutation.isPending || updateMutation.isPending} />
     </div>
   );
 }

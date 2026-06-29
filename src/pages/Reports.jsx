@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Target, TrendingUp, Users, Building2, DollarSign } from 'lucide-react';
+import { Download, Target, TrendingUp, Users, Building2 } from 'lucide-react';
 
 function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -34,10 +34,12 @@ export default function Reports() {
   const { data: allOportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
   const { data: allClientes = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
   const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allVendas = [] } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => { const all = await base44.entities.VendasConsorcio.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
 
   const leads = useMemo(() => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }), [allLeads, user, teamMembers]);
   const oportunidades = useMemo(() => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }), [allOportunidades, user, teamMembers]);
   const clientes = useMemo(() => applyAccessFilter(allClientes, user, { vendedorField: 'vendedor_responsavel', teamMembers }), [allClientes, user, teamMembers]);
+  const vendas = useMemo(() => applyAccessFilter(allVendas, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }), [allVendas, user, teamMembers]);
 
   const resumo = useMemo(() => {
     const abertas = oportunidades.filter((item) => item.status === 'aberta');
@@ -70,6 +72,37 @@ export default function Reports() {
     });
     return Object.values(map).sort((a, b) => b.valor - a.valor).slice(0, 5);
   }, [oportunidades]);
+
+  const comissaoPorVendedor = useMemo(() => {
+    const map = {};
+    vendas.forEach((item) => {
+      const vendedor = item.vendedor || 'Sem vendedor';
+      if (!map[vendedor]) map[vendedor] = { nome: vendedor, vendas: 0, comissaoTotal: 0, comissaoVendedor: 0 };
+      map[vendedor].vendas += 1;
+      map[vendedor].comissaoTotal += item.valor_comissao_prevista || 0;
+      map[vendedor].comissaoVendedor += item.valor_comissao_vendedor || 0;
+    });
+    return Object.values(map).sort((a, b) => b.comissaoVendedor - a.comissaoVendedor).slice(0, 5);
+  }, [vendas]);
+
+  const topProdutos = useMemo(() => {
+    const map = {};
+    vendas.forEach((item) => {
+      const produto = item.produto || 'Não informado';
+      if (!map[produto]) map[produto] = { nome: produto, quantidade: 0, valorTotal: 0 };
+      map[produto].quantidade += 1;
+      map[produto].valorTotal += item.valor_carta || 0;
+    });
+    return Object.values(map).sort((a, b) => b.valorTotal - a.valorTotal).slice(0, 5);
+  }, [vendas]);
+
+  const funil = useMemo(() => ({
+    leads: leads.length,
+    oportunidades: oportunidades.length,
+    vendas: vendas.length,
+    taxaLeadOp: leads.length ? ((oportunidades.length / leads.length) * 100).toFixed(1) : '0.0',
+    taxaOpVenda: oportunidades.length ? ((vendas.length / oportunidades.length) * 100).toFixed(1) : '0.0',
+  }), [leads, oportunidades, vendas]);
 
   const exportarOportunidades = () => {
     const headers = ['Nome', 'Cliente', 'Produto', 'Valor da Carta', 'Status', 'Etapa', 'Vendedor', 'Líder', 'Administradora'];
@@ -131,7 +164,7 @@ export default function Reports() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardHeader><CardTitle className="text-base">Ranking de Vendedores</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -146,6 +179,41 @@ export default function Reports() {
           <CardContent className="space-y-3">
             {rankingAdministradoras.length === 0 ? <p className="text-sm text-gray-500">Sem dados.</p> : rankingAdministradoras.map((item, index) => (
               <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0"><span>#{index + 1} {item.nome}</span><strong>{money(item.valor)}</strong></div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Funil de Conversão</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between"><span className="text-gray-600">Leads</span><strong>{funil.leads}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600">Oportunidades</span><strong>{funil.oportunidades} <span className="text-xs text-gray-400">({funil.taxaLeadOp}% dos leads)</span></strong></div>
+            <div className="flex justify-between"><span className="text-gray-600">Vendas fechadas</span><strong>{funil.vendas} <span className="text-xs text-gray-400">({funil.taxaOpVenda}% das oport.)</span></strong></div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Comissão por Vendedor</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {comissaoPorVendedor.length === 0 ? <p className="text-sm text-gray-500">Sem dados de vendas.</p> : comissaoPorVendedor.map((item, index) => (
+              <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0">
+                <span className="text-sm">#{index + 1} {item.nome} <span className="text-xs text-gray-400">({item.vendas} venda{item.vendas !== 1 ? 's' : ''})</span></span>
+                <strong className="text-green-700">{money(item.comissaoVendedor)}</strong>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Top Produtos Vendidos</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {topProdutos.length === 0 ? <p className="text-sm text-gray-500">Sem dados de vendas.</p> : topProdutos.map((item, index) => (
+              <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0">
+                <span className="text-sm">#{index + 1} {item.nome}</span>
+                <strong>{money(item.valorTotal)}</strong>
+              </div>
             ))}
           </CardContent>
         </Card>
