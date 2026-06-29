@@ -34,6 +34,7 @@ import { MoneyInput, formatCurrency } from '@/components/forms/MaskedInputs';
 export default function EquipeComercial() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEquipe, setSelectedEquipe] = useState(null);
   const [form, setForm] = useState({
     nome_equipe: '',
     lider_responsavel: '',
@@ -60,11 +61,48 @@ export default function EquipeComercial() {
 
   const resetForm = () => setForm({ nome_equipe: '', lider_responsavel: '', vendedores_texto: '', meta_mensal: '', status: 'ativo' });
 
+  const openCreateDialog = () => {
+    setSelectedEquipe(null);
+    resetForm();
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (equipe) => {
+    setSelectedEquipe(equipe);
+    setForm({
+      nome_equipe: equipe.nome_equipe || '',
+      lider_responsavel: equipe.lider_responsavel || '',
+      vendedores_texto: equipe.vendedores_vinculados?.join(', ') || '',
+      meta_mensal: equipe.meta_mensal || '',
+      status: equipe.status || 'ativo',
+    });
+    setDialogOpen(true);
+  };
+
+  const closeDialog = (open) => {
+    setDialogOpen(open);
+    if (!open) {
+      setSelectedEquipe(null);
+      resetForm();
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.EquipeComercial.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
       setDialogOpen(false);
+      setSelectedEquipe(null);
+      resetForm();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.EquipeComercial.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
+      setDialogOpen(false);
+      setSelectedEquipe(null);
       resetForm();
     },
   });
@@ -96,14 +134,19 @@ export default function EquipeComercial() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-    createMutation.mutate({
+    const payload = {
       nome_equipe: form.nome_equipe,
       lider_responsavel: form.lider_responsavel,
       meta_mensal: form.meta_mensal ? parseFloat(form.meta_mensal) : undefined,
       status: form.status,
       vendedores_vinculados: vendedores,
-    });
+    };
+
+    if (selectedEquipe?.id) updateMutation.mutate({ id: selectedEquipe.id, data: payload });
+    else createMutation.mutate(payload);
   };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
@@ -113,7 +156,7 @@ export default function EquipeComercial() {
           <p className="text-gray-500 mt-1">Gestão de líderes, vendedores, equipes comerciais e metas</p>
         </div>
         {canManageTeams && (
-          <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={openCreateDialog}>
             <Plus className="w-4 h-4 mr-2" />
             Nova Equipe
           </Button>
@@ -161,7 +204,7 @@ export default function EquipeComercial() {
                     <TableCell><span className="font-medium">{equipe.meta_mensal ? formatCurrency(equipe.meta_mensal) : '-'}</span></TableCell>
                     <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
                     {canManageTeams && (
-                    <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                    <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => openEditDialog(equipe)}>Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
                     )}
                   </TableRow>
                 ))
@@ -171,15 +214,27 @@ export default function EquipeComercial() {
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={closeDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nova Equipe Comercial</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{selectedEquipe ? 'Editar Equipe Comercial' : 'Nova Equipe Comercial'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div><Label htmlFor="nome_equipe">Nome da Equipe *</Label><Input id="nome_equipe" value={form.nome_equipe} onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))} placeholder="Ex: Equipe Sul" required /></div>
             <div><Label htmlFor="lider">Líder Responsável</Label><Input id="lider" value={form.lider_responsavel} onChange={(e) => setForm(prev => ({ ...prev, lider_responsavel: e.target.value }))} placeholder="Nome do líder" /></div>
             <div><Label htmlFor="vendedores">Vendedores Vinculados</Label><Input id="vendedores" value={form.vendedores_texto} onChange={(e) => setForm(prev => ({ ...prev, vendedores_texto: e.target.value }))} placeholder="Ex: Ana Lima, Marcos Oliveira, Bruno Ferreira" /><p className="text-xs text-gray-500 mt-1">Separe os vendedores por vírgula.</p></div>
             <div><Label htmlFor="meta">Meta Mensal</Label><MoneyInput id="meta" value={form.meta_mensal} onChange={(value) => setForm(prev => ({ ...prev, meta_mensal: value }))} /></div>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button type="submit" className="bg-primary hover:bg-primary-dark" disabled={createMutation.isPending}>{createMutation.isPending ? 'Salvando...' : 'Criar Equipe'}</Button></DialogFooter>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                value={form.status}
+                onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+              >
+                <option value="ativo">Ativa</option>
+                <option value="inativo">Inativa</option>
+              </select>
+            </div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => closeDialog(false)}>Cancelar</Button><Button type="submit" className="bg-primary hover:bg-primary-dark" disabled={isSaving}>{isSaving ? 'Salvando...' : selectedEquipe ? 'Salvar Alterações' : 'Criar Equipe'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
