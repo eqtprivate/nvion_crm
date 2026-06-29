@@ -35,6 +35,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const NVION_ICON_URL = 'https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png';
+
 export default function Layout({ children, currentPageName }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { user: currentUser, logout } = useAuth();
@@ -64,6 +66,9 @@ export default function Layout({ children, currentPageName }) {
   const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
   const isAdmin = isAdminRole(currentUser?.role);
   const isSuperAdmin = currentUser?.role === 'super_admin';
+  const accessLabel = isSuperAdmin
+    ? 'SUPERADMIN (acesso a todas)'
+    : (currentUser?.empresa_vinculada || 'Empresa não definida');
 
   const menuItems = allMenuItems.filter((item) =>
     isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path)
@@ -81,8 +86,18 @@ export default function Layout({ children, currentPageName }) {
 
   const SidebarContent = () => (
     <>
-      <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-        <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png" alt="NVION" className="h-8 w-auto" />
+      <div className="h-20 flex items-center px-4 border-b border-sidebar-border">
+        <div className="flex items-center gap-3 min-w-0 w-full">
+          <div className="w-10 h-10 rounded-xl bg-white/5 border border-sidebar-border flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img src={NVION_ICON_URL} alt="NVION" className="h-7 w-7 object-contain" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/40 leading-none mb-1">Acesso</p>
+            <p title={accessLabel} className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+              {accessLabel}
+            </p>
+          </div>
+        </div>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 flex flex-col overflow-y-auto">
         <div className="space-y-0.5">
