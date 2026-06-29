@@ -26,14 +26,19 @@ export const OPP_STATUSES = [
 
 const emptyForm = { name: '', cliente_vinculado: '', lead_vinculado: '', vendedor: '', lider: '', administradora_pretendida: '', produto: '', valor_carta: '', previsao_fechamento: '', probabilidade: '', motivo_perda: '', status: 'aberta', stage: 'novo_contato' };
 
-export default function OpportunityDialog({ open, onOpenChange, onSubmit, isLoading, opportunity }) {
+export default function OpportunityDialog({ open, onOpenChange, onSubmit, isLoading, opportunity, currentUser }) {
   const [form, setForm] = useState(emptyForm);
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
 
   useEffect(() => {
     if (opportunity) {
       setForm({ name: opportunity.name || '', cliente_vinculado: opportunity.cliente_vinculado || '', lead_vinculado: opportunity.lead_vinculado || '', vendedor: opportunity.vendedor || '', lider: opportunity.lider || '', administradora_pretendida: opportunity.administradora_pretendida || '', produto: opportunity.produto || '', valor_carta: opportunity.valor_carta || '', previsao_fechamento: opportunity.previsao_fechamento || '', probabilidade: opportunity.probabilidade || '', motivo_perda: opportunity.motivo_perda || '', status: opportunity.status || 'aberta', stage: opportunity.stage || 'novo_contato' });
-    } else { setForm(emptyForm); }
+    } else {
+      const base = { ...emptyForm };
+      if (currentUser?.role === 'vendedor') base.vendedor = currentUser.display_name || '';
+      if (currentUser?.role === 'lider_comercial') base.lider = currentUser.display_name || '';
+      setForm(base);
+    }
   }, [opportunity, open]);
 
   const handleSubmit = (e) => {

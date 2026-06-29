@@ -254,7 +254,7 @@ export default function Oportunidades() {
         </div>
       </div>
 
-      <OpportunityDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} />
+      <OpportunityDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} />
       <OpportunityDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} opportunity={selectedOportunidade} onSubmit={data => updateMutation.mutate({ id: selectedOportunidade.id, data })} isLoading={updateMutation.isPending} />
     </div>
   );

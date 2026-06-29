@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
+import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Target, TrendingUp, Users, Building2, DollarSign } from 'lucide-react';
@@ -27,11 +28,16 @@ function Indicador({ title, value, Icon }) {
 export default function Reports() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
+  const teamMembers = useTeamMembers(user);
 
-  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
-  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
-  const { data: clientes = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allLeads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allOportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allClientes = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
   const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+
+  const leads = useMemo(() => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }), [allLeads, user, teamMembers]);
+  const oportunidades = useMemo(() => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }), [allOportunidades, user, teamMembers]);
+  const clientes = useMemo(() => applyAccessFilter(allClientes, user, { vendedorField: 'vendedor_responsavel', teamMembers }), [allClientes, user, teamMembers]);
 
   const resumo = useMemo(() => {
     const abertas = oportunidades.filter((item) => item.status === 'aberta');

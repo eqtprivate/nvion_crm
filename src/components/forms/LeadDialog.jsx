@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,14 +46,22 @@ const emptyForm = {
   proxima_acao: '', observacoes: '',
 };
 
-export default function LeadDialog({ open, onOpenChange, onSubmit, isLoading }) {
-  const [form, setForm] = useState(emptyForm);
+export default function LeadDialog({ open, onOpenChange, onSubmit, isLoading, currentUser }) {
+  const getInitialForm = () => {
+    const base = { ...emptyForm };
+    if (currentUser?.role === 'vendedor') base.vendedor_responsavel = currentUser.display_name || '';
+    if (currentUser?.role === 'lider_comercial') base.lider_vinculado = currentUser.display_name || '';
+    return base;
+  };
+  const [form, setForm] = useState(getInitialForm);
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
+
+  useEffect(() => { if (open) setForm(getInitialForm()); }, [open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ ...form, valor_estimado_carta: form.valor_estimado_carta ? parseFloat(form.valor_estimado_carta) : undefined });
-    setForm(emptyForm);
+    setForm(getInitialForm());
   };
 
   return (

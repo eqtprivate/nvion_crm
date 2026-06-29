@@ -242,7 +242,7 @@ export default function Leads() {
 
       <LeadsAnalytics leads={filtered} />
 
-      <LeadDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} />
+      <LeadDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} />
       <EditLeadDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} lead={selectedLead} onSubmit={data => updateMutation.mutate({ id: selectedLead.id, data })} isLoading={updateMutation.isPending} />
     </div>
   );
