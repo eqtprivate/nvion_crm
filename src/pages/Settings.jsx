@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/lib/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,25 +10,30 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AlertCircle, Download, Trash2 } from 'lucide-react';
 
 export default function Settings() {
+  const { user } = useAuth();
+  const empresa = user?.empresa_vinculada;
+  const isSuperAdmin = user?.role === 'super_admin';
   const [resetConfirmation, setResetConfirmation] = useState('');
   const queryClient = useQueryClient();
 
   const { data: defaultSettings } = useQuery({
-    queryKey: ['defaultSettings'],
+    queryKey: ['defaultSettings', empresa],
     queryFn: async () => {
       const settings = await base44.entities.DefaultSettings.list();
-      return settings[0] || null;
+      const filtered = settings.filter(s => s.empresa_vinculada === empresa);
+      return filtered[0] || null;
     },
+    enabled: Boolean(empresa),
   });
 
   const createSettingsMutation = useMutation({
-    mutationFn: (data) => base44.entities.DefaultSettings.create(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['defaultSettings'] }),
+    mutationFn: (data) => base44.entities.DefaultSettings.create({ ...data, empresa_vinculada: empresa }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['defaultSettings', empresa] }),
   });
 
   const updateSettingsMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DefaultSettings.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['defaultSettings'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['defaultSettings', empresa] }),
   });
 
   const handleUpdateSettings = async (field, value) => {
@@ -49,11 +55,12 @@ export default function Settings() {
     }
 
     try {
+      const filterEmpresa = (items) => items.filter(i => isSuperAdmin || i.empresa_vinculada === empresa);
       await Promise.all([
-        base44.entities.Contact.list().then(items => Promise.all(items.map(i => base44.entities.Contact.delete(i.id)))),
-        base44.entities.Account.list().then(items => Promise.all(items.map(i => base44.entities.Account.delete(i.id)))),
-        base44.entities.Lead.list().then(items => Promise.all(items.map(i => base44.entities.Lead.delete(i.id)))),
-        base44.entities.Opportunity.list().then(items => Promise.all(items.map(i => base44.entities.Opportunity.delete(i.id)))),
+        base44.entities.Contact.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Contact.delete(i.id)))),
+        base44.entities.Account.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Account.delete(i.id)))),
+        base44.entities.Lead.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Lead.delete(i.id)))),
+        base44.entities.Opportunity.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Opportunity.delete(i.id)))),
       ]);
 
       queryClient.invalidateQueries();
@@ -65,7 +72,8 @@ export default function Settings() {
   };
 
   const exportData = async (entityName, fileName) => {
-    const data = await base44.entities[entityName].list();
+    const all = await base44.entities[entityName].list();
+    const data = isSuperAdmin ? all : all.filter(i => i.empresa_vinculada === empresa);
     if (!data.length) return;
     const csv = [
       Object.keys(data[0]).join(','),
