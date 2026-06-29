@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,9 +7,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ORIGENS, TEMPERATURAS, LEAD_STATUSES } from './LeadDialog';
 
-export default function EditLeadDialog({ open, onOpenChange, lead, onSubmit, isLoading }) {
+export default function EditLeadDialog({
+  open,
+  onOpenChange,
+  lead,
+  onSubmit,
+  isLoading,
+  produtos = [],
+  administradoras = [],
+  vendedores = [],
+  equipes = [],
+}) {
   const [form, setForm] = useState({});
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
+
+  const lideres = useMemo(() => {
+    const nomes = new Set([
+      ...vendedores.filter(v => v.tipo_vendedor === 'lider').map(v => v.nome).filter(Boolean),
+      ...equipes.map(e => e.lider_responsavel).filter(Boolean),
+    ]);
+    return Array.from(nomes).sort();
+  }, [vendedores, equipes]);
 
   useEffect(() => {
     if (lead) {
@@ -30,6 +48,15 @@ export default function EditLeadDialog({ open, onOpenChange, lead, onSubmit, isL
     onSubmit({ ...form, valor_estimado_carta: form.valor_estimado_carta ? parseFloat(form.valor_estimado_carta) : undefined });
   };
 
+  const handleProdutoChange = (nomeProduto) => {
+    const produto = produtos.find(item => item.nome_produto === nomeProduto);
+    setForm(prev => ({
+      ...prev,
+      produto_interesse: nomeProduto,
+      administradora_interesse: produto?.administradora_vinculada || prev.administradora_interesse,
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -45,13 +72,13 @@ export default function EditLeadDialog({ open, onOpenChange, lead, onSubmit, isL
             <div className="space-y-1"><Label>Campanha</Label><Input value={form.campanha || ''} onChange={e => set('campanha', e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Produto de Interesse</Label><Input value={form.produto_interesse || ''} onChange={e => set('produto_interesse', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Produto de Interesse</Label><Select value={form.produto_interesse || ''} onValueChange={handleProdutoChange}><SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger><SelectContent>{produtos.filter(p => p.nome_produto).map(p => <SelectItem key={p.id} value={p.nome_produto}>{p.nome_produto}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1"><Label>Valor Estimado da Carta (R$)</Label><Input type="number" value={form.valor_estimado_carta || ''} onChange={e => set('valor_estimado_carta', e.target.value)} /></div>
           </div>
-          <div className="space-y-1"><Label>Administradora de Interesse</Label><Input value={form.administradora_interesse || ''} onChange={e => set('administradora_interesse', e.target.value)} /></div>
+          <div className="space-y-1"><Label>Administradora de Interesse</Label><Select value={form.administradora_interesse || ''} onValueChange={v => set('administradora_interesse', v)}><SelectTrigger><SelectValue placeholder="Selecione a administradora" /></SelectTrigger><SelectContent>{administradoras.filter(a => a.name).map(a => <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Vendedor Responsável</Label><Input value={form.vendedor_responsavel || ''} onChange={e => set('vendedor_responsavel', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Líder Vinculado</Label><Input value={form.lider_vinculado || ''} onChange={e => set('lider_vinculado', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Vendedor Responsável</Label><Select value={form.vendedor_responsavel || ''} onValueChange={v => set('vendedor_responsavel', v)}><SelectTrigger><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger><SelectContent>{vendedores.filter(v => v.nome).map(v => <SelectItem key={v.id} value={v.nome}>{v.nome}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1"><Label>Líder Vinculado</Label><Select value={form.lider_vinculado || ''} onValueChange={v => set('lider_vinculado', v)}><SelectTrigger><SelectValue placeholder="Selecione o líder" /></SelectTrigger><SelectContent>{lideres.map(nome => <SelectItem key={nome} value={nome}>{nome}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Temperatura</Label><Select value={form.temperatura || 'morno'} onValueChange={v => set('temperatura', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPERATURAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></div>
