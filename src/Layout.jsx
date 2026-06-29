@@ -70,16 +70,18 @@ export default function Layout({ children, currentPageName }) {
     ? 'SUPERADMIN (acesso a todas)'
     : (currentUser?.empresa_vinculada || 'Empresa não definida');
 
+  const hasModuleAccess = (path) => isAdmin || !hasModules || modulosPermitidos.includes(path);
+
   const menuItems = allMenuItems.filter((item) =>
-    isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path)
+    hasModuleAccess(item.path)
   );
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
     if (item.path === 'GestaoAcessos' || item.path === 'DadosTeste') {
       if (!isAdmin) return false;
-      return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
+      return hasModuleAccess(item.path);
     }
-    return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
+    return hasModuleAccess(item.path);
   });
 
   const isActive = (itemName) => currentPageName === itemName;
