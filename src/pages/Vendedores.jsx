@@ -47,14 +47,16 @@ function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loadi
     setForm({
       ...form,
       equipe: nomeEquipe,
-      lider: equipe?.lider_responsavel || form.lider,
+      lider: equipe?.lider_responsavel || '',
     });
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const equipeSelecionada = equipes.find((item) => item.nome_equipe === form.equipe);
     onSubmit({
       ...form,
+      lider: equipeSelecionada?.lider_responsavel || '',
       meta_mensal: form.meta_mensal ? Number(form.meta_mensal) : undefined,
     });
   };
@@ -92,7 +94,7 @@ function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loadi
             </div>
             <div>
               <Label>Líder</Label>
-              <Input value={form.lider || ''} onChange={(e) => setForm({ ...form, lider: e.target.value })} />
+              <Input value={form.lider || ''} readOnly disabled placeholder="Definido pela equipe" />
             </div>
             <div>
               <Label>Tipo</Label>
