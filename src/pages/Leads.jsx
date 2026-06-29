@@ -193,6 +193,46 @@ export default function Leads() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads', empresa] }),
   });
 
+  const convertToOpportunityMutation = useMutation({
+    mutationFn: async (lead) => {
+      const existing = await base44.entities.Opportunity.list('-created_date');
+      const existingOpportunity = existing.find((op) =>
+        op.empresa_vinculada === empresa &&
+        (op.lead_vinculado === lead.id || op.lead_vinculado === lead.name)
+      );
+
+      if (existingOpportunity) return existingOpportunity;
+
+      const opportunity = await base44.entities.Opportunity.create({
+        name: `Oportunidade - ${lead.name}`,
+        empresa_vinculada: empresa,
+        cliente_vinculado: lead.name,
+        lead_vinculado: lead.id,
+        vendedor: lead.vendedor_responsavel || '',
+        lider: lead.lider_vinculado || '',
+        administradora_pretendida: lead.administradora_interesse || '',
+        produto: lead.produto_interesse || '',
+        valor_carta: Number(lead.valor_estimado_carta || 0),
+        previsao_fechamento: '',
+        probabilidade: lead.temperatura === 'quente' ? 70 : lead.temperatura === 'frio' ? 30 : 50,
+        status: 'aberta',
+        stage: lead.status && !['novo_contato', 'perdida', 'venda_concluida'].includes(lead.status)
+          ? lead.status
+          : 'qualificacao',
+      });
+
+      await base44.entities.Lead.update(lead.id, {
+        status: lead.status === 'venda_concluida' ? lead.status : 'simulacao',
+      });
+
+      return opportunity;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads', empresa] });
+      queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] });
+    },
+  });
+
   const handleEdit = (lead) => { setSelectedLead(lead); setEditDialogOpen(true); };
   const handleFilterChange = (key, value) => setFilters(p => ({ ...p, [key]: value }));
   const handleClearFilters = () => setFilters({ status: 'all', origem: 'all', temperatura: 'all' });
@@ -351,6 +391,12 @@ export default function Leads() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEdit(lead)}>Editar</DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={convertToOpportunityMutation.isPending}
+                            onClick={() => convertToOpportunityMutation.mutate(lead)}
+                          >
+                            Criar oportunidade
+                          </DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(lead.id)}>Excluir</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
