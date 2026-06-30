@@ -39,6 +39,18 @@ export const LEAD_STATUSES = [
   { value: 'perdida', label: 'Perdida' },
 ];
 
+export const TIPOS_PROXIMA_ACAO = [
+  { value: 'ligacao', label: 'Ligação' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'Email' },
+  { value: 'reuniao', label: 'Reunião' },
+  { value: 'simulacao', label: 'Simulação' },
+  { value: 'enviar_proposta', label: 'Enviar proposta' },
+  { value: 'cobrar_documento', label: 'Cobrar documento' },
+  { value: 'follow_up', label: 'Follow-up' },
+  { value: 'outro', label: 'Outro' },
+];
+
 const emptyForm = {
   name: '', email: '', phone: '',
   origem: 'base_propria', campanha: '',
@@ -46,6 +58,7 @@ const emptyForm = {
   administradora_interesse: '', vendedor_responsavel: '',
   lider_vinculado: '', temperatura: 'morno',
   status: 'novo_contato', data_ultimo_contato: '',
+  tipo_proxima_acao: '', data_proxima_acao: '',
   proxima_acao: '', observacoes: '',
 };
 
@@ -125,10 +138,12 @@ export default function LeadDialog({
             <div className="space-y-1"><Label>Temperatura</Label><Select value={form.temperatura} onValueChange={v => set('temperatura', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPERATURAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1"><Label>Status</Label><Select value={form.status} onValueChange={v => set('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Data do Último Contato</Label><Input type="date" value={form.data_ultimo_contato} onChange={e => set('data_ultimo_contato', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Próxima Ação</Label><Input value={form.proxima_acao} onChange={e => set('proxima_acao', e.target.value)} /></div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1"><Label>Último Contato</Label><Input type="date" value={form.data_ultimo_contato} onChange={e => set('data_ultimo_contato', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Tipo Próx. Ação</Label><Select value={form.tipo_proxima_acao || ''} onValueChange={v => set('tipo_proxima_acao', v)}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{TIPOS_PROXIMA_ACAO.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1"><Label>Data Próx. Ação</Label><Input type="date" value={form.data_proxima_acao} onChange={e => set('data_proxima_acao', e.target.value)} /></div>
           </div>
+          <div className="space-y-1"><Label>Próxima Ação</Label><Input value={form.proxima_acao} onChange={e => set('proxima_acao', e.target.value)} placeholder="Ex.: Enviar simulação pelo WhatsApp" /></div>
           <div className="space-y-1"><Label>Observações</Label><Textarea value={form.observacoes} onChange={e => set('observacoes', e.target.value)} rows={3} /></div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
