@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ORIGENS, TEMPERATURAS, LEAD_STATUSES } from './LeadDialog';
+import { ORIGENS, TEMPERATURAS, LEAD_STATUSES, TIPOS_PROXIMA_ACAO } from './LeadDialog';
 import { MoneyInput, PhoneInput } from './MaskedInputs';
 import { FieldError } from './FieldError';
 import { validate, leadSchema } from '@/lib/validation';
@@ -42,6 +42,7 @@ export default function EditLeadDialog({
         administradora_interesse: lead.administradora_interesse || '', vendedor_responsavel: lead.vendedor_responsavel || '',
         lider_vinculado: lead.lider_vinculado || '', temperatura: lead.temperatura || 'morno',
         status: lead.status || 'novo_contato', data_ultimo_contato: lead.data_ultimo_contato || '',
+        tipo_proxima_acao: lead.tipo_proxima_acao || '', data_proxima_acao: lead.data_proxima_acao || '',
         proxima_acao: lead.proxima_acao || '', observacoes: lead.observacoes || '',
       });
     }
@@ -91,10 +92,12 @@ export default function EditLeadDialog({
             <div className="space-y-1"><Label>Temperatura</Label><Select value={form.temperatura || 'morno'} onValueChange={v => set('temperatura', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPERATURAS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1"><Label>Status</Label><Select value={form.status || 'novo_contato'} onValueChange={v => set('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Data do Último Contato</Label><Input type="date" value={form.data_ultimo_contato || ''} onChange={e => set('data_ultimo_contato', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Próxima Ação</Label><Input value={form.proxima_acao || ''} onChange={e => set('proxima_acao', e.target.value)} /></div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1"><Label>Último Contato</Label><Input type="date" value={form.data_ultimo_contato || ''} onChange={e => set('data_ultimo_contato', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Tipo Próx. Ação</Label><Select value={form.tipo_proxima_acao || ''} onValueChange={v => set('tipo_proxima_acao', v)}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{TIPOS_PROXIMA_ACAO.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1"><Label>Data Próx. Ação</Label><Input type="date" value={form.data_proxima_acao || ''} onChange={e => set('data_proxima_acao', e.target.value)} /></div>
           </div>
+          <div className="space-y-1"><Label>Próxima Ação</Label><Input value={form.proxima_acao || ''} onChange={e => set('proxima_acao', e.target.value)} placeholder="Ex.: Enviar simulação pelo WhatsApp" /></div>
           <div className="space-y-1"><Label>Observações</Label><Textarea value={form.observacoes || ''} onChange={e => set('observacoes', e.target.value)} rows={3} /></div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
