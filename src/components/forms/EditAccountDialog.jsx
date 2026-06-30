@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CpfCnpjInput, PhoneInput } from './MaskedInputs';
+import { FieldError } from './FieldError';
+import { validate, accountSchema } from '@/lib/validation';
 
 const initialForm = {
   name: '',
@@ -18,6 +20,7 @@ const initialForm = {
 
 export default function EditAccountDialog({ open, onOpenChange, account, onSubmit, isLoading, readOnly = false }) {
   const [formData, setFormData] = useState(initialForm);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (account) {
@@ -37,8 +40,11 @@ export default function EditAccountDialog({ open, onOpenChange, account, onSubmi
     event.preventDefault();
     if (readOnly) return;
 
+    const { ok, data, errors: errs } = validate(accountSchema, formData);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({
-      ...formData,
+      ...data,
       prazo_medio_pagamento: formData.prazo_medio_pagamento ? Number(formData.prazo_medio_pagamento) : undefined,
     });
   };
@@ -53,11 +59,13 @@ export default function EditAccountDialog({ open, onOpenChange, account, onSubmi
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Nome da Administradora *</Label>
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required disabled={readOnly} />
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} disabled={readOnly} />
+              <FieldError message={errors.name} />
             </div>
             <div>
               <Label>CNPJ</Label>
               <CpfCnpjInput value={formData.cnpj} onChange={(value) => setFormData({ ...formData, cnpj: value })} disabled={readOnly} />
+              <FieldError message={errors.cnpj} />
             </div>
             <div>
               <Label>Contato Principal</Label>
@@ -66,10 +74,12 @@ export default function EditAccountDialog({ open, onOpenChange, account, onSubmi
             <div>
               <Label>Email</Label>
               <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} disabled={readOnly} />
+              <FieldError message={errors.email} />
             </div>
             <div>
               <Label>Telefone</Label>
               <PhoneInput value={formData.telefone} onChange={(value) => setFormData({ ...formData, telefone: value })} disabled={readOnly} />
+              <FieldError message={errors.telefone} />
             </div>
             <div>
               <Label>Prazo Médio de Pagamento (dias)</Label>

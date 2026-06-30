@@ -19,6 +19,8 @@ import {
 import { Info } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
+import { FieldError } from './FieldError';
+import { validate, usuarioAcessoSchema } from '@/lib/validation';
 
 const ALL_ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
 
@@ -32,6 +34,7 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
     empresa_vinculada: '',
   });
   const [empresas, setEmpresas] = useState([]);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     base44.entities.Empresa.list('-razao_social').then(list => setEmpresas(list || [])).catch(() => setEmpresas([]));
@@ -59,6 +62,9 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const { ok, errors: errs } = validate(usuarioAcessoSchema, formData);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     const data = {
       ...formData,
       empresa_vinculada: isSuperAdmin
@@ -91,20 +97,20 @@ export default function UsuarioAcessoDialog({ open, onOpenChange, onSubmit, isLo
               <Label htmlFor="display_name">Nome de Exibição *</Label>
               <Input
                 id="display_name"
-                required
                 value={formData.display_name}
                 onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
               />
+              <FieldError message={errors.display_name} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
-                required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
+              <FieldError message={errors.email} />
             </div>
             {isSuperAdmin && (
               <div className="space-y-2">

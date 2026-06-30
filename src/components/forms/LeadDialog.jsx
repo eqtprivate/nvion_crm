@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MoneyInput, PhoneInput } from './MaskedInputs';
+import { FieldError } from './FieldError';
+import { validate, leadSchema } from '@/lib/validation';
 
 export const ORIGENS = [
   { value: 'indicacao', label: 'Indicação' },
@@ -65,6 +67,7 @@ export default function LeadDialog({
     return base;
   };
   const [form, setForm] = useState(getInitialForm);
+  const [errors, setErrors] = useState({});
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
 
   const lideres = useMemo(() => {
@@ -75,11 +78,14 @@ export default function LeadDialog({
     return Array.from(nomes).sort();
   }, [vendedores, equipes]);
 
-  useEffect(() => { if (open) setForm(getInitialForm()); }, [open]);
+  useEffect(() => { if (open) { setForm(getInitialForm()); setErrors({}); } }, [open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ ...form, valor_estimado_carta: form.valor_estimado_carta ? parseFloat(form.valor_estimado_carta) : undefined });
+    const { ok, data, errors: errs } = validate(leadSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
+    onSubmit({ ...data, valor_estimado_carta: form.valor_estimado_carta ? parseFloat(form.valor_estimado_carta) : undefined });
     setForm(getInitialForm());
   };
 
@@ -98,9 +104,9 @@ export default function LeadDialog({
         <DialogHeader><DialogTitle>Novo Lead</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-1"><Label>Nome *</Label><Input required value={form.name} onChange={e => set('name', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Email</Label><Input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
-            <div className="space-y-1"><Label>Telefone</Label><PhoneInput value={form.phone} onChange={value => set('phone', value)} placeholder="(11) 99999-9999" /></div>
+            <div className="col-span-2 space-y-1"><Label>Nome *</Label><Input value={form.name} onChange={e => set('name', e.target.value)} /><FieldError message={errors.name} /></div>
+            <div className="space-y-1"><Label>Email</Label><Input type="email" value={form.email} onChange={e => set('email', e.target.value)} /><FieldError message={errors.email} /></div>
+            <div className="space-y-1"><Label>Telefone</Label><PhoneInput value={form.phone} onChange={value => set('phone', value)} placeholder="(11) 99999-9999" /><FieldError message={errors.phone} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Origem</Label><Select value={form.origem} onValueChange={v => set('origem', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ORIGENS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></div>

@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CpfCnpjInput, PhoneInput } from './MaskedInputs';
+import { FieldError } from './FieldError';
+import { validate, accountSchema } from '@/lib/validation';
 
 const initialForm = {
   name: '',
@@ -18,11 +20,15 @@ const initialForm = {
 
 export default function AccountDialog({ open, onOpenChange, onSubmit, isLoading }) {
   const [formData, setFormData] = useState(initialForm);
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const { ok, data, errors: errs } = validate(accountSchema, formData);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({
-      ...formData,
+      ...data,
       prazo_medio_pagamento: formData.prazo_medio_pagamento ? Number(formData.prazo_medio_pagamento) : undefined,
     });
     setFormData(initialForm);
@@ -38,11 +44,13 @@ export default function AccountDialog({ open, onOpenChange, onSubmit, isLoading 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome da Administradora *</Label>
-              <Input id="name" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              <FieldError message={errors.name} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ</Label>
               <CpfCnpjInput id="cnpj" value={formData.cnpj} onChange={(value) => setFormData({ ...formData, cnpj: value })} placeholder="00.000.000/0000-00" />
+              <FieldError message={errors.cnpj} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="contato">Contato Principal</Label>
@@ -51,10 +59,12 @@ export default function AccountDialog({ open, onOpenChange, onSubmit, isLoading 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+              <FieldError message={errors.email} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="telefone">Telefone</Label>
               <PhoneInput id="telefone" value={formData.telefone} onChange={(value) => setFormData({ ...formData, telefone: value })} placeholder="(11) 99999-9999" />
+              <FieldError message={errors.telefone} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="prazo_medio_pagamento">Prazo Médio de Pagamento (dias)</Label>

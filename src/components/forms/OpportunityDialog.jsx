@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MoneyInput, PercentInput } from './MaskedInputs';
+import { FieldError } from './FieldError';
+import { validate, opportunitySchema } from '@/lib/validation';
 
 export const OPP_STAGES = [
   { value: 'novo_contato', label: 'Novo Contato' },
@@ -42,6 +44,7 @@ export default function OpportunityDialog({
   equipes = [],
 }) {
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
   const set = (field, value) => setForm(p => ({ ...p, [field]: value }));
 
   const lideres = useMemo(() => {
@@ -53,6 +56,7 @@ export default function OpportunityDialog({
   }, [vendedores, equipes]);
 
   useEffect(() => {
+    setErrors({});
     if (opportunity) {
       setForm({ name: opportunity.name || '', cliente_vinculado: opportunity.cliente_vinculado || '', lead_vinculado: opportunity.lead_vinculado || '', vendedor: opportunity.vendedor || '', lider: opportunity.lider || '', administradora_pretendida: opportunity.administradora_pretendida || '', produto: opportunity.produto || '', valor_carta: opportunity.valor_carta || '', previsao_fechamento: opportunity.previsao_fechamento || '', probabilidade: opportunity.probabilidade || '', motivo_perda: opportunity.motivo_perda || '', status: opportunity.status || 'aberta', stage: opportunity.stage || 'novo_contato' });
     } else {
@@ -65,6 +69,9 @@ export default function OpportunityDialog({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const { ok, errors: errs } = validate(opportunitySchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({ ...form, valor_carta: form.valor_carta ? parseFloat(form.valor_carta) : undefined, probabilidade: form.probabilidade ? parseFloat(form.probabilidade) : undefined });
     if (!opportunity) setForm(emptyForm);
   };
@@ -103,7 +110,7 @@ export default function OpportunityDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? 'Editar Oportunidade' : 'Nova Oportunidade'}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="space-y-1"><Label>Nome da Oportunidade *</Label><Input required value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ex: João Silva — Imóvel 350k" /></div>
+          <div className="space-y-1"><Label>Nome da Oportunidade *</Label><Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ex: João Silva — Imóvel 350k" /><FieldError message={errors.name} /></div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Cliente Vinculado</Label><Select value={form.cliente_vinculado || ''} onValueChange={v => set('cliente_vinculado', v)}><SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger><SelectContent>{contacts.filter(c => c.name).map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-1"><Label>Lead de Origem</Label><Select value={form.lead_vinculado || ''} onValueChange={handleLeadChange}><SelectTrigger><SelectValue placeholder="Selecione o lead" /></SelectTrigger><SelectContent>{leads.filter(l => l.id && l.name).map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent></Select></div>
@@ -117,8 +124,8 @@ export default function OpportunityDialog({
             <div className="space-y-1"><Label>Produto</Label><Select value={form.produto || ''} onValueChange={handleProdutoChange}><SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger><SelectContent>{produtos.filter(p => p.nome_produto).map(p => <SelectItem key={p.id} value={p.nome_produto}>{p.nome_produto}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1"><Label>Valor da Carta *</Label><MoneyInput required value={form.valor_carta} onChange={value => set('valor_carta', value)} /></div>
-            <div className="space-y-1"><Label>Probabilidade</Label><PercentInput value={form.probabilidade} onChange={value => set('probabilidade', value)} /></div>
+            <div className="space-y-1"><Label>Valor da Carta *</Label><MoneyInput value={form.valor_carta} onChange={value => set('valor_carta', value)} /><FieldError message={errors.valor_carta} /></div>
+            <div className="space-y-1"><Label>Probabilidade</Label><PercentInput value={form.probabilidade} onChange={value => set('probabilidade', value)} /><FieldError message={errors.probabilidade} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Etapa</Label><Select value={form.stage} onValueChange={v => set('stage', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{OPP_STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
