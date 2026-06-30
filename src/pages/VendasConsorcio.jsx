@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoneyInput, PercentInput, formatCurrency } from '@/components/forms/MaskedInputs';
 
-const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
+const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', num_parcelas_comissao: '', prazo_primeira_parcela_dias: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
 const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliacao: 'Em conciliação', conciliada: 'Conciliada', divergente: 'Divergente' };
 const statusOperacionalLabel = { lancada: 'Lançada', documentacao: 'Documentação', em_aprovacao: 'Em aprovação', aprovada: 'Aprovada', concluida: 'Concluída', cancelada: 'Cancelada' };
 function money(value) { return formatCurrency(value); }
@@ -39,7 +39,7 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
   const applyRegra = (nomeProduto, administradora, currentForm) => {
     const regra = regras.find(r => r.status === 'ativa' && r.produto === nomeProduto && (!r.administradora || r.administradora === administradora));
     if (!regra) return currentForm;
-    return { ...currentForm, percentual_comissao_prevista: regra.percentual_base || currentForm.percentual_comissao_prevista, percentual_vendedor: regra.percentual_vendedor || '', percentual_lider: regra.percentual_lider || '' };
+    return { ...currentForm, percentual_comissao_prevista: regra.percentual_base || currentForm.percentual_comissao_prevista, percentual_vendedor: regra.percentual_vendedor || '', percentual_lider: regra.percentual_lider || '', num_parcelas_comissao: regra.num_parcelas_comissao || currentForm.num_parcelas_comissao, prazo_primeira_parcela_dias: regra.prazo_primeira_parcela_dias || currentForm.prazo_primeira_parcela_dias };
   };
 
   const handleOpportunity = (id) => {
@@ -56,7 +56,7 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit({ ...form, valor_carta: Number(form.valor_carta || 0), percentual_comissao_prevista: Number(form.percentual_comissao_prevista || 0), percentual_vendedor: Number(form.percentual_vendedor || 0), percentual_lider: Number(form.percentual_lider || 0), valor_comissao_prevista: valorComissao, valor_comissao_vendedor: valorVendedor, valor_comissao_lider: valorLider });
+    onSubmit({ ...form, valor_carta: Number(form.valor_carta || 0), percentual_comissao_prevista: Number(form.percentual_comissao_prevista || 0), percentual_vendedor: Number(form.percentual_vendedor || 0), percentual_lider: Number(form.percentual_lider || 0), num_parcelas_comissao: Number(form.num_parcelas_comissao || 1), prazo_primeira_parcela_dias: Number(form.prazo_primeira_parcela_dias || 30), valor_comissao_prevista: valorComissao, valor_comissao_vendedor: valorVendedor, valor_comissao_lider: valorLider });
   };
 
   return (
@@ -82,8 +82,10 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
             <div><Label>Comissão total prevista</Label><Input value={money(valorComissao)} disabled /></div>
             <div><Label>Comissão vendedor</Label><Input value={money(valorVendedor)} disabled /></div>
             <div><Label>Comissão líder</Label><Input value={money(valorLider)} disabled /></div>
+            <div><Label>Nº de parcelas da comissão</Label><Input type="number" min="1" max="60" placeholder="Ex: 3" value={form.num_parcelas_comissao || ''} onChange={(e) => setForm({ ...form, num_parcelas_comissao: e.target.value })} /></div>
+            <div><Label>Prazo 1ª parcela (dias)</Label><Input type="number" min="1" placeholder="Ex: 30" value={form.prazo_primeira_parcela_dias || ''} onChange={(e) => setForm({ ...form, prazo_primeira_parcela_dias: e.target.value })} /></div>
             <div><Label>Data prevista pagamento</Label><Input type="date" value={form.data_prevista_pagamento || ''} onChange={(e) => setForm({ ...form, data_prevista_pagamento: e.target.value })} /></div>
-            <div className="md:col-span-2"><Label>Observações</Label><Input value={form.observacoes || ''} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
+            <div className="md:col-span-3"><Label>Observações</Label><Input value={form.observacoes || ''} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} /></div>
           </div>
           <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button><Button type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar Venda'}</Button></DialogFooter>
         </form>
@@ -127,7 +129,7 @@ export default function VendasConsorcio() {
     const valorComissaoVendedor = fallbackNumber(data.valor_comissao_vendedor, calcComissao(valorComissaoTotal, percentualVendedor));
     const valorComissaoLider = fallbackNumber(data.valor_comissao_lider, calcComissao(valorComissaoTotal, percentualLider));
 
-    await base44.entities.Comissoes.create({
+    return base44.entities.Comissoes.create({
       empresa_vinculada: empresa,
       venda_vinculada: vendaId,
       cliente: data.cliente,
@@ -176,6 +178,41 @@ export default function VendasConsorcio() {
       valor_comissao_lider: valorComissaoLider,
     });
     return true;
+  };
+
+  const gerarRecebiveis = async (vendaId, comissaoId, data) => {
+    const numParcelas = Number(data.num_parcelas_comissao || 1);
+    const prazo = Number(data.prazo_primeira_parcela_dias || 30);
+    const valorTotal = Number(data.valor_comissao_prevista || 0);
+    const valorParcela = numParcelas > 0 ? valorTotal / numParcelas : valorTotal;
+    const dataBase = data.data_venda || new Date().toISOString().slice(0, 10);
+    for (let i = 0; i < numParcelas; i++) {
+      const d = new Date(dataBase + 'T00:00:00');
+      d.setDate(d.getDate() + prazo + i * 30);
+      await base44.entities.RecebiveisConsorcio.create({
+        empresa_vinculada: empresa,
+        venda_vinculada: vendaId,
+        comissao_vinculada: comissaoId || '',
+        cliente: data.cliente,
+        administradora: data.administradora,
+        produto: data.produto,
+        vendedor: data.vendedor,
+        lider: data.lider,
+        valor_carta: Number(data.valor_carta || 0),
+        valor_recebivel: valorParcela,
+        numero_parcela: i + 1,
+        total_parcelas: numParcelas,
+        data_prevista_recebimento: d.toISOString().slice(0, 10),
+        status_recebivel: 'previsto',
+        elegivel_antecipacao: false,
+      });
+    }
+  };
+
+  const cancelarRecebiveisDaVenda = async (vendaId) => {
+    const todos = await base44.entities.RecebiveisConsorcio.list('-created_date');
+    const vinculados = filterEmpresa(todos).filter((r) => r.venda_vinculada === vendaId && r.status_recebivel === 'previsto');
+    await Promise.all(vinculados.map((r) => base44.entities.RecebiveisConsorcio.update(r.id, { status_recebivel: 'cancelado' })));
   };
 
   const cancelarComissoesDaVenda = async (vendaId) => {
@@ -263,11 +300,12 @@ export default function VendasConsorcio() {
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const venda = await base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
-      await gerarComissao(venda.id, data);
+      const comissao = await gerarComissao(venda.id, data);
+      await gerarRecebiveis(venda.id, comissao?.id, data);
       await concluirOportunidadeVinculada(data);
       return venda;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['recebiveis', empresa] }); queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setDialogOpen(false); setSelectedVenda(null); },
   });
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
@@ -284,15 +322,17 @@ export default function VendasConsorcio() {
         status_financeiro: 'comissao_cancelada',
       });
       await cancelarComissoesDaVenda(venda.id);
+      await cancelarRecebiveisDaVenda(venda.id);
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['recebiveis', empresa] }); },
   });
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       await cancelarComissoesDaVenda(id);
+      await cancelarRecebiveisDaVenda(id);
       return base44.entities.VendasConsorcio.delete(id);
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['recebiveis', empresa] }); },
   });
 
   const filtered = useMemo(() => { const term = searchTerm.toLowerCase(); return vendas.filter((item) => item.cliente?.toLowerCase().includes(term) || item.vendedor?.toLowerCase().includes(term) || item.administradora?.toLowerCase().includes(term) || item.produto?.toLowerCase().includes(term)); }, [vendas, searchTerm]);

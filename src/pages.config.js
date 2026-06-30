@@ -8,6 +8,7 @@ import EquipeComercial from './pages/EquipeComercial';
 import Leads from './pages/Leads';
 import Oportunidades from './pages/Oportunidades';
 import ProdutoConsorcio from './pages/ProdutoConsorcio';
+import Recebiveis from './pages/Recebiveis';
 import RegrasComissao from './pages/RegrasComissao';
 import VendasConsorcio from './pages/VendasConsorcio';
 import Vendedores from './pages/Vendedores';
@@ -28,6 +29,7 @@ export const PAGES = {
   Leads,
   Oportunidades,
   ProdutoConsorcio,
+  Recebiveis,
   RegrasComissao,
   VendasConsorcio,
   Vendedores,
