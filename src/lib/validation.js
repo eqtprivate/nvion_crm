@@ -160,6 +160,8 @@ export const leadSchema = z.object({
   temperatura: z.enum(['frio', 'morno', 'quente']).optional(),
   status: z.enum(['novo_contato', 'qualificacao', 'simulacao', 'proposta_enviada', 'documentacao', 'em_aprovacao', 'venda_concluida', 'perdida']).optional(),
   data_ultimo_contato: optionalDate,
+  tipo_proxima_acao: optionalString,
+  data_proxima_acao: optionalDate,
   proxima_acao: optionalString,
   observacoes: optionalString,
 }).passthrough();
@@ -219,129 +221,10 @@ export const vendedorSchema = z.object({
   observacoes: optionalString,
 }).passthrough();
 
-export const vendaConsorcioSchema = z.object({
-  cliente: requiredString('Cliente é obrigatório'),
-  oportunidade_vinculada: optionalString,
-  vendedor: optionalString,
-  lider: optionalString,
-  equipe: optionalString,
-  administradora: optionalString,
-  produto: optionalString,
-  grupo: optionalString,
-  cota: optionalString,
-  valor_carta: requiredPositiveNumber('Informe o valor da carta'),
-  data_venda: optionalDate,
-  percentual_comissao_prevista: optionalPercent,
-  valor_comissao_prevista: optionalNonNegativeNumber,
-  data_prevista_pagamento: optionalDate,
-  status_operacional: z.enum(['lancada', 'documentacao', 'em_aprovacao', 'aprovada', 'concluida', 'cancelada']).optional(),
-  status_conciliacao: z.enum(['nao_conciliada', 'em_conciliacao', 'conciliada', 'divergente']).optional(),
-  status_financeiro: z.enum(['comissao_prevista', 'comissao_paga', 'comissao_cancelada']).optional(),
-  observacoes: optionalString,
-}).passthrough();
-
-export const regraComissaoSchema = z.object({
-  nome_regra: requiredString('Nome da regra é obrigatório'),
-  administradora: optionalString,
-  produto: optionalString,
-  tabela_comercial: optionalString,
-  categoria_produto: optionalString,
-  tipo_comissao: z.enum(['percentual', 'fixo', 'hibrido']).optional(),
-  tipo_regra_comissao: z.enum(['percentual_fixo', 'percentual_parcelado_igual', 'percentual_parcelado_customizado', 'valor_fixo', 'hibrido', 'faixa_variavel']).optional(),
-  base_calculo: z.enum(['valor_carta', 'valor_credito', 'taxa_administracao', 'valor_comissao_administradora', 'valor_manual']).optional(),
-  percentual_total: optionalNonNegativeNumber,
-  percentual_base: optionalNonNegativeNumber,
-  valor_fixo_total: optionalNonNegativeNumber,
-  quantidade_parcelas_comissionaveis: optionalNonNegativeNumber,
-  forma_pagamento: z.enum(['a_vista', 'parcelado', 'customizado']).optional(),
-  comissao_min: optionalNonNegativeNumber,
-  comissao_max: optionalNonNegativeNumber,
-  possui_estorno: z.boolean().optional(),
-  sem_estorno: z.boolean().optional(),
-  percentual_estorno: optionalNonNegativeNumber,
-  parcela_referencia_estorno: optionalNonNegativeNumber,
-  prazo_pagamento_dias: optionalNonNegativeNumber,
-  prazo_primeiro_pagamento_dias: optionalNonNegativeNumber,
-  gatilho_pagamento: z.enum(['venda_criada', 'venda_confirmada', 'conciliacao_confirmada', 'pagamento_administradora', 'pagamento_cliente']).optional(),
-  percentual_vendedor: optionalNonNegativeNumber,
-  percentual_lider: optionalNonNegativeNumber,
-  percentual_empresa: optionalNonNegativeNumber,
-  permitir_diferenca_manual: z.boolean().optional(),
-  justificativa_diferenca: optionalString,
-  status: z.enum(['ativa', 'inativa', 'suspensa', 'arquivada']).optional(),
-  observacoes: optionalString,
-}).passthrough();
-
-export const produtoConsorcioSchema = z.object({
-  nome_produto: requiredString('Nome do produto é obrigatório'),
-  administradora_vinculada: optionalString,
-  categoria: z.enum(['imovel', 'veiculo', 'pesados', 'servicos', 'agro', 'outros']).optional(),
-  percentual_comissao_padrao: optionalNonNegativeNumber,
-  prazo_medio_pagamento: optionalNonNegativeNumber,
-  status: z.enum(['ativo', 'inativo']).optional(),
-  observacoes: optionalString,
-}).passthrough();
-
-export const equipeComercialSchema = z.object({
+export const equipeSchema = z.object({
   nome_equipe: requiredString('Nome da equipe é obrigatório'),
-  lider_responsavel: optionalString,
-  vendedores_vinculados: z.array(z.string()).optional(),
+  lider_responsavel: requiredString('Líder responsável é obrigatório'),
   meta_mensal: optionalNonNegativeNumber,
-  status: z.enum(['ativo', 'inativo']).optional(),
+  status: z.enum(['ativa', 'inativa']).optional(),
+  observacoes: optionalString,
 }).passthrough();
-
-export const empresaSchema = z.object({
-  razao_social: requiredString('Razão social é obrigatória'),
-  nome_fantasia: optionalString,
-  cnpj: optionalCpfCnpj,
-  responsavel_principal: optionalString,
-  email: optionalEmail,
-  telefone: optionalPhone,
-  cep: optionalCEP,
-  status: z.enum(['em_implantacao', 'ativa', 'em_analise', 'elegivel_para_credito', 'suspensa', 'inativa']).optional(),
-  plano_contratado: optionalString,
-  data_inicio_plataforma: optionalDate,
-  elegivel_antecipacao: z.boolean().optional(),
-  limite_atual_sugerido: optionalNonNegativeNumber,
-  limite_utilizado: optionalNonNegativeNumber,
-  limite_disponivel: optionalNonNegativeNumber,
-  observacoes_internas: optionalString,
-}).passthrough();
-
-export const usuarioAcessoSchema = z.object({
-  display_name: requiredString('Nome de exibição é obrigatório'),
-  email: requiredEmail(),
-  role: z.enum(['super_admin', 'admin_empresa', 'gestor_comercial', 'lider_comercial', 'gestor_financeiro', 'vendedor', 'analista_plataforma']).optional(),
-  empresa_vinculada: optionalString,
-  status: z.enum(['ativo', 'suspenso', 'pendente']).optional(),
-}).passthrough();
-
-export const planoSchema = z.object({
-  slug: requiredString('Slug é obrigatório').regex(/^[a-z0-9_-]+$/, 'Use apenas letras minúsculas, números, "-" ou "_"'),
-  label: requiredString('Nome do plano é obrigatório'),
-  max_usuarios: optionalNonNegativeNumber,
-  modulos: z.array(z.string()).optional(),
-  ativo: z.boolean().optional(),
-  descricao: optionalString,
-}).passthrough();
-
-// ──────────────────────────────────────────────────────────────────────────
-// Helper de validação para formulários controlados por useState
-// ──────────────────────────────────────────────────────────────────────────
-
-/**
- * Valida `data` contra `schema`.
- * @returns {{ ok: boolean, data: object|null, errors: Record<string,string> }}
- *   `errors` mapeia o caminho do campo (ex: "email") para a primeira mensagem.
- */
-export function validate(schema, data) {
-  const result = schema.safeParse(data);
-  if (result.success) return { ok: true, data: result.data, errors: {} };
-
-  const errors = {};
-  for (const issue of result.error.issues) {
-    const key = issue.path.join('.') || '_';
-    if (!errors[key]) errors[key] = issue.message;
-  }
-  return { ok: false, data: null, errors };
-}
