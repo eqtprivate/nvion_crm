@@ -14,6 +14,8 @@ import { Plus, Search, ReceiptText, MoreVertical, Download } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoneyInput, PercentInput, formatCurrency } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, vendaConsorcioSchema } from '@/lib/validation';
 
 const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', num_parcelas_comissao: '', prazo_primeira_parcela_dias: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
 const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliacao: 'Em conciliação', conciliada: 'Conciliada', divergente: 'Divergente' };
@@ -30,7 +32,8 @@ function isMissingNumber(value) {
 
 function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
-  React.useEffect(() => { setForm(venda ? { ...emptyForm, ...venda } : emptyForm); }, [venda, open]);
+  const [errors, setErrors] = useState({});
+  React.useEffect(() => { setForm(venda ? { ...emptyForm, ...venda } : emptyForm); setErrors({}); }, [venda, open]);
 
   const valorComissao = calcComissao(form.valor_carta, form.percentual_comissao_prevista);
   const valorVendedor = calcComissao(valorComissao, form.percentual_vendedor);
@@ -56,6 +59,9 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const { ok, errors: errs } = validate(vendaConsorcioSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({ ...form, valor_carta: Number(form.valor_carta || 0), percentual_comissao_prevista: Number(form.percentual_comissao_prevista || 0), percentual_vendedor: Number(form.percentual_vendedor || 0), percentual_lider: Number(form.percentual_lider || 0), num_parcelas_comissao: Number(form.num_parcelas_comissao || 1), prazo_primeira_parcela_dias: Number(form.prazo_primeira_parcela_dias || 30), valor_comissao_prevista: valorComissao, valor_comissao_vendedor: valorVendedor, valor_comissao_lider: valorLider });
   };
 
@@ -66,14 +72,14 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div><Label>Oportunidade vinculada</Label><Select value={form.oportunidade_vinculada || ''} onValueChange={handleOpportunity}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{oportunidades.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Cliente *</Label><Input required value={form.cliente || ''} onChange={(e) => setForm({ ...form, cliente: e.target.value })} /></div>
+            <div><Label>Cliente *</Label><Input value={form.cliente || ''} onChange={(e) => setForm({ ...form, cliente: e.target.value })} /><FieldError message={errors.cliente} /></div>
             <div><Label>Data da venda</Label><Input type="date" value={form.data_venda || ''} onChange={(e) => setForm({ ...form, data_venda: e.target.value })} /></div>
             <div><Label>Produto</Label><Select value={form.produto || ''} onValueChange={handleProduto}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{produtos.map((item) => <SelectItem key={item.id} value={item.nome_produto}>{item.nome_produto}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Administradora</Label><Input value={form.administradora || ''} onChange={(e) => setForm({ ...form, administradora: e.target.value })} /></div>
             <div><Label>Equipe</Label><Select value={form.equipe || ''} onValueChange={(value) => setForm({ ...form, equipe: value })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{equipes.map((item) => <SelectItem key={item.id} value={item.nome_equipe}>{item.nome_equipe}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Vendedor</Label><Input value={form.vendedor || ''} onChange={(e) => setForm({ ...form, vendedor: e.target.value })} /></div>
             <div><Label>Líder</Label><Input value={form.lider || ''} onChange={(e) => setForm({ ...form, lider: e.target.value })} /></div>
-            <div><Label>Valor da carta *</Label><MoneyInput required value={form.valor_carta || ''} onChange={(value) => setForm({ ...form, valor_carta: value })} /></div>
+            <div><Label>Valor da carta *</Label><MoneyInput value={form.valor_carta || ''} onChange={(value) => setForm({ ...form, valor_carta: value })} /><FieldError message={errors.valor_carta} /></div>
             <div><Label>Grupo</Label><Input value={form.grupo || ''} onChange={(e) => setForm({ ...form, grupo: e.target.value })} /></div>
             <div><Label>Cota</Label><Input value={form.cota || ''} onChange={(e) => setForm({ ...form, cota: e.target.value })} /></div>
             <div><Label>Comissão base</Label><PercentInput value={form.percentual_comissao_prevista || ''} onChange={(value) => setForm({ ...form, percentual_comissao_prevista: value })} /></div>

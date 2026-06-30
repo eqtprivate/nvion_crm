@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Pencil, Trash2, Users, Package } from 'lucide-react';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, planoSchema } from '@/lib/validation';
 
 const EMPTY_FORM = {
   slug: '',
@@ -39,9 +41,11 @@ const EMPTY_FORM = {
 function PlanoDialog({ open, onOpenChange, plano, onSuccess }) {
   const isEdit = !!plano?.id;
   const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
+    setErrors({});
     if (open) {
       if (plano) {
         setForm({
@@ -83,10 +87,9 @@ function PlanoDialog({ open, onOpenChange, plano, onSuccess }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.slug.trim() || !form.label.trim()) {
-      toast({ title: 'Slug e nome são obrigatórios.', variant: 'destructive' });
-      return;
-    }
+    const { ok, errors: errs } = validate(planoSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     const maxU = form.max_usuarios === '' ? 0 : Number(form.max_usuarios);
     mutation.mutate({ ...form, max_usuarios: maxU });
   };
@@ -108,10 +111,12 @@ function PlanoDialog({ open, onOpenChange, plano, onSuccess }) {
                 disabled={isEdit}
               />
               {isEdit && <p className="text-xs text-gray-400">O slug não pode ser alterado.</p>}
+              <FieldError message={errors.slug} />
             </div>
             <div className="space-y-1">
               <Label>Nome do Plano *</Label>
               <Input value={form.label} onChange={(e) => set('label', e.target.value)} placeholder="ex: Essencial" />
+              <FieldError message={errors.label} />
             </div>
           </div>
           <div className="space-y-1">

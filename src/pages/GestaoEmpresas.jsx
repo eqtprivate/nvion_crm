@@ -13,6 +13,8 @@ import { Plus, Search, Building2, MoreVertical } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, empresaSchema } from '@/lib/validation';
 import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
 
 const STATUS_LIST = ['em_implantacao', 'ativa', 'em_analise', 'elegivel_para_credito', 'suspensa', 'inativa'];
@@ -50,7 +52,8 @@ function money(v) {
 
 function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos }) {
   const [form, setForm] = useState(emptyForm);
-  React.useEffect(() => { setForm(empresa ? { ...emptyForm, ...empresa } : emptyForm); }, [empresa, open]);
+  const [errors, setErrors] = useState({});
+  React.useEffect(() => { setForm(empresa ? { ...emptyForm, ...empresa } : emptyForm); setErrors({}); }, [empresa, open]);
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
   const { data: usuariosEmpresa = [] } = useQuery({
@@ -67,6 +70,9 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos 
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const { ok, errors: errs } = validate(empresaSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({
       ...form,
       limite_atual_sugerido: Number(form.limite_atual_sugerido || 0),
@@ -86,8 +92,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos 
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados Principais</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2"><Label>Razão Social *</Label><Input required value={form.razao_social} onChange={(e) => set('razao_social', e.target.value)} /></div>
-              <div><Label>CNPJ</Label><CpfCnpjInput value={form.cnpj} onChange={(v) => set('cnpj', v)} /></div>
+              <div className="md:col-span-2"><Label>Razão Social *</Label><Input value={form.razao_social} onChange={(e) => set('razao_social', e.target.value)} /><FieldError message={errors.razao_social} /></div>
+              <div><Label>CNPJ</Label><CpfCnpjInput value={form.cnpj} onChange={(v) => set('cnpj', v)} /><FieldError message={errors.cnpj} /></div>
               <div><Label>Nome Fantasia</Label><Input value={form.nome_fantasia} onChange={(e) => set('nome_fantasia', e.target.value)} /></div>
               <div>
                 <Label>Responsável principal</Label>
@@ -110,8 +116,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos 
                   <SelectContent>{STATUS_LIST.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} /></div>
-              <div><Label>Telefone</Label><PhoneInput value={form.telefone} onChange={(v) => set('telefone', v)} /></div>
+              <div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} /><FieldError message={errors.email} /></div>
+              <div><Label>Telefone</Label><PhoneInput value={form.telefone} onChange={(v) => set('telefone', v)} /><FieldError message={errors.telefone} /></div>
               <div><Label>Website</Label><Input value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://" /></div>
               <div className="md:col-span-3"><Label>URL do Logotipo</Label><Input value={form.logo_url} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://..." /></div>
             </div>
@@ -120,7 +126,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos 
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Endereço</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><Label>CEP</Label><Input value={form.cep} onChange={(e) => set('cep', e.target.value)} placeholder="00000-000" /></div>
+              <div><Label>CEP</Label><Input value={form.cep} onChange={(e) => set('cep', e.target.value)} placeholder="00000-000" /><FieldError message={errors.cep} /></div>
               <div className="md:col-span-2"><Label>Logradouro</Label><Input value={form.logradouro} onChange={(e) => set('logradouro', e.target.value)} /></div>
               <div><Label>Número</Label><Input value={form.numero} onChange={(e) => set('numero', e.target.value)} /></div>
               <div><Label>Complemento</Label><Input value={form.complemento} onChange={(e) => set('complemento', e.target.value)} /></div>
