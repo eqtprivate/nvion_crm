@@ -9,20 +9,32 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle, Building2, Download, Save, Trash2 } from 'lucide-react';
-import { PhoneInput } from '@/components/forms/MaskedInputs';
+import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
+import { usePlanos } from '@/lib/usePlanos';
 
 const UF_LIST = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 
-function MinhaEmpresaTab({ empresa_vinculada, isSuperAdmin }) {
+function MinhaEmpresaTab({ empresa_vinculada }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
+
+  const { data: planos = [] } = usePlanos();
 
   const { data: empresaRecord, isLoading } = useQuery({
     queryKey: ['minhaEmpresa', empresa_vinculada],
     queryFn: async () => {
       const all = await base44.entities.Empresa.list();
       return all.find((e) => e.razao_social === empresa_vinculada || e.nome_fantasia === empresa_vinculada) || null;
+    },
+    enabled: Boolean(empresa_vinculada),
+  });
+
+  const { data: usuariosEmpresa = [] } = useQuery({
+    queryKey: ['usuariosMinhaEmpresa', empresa_vinculada],
+    queryFn: async () => {
+      const all = await base44.entities.UsuarioAcesso.list();
+      return all.filter((u) => u.empresa_vinculada === empresa_vinculada);
     },
     enabled: Boolean(empresa_vinculada),
   });
@@ -75,11 +87,29 @@ function MinhaEmpresaTab({ empresa_vinculada, isSuperAdmin }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><Label>Razão Social</Label><Input value={form.razao_social || ''} onChange={(e) => set('razao_social', e.target.value)} /></div>
             <div><Label>Nome Fantasia</Label><Input value={form.nome_fantasia || ''} onChange={(e) => set('nome_fantasia', e.target.value)} /></div>
-            <div><Label>CNPJ</Label><Input value={form.cnpj || ''} onChange={(e) => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" /></div>
-            <div><Label>Responsável principal</Label><Input value={form.responsavel_principal || ''} onChange={(e) => set('responsavel_principal', e.target.value)} /></div>
+            <div><Label>CNPJ</Label><CpfCnpjInput value={form.cnpj || ''} onChange={(v) => set('cnpj', v)} /></div>
+            <div>
+              <Label>Responsável principal</Label>
+              {usuariosEmpresa.length > 0 ? (
+                <Select value={form.responsavel_principal || ''} onValueChange={(v) => set('responsavel_principal', v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
+                  <SelectContent>
+                    {usuariosEmpresa.map((u) => (
+                      <SelectItem key={u.id} value={u.display_name}>{u.display_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={form.responsavel_principal || ''} onChange={(e) => set('responsavel_principal', e.target.value)} />
+              )}
+            </div>
             <div><Label>Email</Label><Input type="email" value={form.email || ''} onChange={(e) => set('email', e.target.value)} /></div>
             <div><Label>Telefone</Label><PhoneInput value={form.telefone || ''} onChange={(v) => set('telefone', v)} /></div>
-            <div className="md:col-span-2"><Label>Website</Label><Input value={form.website || ''} onChange={(e) => set('website', e.target.value)} placeholder="https://" /></div>
+            <div><Label>Website</Label><Input value={form.website || ''} onChange={(e) => set('website', e.target.value)} placeholder="https://" /></div>
+            <div>
+              <Label>Plano contratado</Label>
+              <Input value={form.plano_contratado ? (planos.find((p) => p.slug === form.plano_contratado)?.label || form.plano_contratado) : 'Não definido'} readOnly className="bg-gray-50 cursor-default" />
+            </div>
             <div className="md:col-span-2"><Label>URL do Logotipo</Label><Input value={form.logo_url || ''} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://..." /></div>
           </div>
         </CardContent>
@@ -122,7 +152,8 @@ export default function Settings() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
   const isSuperAdmin = user?.role === 'super_admin';
-  const isAdmin = isSuperAdmin || user?.role === 'admin_empresa';
+  const isAdminEmpresa = user?.role === 'admin_empresa';
+  const isAdmin = isSuperAdmin || isAdminEmpresa;
   const [resetConfirmation, setResetConfirmation] = useState('');
   const queryClient = useQueryClient();
 
@@ -211,7 +242,8 @@ export default function Settings() {
     window.URL.revokeObjectURL(url);
   };
 
-  const tabCount = isAdmin ? 3 : 2;
+  const showEmpresaTab = isAdminEmpresa;
+  const tabCount = showEmpresaTab ? 3 : 2;
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
@@ -221,16 +253,16 @@ export default function Settings() {
           <p className="text-gray-500 mt-1">Gerencie as preferências da plataforma</p>
         </div>
 
-        <Tabs defaultValue={isAdmin ? 'empresa' : 'defaults'} className="space-y-6">
+        <Tabs defaultValue={showEmpresaTab ? 'empresa' : 'defaults'} className="space-y-6">
           <TabsList className={`grid w-full grid-cols-${tabCount}`}>
-            {isAdmin && <TabsTrigger value="empresa">Minha Empresa</TabsTrigger>}
+            {showEmpresaTab && <TabsTrigger value="empresa">Minha Empresa</TabsTrigger>}
             <TabsTrigger value="defaults">Padrões</TabsTrigger>
             <TabsTrigger value="data">Dados</TabsTrigger>
           </TabsList>
 
-          {isAdmin && (
+          {showEmpresaTab && (
             <TabsContent value="empresa">
-              <MinhaEmpresaTab empresa_vinculada={empresa} isSuperAdmin={isSuperAdmin} />
+              <MinhaEmpresaTab empresa_vinculada={empresa} />
             </TabsContent>
           )}
 
