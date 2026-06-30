@@ -49,6 +49,8 @@ import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, empresaSchema } from '@/lib/validation';
 import { ROLE_LABELS } from '@/lib/modules';
 import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
 import { useAuth } from '@/lib/AuthContext';
@@ -131,8 +133,10 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
     razao_social: '', nome_fantasia: '', cnpj: '', responsavel_principal: '',
     email: '', telefone: '', plano_contratado: '', status: 'em_implantacao',
   });
+  const [errors, setErrors] = useState({});
 
   React.useEffect(() => {
+    setErrors({});
     if (empresa) {
       setForm({
         razao_social: empresa.razao_social || '',
@@ -149,7 +153,13 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
     }
   }, [empresa, open]);
 
-  const handleSubmit = (e) => { e.preventDefault(); onSubmit(form); };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const { ok, errors: errs } = validate(empresaSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
+    onSubmit(form);
+  };
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   return (
@@ -162,7 +172,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1">
               <Label>Razão Social *</Label>
-              <Input value={form.razao_social} onChange={f('razao_social')} required />
+              <Input value={form.razao_social} onChange={f('razao_social')} />
+              <FieldError message={errors.razao_social} />
             </div>
             <div className="space-y-1">
               <Label>Nome Fantasia</Label>
@@ -171,6 +182,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
             <div className="space-y-1">
               <Label>CNPJ</Label>
               <CpfCnpjInput value={form.cnpj} onChange={(v) => setForm(p => ({ ...p, cnpj: v }))} />
+              <FieldError message={errors.cnpj} />
             </div>
             <div className="space-y-1">
               <Label>Responsável</Label>
@@ -179,10 +191,12 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
             <div className="space-y-1">
               <Label>Email</Label>
               <Input type="email" value={form.email} onChange={f('email')} />
+              <FieldError message={errors.email} />
             </div>
             <div className="space-y-1">
               <Label>Telefone</Label>
               <PhoneInput value={form.telefone} onChange={(value) => setForm(p => ({ ...p, telefone: value }))} />
+              <FieldError message={errors.telefone} />
             </div>
             <div className="space-y-1">
               <Label>Plano</Label>
