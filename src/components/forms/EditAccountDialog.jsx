@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PhoneInput } from './MaskedInputs';
+import { CpfCnpjInput, PhoneInput } from './MaskedInputs';
 
 const initialForm = {
   name: '',
@@ -57,7 +57,7 @@ export default function EditAccountDialog({ open, onOpenChange, account, onSubmi
             </div>
             <div>
               <Label>CNPJ</Label>
-              <Input value={formData.cnpj} onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })} disabled={readOnly} />
+              <CpfCnpjInput value={formData.cnpj} onChange={(value) => setFormData({ ...formData, cnpj: value })} disabled={readOnly} />
             </div>
             <div>
               <Label>Contato Principal</Label>
