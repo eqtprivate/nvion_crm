@@ -14,7 +14,7 @@ import { PLANOS } from '@/lib/plans';
 
 const UF_LIST = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 
-function MinhaEmpresaTab({ empresa_vinculada, isSuperAdmin }) {
+function MinhaEmpresaTab({ empresa_vinculada }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -150,7 +150,8 @@ export default function Settings() {
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
   const isSuperAdmin = user?.role === 'super_admin';
-  const isAdmin = isSuperAdmin || user?.role === 'admin_empresa';
+  const isAdminEmpresa = user?.role === 'admin_empresa';
+  const isAdmin = isSuperAdmin || isAdminEmpresa;
   const [resetConfirmation, setResetConfirmation] = useState('');
   const queryClient = useQueryClient();
 
@@ -239,7 +240,8 @@ export default function Settings() {
     window.URL.revokeObjectURL(url);
   };
 
-  const tabCount = isAdmin ? 3 : 2;
+  const showEmpresaTab = isAdminEmpresa;
+  const tabCount = showEmpresaTab ? 3 : 2;
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
@@ -249,16 +251,16 @@ export default function Settings() {
           <p className="text-gray-500 mt-1">Gerencie as preferências da plataforma</p>
         </div>
 
-        <Tabs defaultValue={isAdmin ? 'empresa' : 'defaults'} className="space-y-6">
+        <Tabs defaultValue={showEmpresaTab ? 'empresa' : 'defaults'} className="space-y-6">
           <TabsList className={`grid w-full grid-cols-${tabCount}`}>
-            {isAdmin && <TabsTrigger value="empresa">Minha Empresa</TabsTrigger>}
+            {showEmpresaTab && <TabsTrigger value="empresa">Minha Empresa</TabsTrigger>}
             <TabsTrigger value="defaults">Padrões</TabsTrigger>
             <TabsTrigger value="data">Dados</TabsTrigger>
           </TabsList>
 
-          {isAdmin && (
+          {showEmpresaTab && (
             <TabsContent value="empresa">
-              <MinhaEmpresaTab empresa_vinculada={empresa} isSuperAdmin={isSuperAdmin} />
+              <MinhaEmpresaTab empresa_vinculada={empresa} />
             </TabsContent>
           )}
 
