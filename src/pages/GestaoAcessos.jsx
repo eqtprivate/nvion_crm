@@ -47,8 +47,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import KPICard from '@/components/shared/KPICard';
 import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
-import { PhoneInput } from '@/components/forms/MaskedInputs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
 import { ROLE_LABELS } from '@/lib/modules';
+import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
 import { useAuth } from '@/lib/AuthContext';
 import { hashPassword } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -124,7 +126,7 @@ function SenhaGeradaDialog({ open, onOpenChange, senha, userName }) {
   );
 }
 
-function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
+function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, planos }) {
   const [form, setForm] = useState({
     razao_social: '', nome_fantasia: '', cnpj: '', responsavel_principal: '',
     email: '', telefone: '', plano_contratado: '', status: 'em_implantacao',
@@ -168,7 +170,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
             </div>
             <div className="space-y-1">
               <Label>CNPJ</Label>
-              <Input value={form.cnpj} onChange={f('cnpj')} placeholder="00.000.000/0001-00" />
+              <CpfCnpjInput value={form.cnpj} onChange={(v) => setForm(p => ({ ...p, cnpj: v }))} />
             </div>
             <div className="space-y-1">
               <Label>Responsável</Label>
@@ -184,21 +186,27 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
             </div>
             <div className="space-y-1">
               <Label>Plano</Label>
-              <Input value={form.plano_contratado} onChange={f('plano_contratado')} placeholder="Ex: Starter, Pro" />
+              <Select value={form.plano_contratado} onValueChange={(v) => setForm(p => ({ ...p, plano_contratado: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
+                <SelectContent>
+                  {(planos || []).map((p) => (
+                    <SelectItem key={p.slug} value={p.slug}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2 space-y-1">
               <Label>Status</Label>
-              <select
-                value={form.status}
-                onChange={f('status')}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-              >
-                <option value="em_implantacao">Em Implantação</option>
-                <option value="ativa">Ativa</option>
-                <option value="em_analise">Em Análise</option>
-                <option value="suspensa">Suspensa</option>
-                <option value="inativa">Inativa</option>
-              </select>
+              <Select value={form.status} onValueChange={(v) => setForm(p => ({ ...p, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="em_implantacao">Em Implantação</SelectItem>
+                  <SelectItem value="ativa">Ativa</SelectItem>
+                  <SelectItem value="em_analise">Em Análise</SelectItem>
+                  <SelectItem value="suspensa">Suspensa</SelectItem>
+                  <SelectItem value="inativa">Inativa</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -465,6 +473,7 @@ function EmpresasTab({ todosUsuarios }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedEmpresa, setSelectedEmpresa] = useState(null);
   const [expandedEmpresa, setExpandedEmpresa] = useState(null);
+  const { data: planos = [] } = usePlanos();
 
   const { data: empresas = [], isLoading } = useQuery({
     queryKey: ['empresas'],
@@ -566,7 +575,7 @@ function EmpresasTab({ todosUsuarios }) {
                       {emp.responsavel_principal && <div><span className="text-gray-500">Responsável:</span> <span className="font-medium">{emp.responsavel_principal}</span></div>}
                       {emp.email && <div><span className="text-gray-500">Email:</span> <span className="font-medium">{emp.email}</span></div>}
                       {emp.telefone && <div><span className="text-gray-500">Tel:</span> <span className="font-medium">{emp.telefone}</span></div>}
-                      {emp.plano_contratado && <div><span className="text-gray-500">Plano:</span> <span className="font-medium">{emp.plano_contratado}</span></div>}
+                      {emp.plano_contratado && <div><span className="text-gray-500">Plano:</span> <span className="font-medium">{planos.find(p => p.slug === emp.plano_contratado)?.label || emp.plano_contratado}</span></div>}
                       {emp.data_inicio_plataforma && <div><span className="text-gray-500">Início:</span> <span className="font-medium">{new Date(emp.data_inicio_plataforma).toLocaleDateString('pt-BR')}</span></div>}
                     </div>
 
@@ -602,8 +611,8 @@ function EmpresasTab({ todosUsuarios }) {
         )}
       </div>
 
-      <EmpresaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} />
-      <EmpresaDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} empresa={selectedEmpresa} onSubmit={data => updateMutation.mutate({ id: selectedEmpresa.id, data })} isLoading={updateMutation.isPending} />
+      <EmpresaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} planos={planos} />
+      <EmpresaDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} empresa={selectedEmpresa} onSubmit={data => updateMutation.mutate({ id: selectedEmpresa.id, data })} isLoading={updateMutation.isPending} planos={planos} />
     </div>
   );
 }

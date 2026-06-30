@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Building2, MoreVertical } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PhoneInput } from '@/components/forms/MaskedInputs';
+import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
+import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
 
 const STATUS_LIST = ['em_implantacao', 'ativa', 'em_analise', 'elegivel_para_credito', 'suspensa', 'inativa'];
 const STATUS_LABEL = {
@@ -47,10 +48,23 @@ function money(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading }) {
+function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos }) {
   const [form, setForm] = useState(emptyForm);
   React.useEffect(() => { setForm(empresa ? { ...emptyForm, ...empresa } : emptyForm); }, [empresa, open]);
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+
+  const { data: usuariosEmpresa = [] } = useQuery({
+    queryKey: ['usuariosEmpresaDialog', empresa?.id],
+    queryFn: async () => {
+      const all = await base44.entities.UsuarioAcesso.list();
+      return all.filter(u =>
+        u.empresa_vinculada === empresa?.razao_social ||
+        u.empresa_vinculada === empresa?.nome_fantasia
+      );
+    },
+    enabled: Boolean(empresa?.id),
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
@@ -73,9 +87,23 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading }) {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados Principais</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2"><Label>Razão Social *</Label><Input required value={form.razao_social} onChange={(e) => set('razao_social', e.target.value)} /></div>
-              <div><Label>CNPJ</Label><Input value={form.cnpj} onChange={(e) => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" /></div>
+              <div><Label>CNPJ</Label><CpfCnpjInput value={form.cnpj} onChange={(v) => set('cnpj', v)} /></div>
               <div><Label>Nome Fantasia</Label><Input value={form.nome_fantasia} onChange={(e) => set('nome_fantasia', e.target.value)} /></div>
-              <div><Label>Responsável principal</Label><Input value={form.responsavel_principal} onChange={(e) => set('responsavel_principal', e.target.value)} /></div>
+              <div>
+                <Label>Responsável principal</Label>
+                {empresa?.id && usuariosEmpresa.length > 0 ? (
+                  <Select value={form.responsavel_principal} onValueChange={(v) => set('responsavel_principal', v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
+                    <SelectContent>
+                      {usuariosEmpresa.map((u) => (
+                        <SelectItem key={u.id} value={u.display_name}>{u.display_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={form.responsavel_principal} onChange={(e) => set('responsavel_principal', e.target.value)} placeholder="Nome do responsável" />
+                )}
+              </div>
               <div><Label>Status</Label>
                 <Select value={form.status} onValueChange={(v) => set('status', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -110,7 +138,17 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading }) {
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Plano & Crédito</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><Label>Plano contratado</Label><Input value={form.plano_contratado} onChange={(e) => set('plano_contratado', e.target.value)} /></div>
+              <div>
+                <Label>Plano contratado</Label>
+                <Select value={form.plano_contratado} onValueChange={(v) => set('plano_contratado', v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
+                  <SelectContent>
+                    {(planos || []).map((p) => (
+                      <SelectItem key={p.slug} value={p.slug}>{p.label} — até {maxUsuarios(p) === Infinity ? 'ilimitado' : maxUsuarios(p)} usuários</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Data início plataforma</Label><Input type="date" value={form.data_inicio_plataforma} onChange={(e) => set('data_inicio_plataforma', e.target.value)} /></div>
               <div className="flex items-center gap-2 pt-6">
                 <input type="checkbox" id="elegivel" checked={form.elegivel_antecipacao} onChange={(e) => set('elegivel_antecipacao', e.target.checked)} className="w-4 h-4" />
@@ -140,6 +178,8 @@ export default function GestaoEmpresas() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState(null);
+
+  const { data: planos = [] } = usePlanos();
 
   const { data: empresas = [], isLoading } = useQuery({
     queryKey: ['empresas'],
@@ -264,7 +304,7 @@ export default function GestaoEmpresas() {
                   <TableCell className="font-mono text-sm">{emp.cnpj || '-'}</TableCell>
                   <TableCell>{emp.responsavel_principal || '-'}</TableCell>
                   <TableCell>{emp.cidade ? `${emp.cidade}/${emp.estado}` : '-'}</TableCell>
-                  <TableCell>{emp.plano_contratado || '-'}</TableCell>
+                  <TableCell>{emp.plano_contratado ? (planos.find((p) => p.slug === emp.plano_contratado)?.label || emp.plano_contratado) : '-'}</TableCell>
                   <TableCell>{emp.limite_atual_sugerido ? money(emp.limite_atual_sugerido) : '-'}</TableCell>
                   <TableCell>
                     <Badge className={STATUS_COLORS[emp.status] || ''}>{STATUS_LABEL[emp.status] || emp.status}</Badge>
@@ -293,6 +333,7 @@ export default function GestaoEmpresas() {
         empresa={selected}
         onSubmit={handleSubmit}
         loading={createMutation.isPending || updateMutation.isPending}
+        planos={planos}
       />
     </div>
   );
