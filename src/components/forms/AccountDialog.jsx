@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PhoneInput } from './MaskedInputs';
+import { CpfCnpjInput, PhoneInput } from './MaskedInputs';
 
 const initialForm = {
   name: '',
@@ -42,7 +42,7 @@ export default function AccountDialog({ open, onOpenChange, onSubmit, isLoading 
             </div>
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ</Label>
-              <Input id="cnpj" value={formData.cnpj} onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
+              <CpfCnpjInput id="cnpj" value={formData.cnpj} onChange={(value) => setFormData({ ...formData, cnpj: value })} placeholder="00.000.000/0000-00" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="contato">Contato Principal</Label>
