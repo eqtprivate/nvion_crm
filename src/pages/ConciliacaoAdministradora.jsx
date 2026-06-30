@@ -156,6 +156,33 @@ function mapReportRow(row) {
   };
 }
 
+function csvDuplicateKeys(row, administradora) {
+  const keys = [];
+  const grupo = normalize(row.grupo);
+  const cota = normalize(row.cota);
+  const cliente = normalize(row.cliente);
+  const admin = normalize(administradora);
+
+  if (admin && grupo && cota) {
+    keys.push(['admin-grupo-cota-valor-comissao', admin, grupo, cota, Number(row.valor_carta || 0).toFixed(2), Number(row.comissao || 0).toFixed(2)].join('|'));
+  }
+  if (grupo && cota && cliente) {
+    keys.push(['grupo-cota-cliente', grupo, cota, cliente].join('|'));
+  }
+
+  return keys;
+}
+
+function findCsvDuplicateKeys(rows, administradora) {
+  const counts = new Map();
+
+  rows.forEach((row) => {
+    csvDuplicateKeys(row, administradora).forEach((key) => counts.set(key, (counts.get(key) || 0) + 1));
+  });
+
+  return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+}
+
 function getVendaComissao(venda, comissoes) {
   return comissoes.find((comissao) => comissao.venda_vinculada === venda?.id);
 }
@@ -305,6 +332,7 @@ export default function ConciliacaoAdministradora() {
       const content = await readFile(file);
       const rows = parseCsv(content).map(mapReportRow);
       if (rows.length === 0) throw new Error('O arquivo não possui linhas válidas.');
+      const duplicateKeys = findCsvDuplicateKeys(rows, administradora);
 
       const importacao = await base44.entities.ImportacaoRelatorioAdministradora.create({
         empresa_vinculada: empresa,
@@ -321,7 +349,10 @@ export default function ConciliacaoAdministradora() {
 
       const created = [];
       for (const row of rows) {
-        const result = classifyRow(row, administradora, vendas, comissoes);
+        const isCsvDuplicate = csvDuplicateKeys(row, administradora).some((key) => duplicateKeys.has(key));
+        const result = isCsvDuplicate
+          ? { status: 'duplicada', divergencia: 'duplicidade', venda: null, comissao: null }
+          : classifyRow(row, administradora, vendas, comissoes);
         const venda = result.venda;
         const comissao = result.comissao;
         const comissaoInterna = comissao?.valor_comissao_total || venda?.valor_comissao_prevista || 0;
