@@ -24,7 +24,7 @@ import EditAccountDialog from '../components/forms/EditAccountDialog';
 import AccountKPICard from '../components/accounts/AccountKPICard';
 import AccountInsightsDialog from '../components/accounts/AccountInsightsDialog';
 import { useAuth } from '@/lib/AuthContext';
-import { formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
+import { formatCpfCnpj, formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
 
 const statusLabel = {
   ativa: 'Ativa',
@@ -81,10 +81,15 @@ export default function Accounts() {
   });
 
   const filteredAccounts = useMemo(() => {
-    return accounts.filter(account => {
-      const matchSearch = account.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchSearch;
-    });
+    const term = searchTerm.toLowerCase();
+    return accounts.filter(account => (
+      account.name?.toLowerCase().includes(term) ||
+      account.cnpj?.toLowerCase().includes(term) ||
+      formatCpfCnpj(account.cnpj).toLowerCase().includes(term) ||
+      account.contato?.toLowerCase().includes(term) ||
+      account.email?.toLowerCase().includes(term) ||
+      account.telefone?.toLowerCase().includes(term)
+    ));
   }, [accounts, searchTerm]);
 
   const kpis = useMemo(() => {
@@ -114,10 +119,10 @@ export default function Accounts() {
     const headers = ['Nome', 'CNPJ', 'Contato', 'Email', 'Telefone', 'Prazo Médio Pagamento', 'Status'];
     const rows = filteredAccounts.map(account => [
       account.name || '',
-      account.cnpj || '',
+      formatCpfCnpj(account.cnpj) || '',
       account.contato || '',
       account.email || '',
-      account.telefone || '',
+      formatPhone(account.telefone) || '',
       account.prazo_medio_pagamento || '',
       account.status || '',
     ]);
@@ -156,58 +161,19 @@ export default function Accounts() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <AccountKPICard
-          title="Total de Administradoras"
-          value={kpis.totalAccounts}
-          trend="up"
-          trendValue="+2%"
-          chartData={[50, 60, 55, 70, 65, 75]}
-          color="blue"
-        />
-        <AccountKPICard
-          title="Ativas"
-          value={kpis.activeAccounts}
-          trend="up"
-          trendValue="+2%"
-          chartData={[55, 60, 58, 68, 65, 72]}
-          color="green"
-        />
-        <AccountKPICard
-          title="Principais Parceiras"
-          value={kpis.keyAccounts}
-          trend="up"
-          trendValue="+5%"
-          chartData={[40, 45, 50, 55, 58, 62]}
-          color="cyan"
-        />
-        <AccountKPICard
-          title="Volume Total"
-          value={formatCurrency(kpis.totalRevenue)}
-          trend="up"
-          trendValue="+3.6%"
-          chartData={[60, 65, 70, 75, 78, 82]}
-          color="purple"
-        />
-        <AccountKPICard
-          title="Atividades Vencidas"
-          value={kpis.overdueAccounts}
-          chartData={[30, 35, 40, 38, 42, 45]}
-          color="red"
-        />
+        <AccountKPICard title="Total de Administradoras" value={kpis.totalAccounts} trend="up" trendValue="+2%" chartData={[50, 60, 55, 70, 65, 75]} color="blue" />
+        <AccountKPICard title="Ativas" value={kpis.activeAccounts} trend="up" trendValue="+2%" chartData={[55, 60, 58, 68, 65, 72]} color="green" />
+        <AccountKPICard title="Principais Parceiras" value={kpis.keyAccounts} trend="up" trendValue="+5%" chartData={[40, 45, 50, 55, 58, 62]} color="cyan" />
+        <AccountKPICard title="Volume Total" value={formatCurrency(kpis.totalRevenue)} trend="up" trendValue="+3.6%" chartData={[60, 65, 70, 75, 78, 82]} color="purple" />
+        <AccountKPICard title="Atividades Vencidas" value={kpis.overdueAccounts} chartData={[30, 35, 40, 38, 42, 45]} color="red" />
       </div>
 
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Buscar administradoras..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 h-9"
-            />
+            <Input placeholder="Buscar administradoras..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9" />
           </div>
         </div>
 
@@ -226,18 +192,9 @@ export default function Accounts() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">Carregando...</TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
               ) : filteredAccounts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-gray-500">
-                    <div className="flex flex-col items-center gap-2">
-                      <Building2 className="w-12 h-12 text-gray-300" />
-                      <span className="font-medium">Nenhuma administradora encontrada</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Building2 className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma administradora encontrada</span></div></TableCell></TableRow>
               ) : (
                 filteredAccounts.map((account) => (
                   <TableRow key={account.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewInsights(account)}>
@@ -252,12 +209,10 @@ export default function Accounts() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm">{account.cnpj || '-'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">{formatCpfCnpj(account.cnpj) || '-'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">{account.contato || '-'}</TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{account.email || '-'}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm">
-                        {account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento} dias` : '-'}
-                    </TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm">{account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento} dias` : '-'}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[account.status] || 'bg-gray-100 text-gray-800'}>
                         {statusLabel[account.status] || account.status || '-'}
@@ -266,20 +221,11 @@ export default function Accounts() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
+                          <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(account); }}>
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(account.id); }}
-                          >
-                            Excluir
-                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(account); }}>Editar</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(account.id); }}>Excluir</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -291,29 +237,9 @@ export default function Accounts() {
         </div>
       </div>
 
-      <AccountDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSubmit={(data) => createMutation.mutate(data)}
-        isLoading={createMutation.isPending}
-      />
-
-      <EditAccountDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        account={selectedAccount}
-        onSubmit={(data) => updateMutation.mutate({ id: selectedAccount.id, data })}
-        isLoading={updateMutation.isPending}
-      />
-
-      <AccountInsightsDialog
-        open={insightsDialogOpen}
-        onOpenChange={setInsightsDialogOpen}
-        account={selectedAccount}
-        activities={[]}
-        contacts={[]}
-        opportunities={opportunities}
-      />
+      <AccountDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={(data) => createMutation.mutate(data)} isLoading={createMutation.isPending} />
+      <EditAccountDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} account={selectedAccount} onSubmit={(data) => updateMutation.mutate({ id: selectedAccount.id, data })} isLoading={updateMutation.isPending} />
+      <AccountInsightsDialog open={insightsDialogOpen} onOpenChange={setInsightsDialogOpen} account={selectedAccount} activities={[]} contacts={[]} opportunities={opportunities} />
     </div>
   );
 }
