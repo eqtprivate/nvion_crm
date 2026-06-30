@@ -84,8 +84,8 @@ export default function Layout({ children, currentPageName }) {
 
   const SidebarContent = () => (
     <>
-      <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-        <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/116da3a6e_nvion_logo_transp.png" alt="NVION" className="h-8 w-auto" />
+      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
+        <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/52d192aa6_nvion_logo_icon.png" alt="NVION" className="h-9 w-9 rounded-lg object-cover" />
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 flex flex-col overflow-y-auto">
         <div className="space-y-0.5">

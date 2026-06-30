@@ -1,0 +1,37 @@
+{
+  "properties": {
+    "ativo": {
+      "description": "Plano ativo",
+      "type": "boolean"
+    },
+    "descricao": {
+      "description": "Descri\u00e7\u00e3o",
+      "type": "string"
+    },
+    "label": {
+      "description": "Nome do plano",
+      "type": "string"
+    },
+    "max_usuarios": {
+      "description": "M\u00e1x. usu\u00e1rios (0 = ilimitado)",
+      "type": "number"
+    },
+    "modulos": {
+      "description": "M\u00f3dulos inclu\u00eddos",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "slug": {
+      "description": "Chave \u00fanica do plano (ex: essencial)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "slug",
+    "label"
+  ],
+  "type": "object",
+  "name": "Plano"
+}

@@ -1,0 +1,90 @@
+{
+  "properties": {
+    "administradora": {
+      "description": "Administradora",
+      "type": "string"
+    },
+    "cliente": {
+      "description": "Cliente",
+      "type": "string"
+    },
+    "comissao_vinculada": {
+      "description": "ID da comissao de origem",
+      "type": "string"
+    },
+    "data_prevista_recebimento": {
+      "description": "Data prevista para recebimento desta parcela",
+      "format": "date",
+      "type": "string"
+    },
+    "data_recebimento_real": {
+      "description": "Data efetiva do recebimento",
+      "format": "date",
+      "type": "string"
+    },
+    "elegivel_antecipacao": {
+      "default": false,
+      "description": "Indica se esta parcela e elegivel para antecipacao",
+      "type": "boolean"
+    },
+    "empresa_vinculada": {
+      "description": "Empresa vinculada",
+      "type": "string"
+    },
+    "lider": {
+      "description": "Lider comercial",
+      "type": "string"
+    },
+    "motivo_inelegibilidade": {
+      "description": "Motivo pelo qual nao e elegivel para antecipacao",
+      "type": "string"
+    },
+    "numero_parcela": {
+      "description": "Numero desta parcela",
+      "type": "number"
+    },
+    "observacoes": {
+      "description": "Observacoes",
+      "type": "string"
+    },
+    "produto": {
+      "description": "Produto de consorcio",
+      "type": "string"
+    },
+    "status_recebivel": {
+      "default": "previsto",
+      "description": "Status do recebivel",
+      "enum": [
+        "previsto",
+        "confirmado",
+        "recebido",
+        "atrasado",
+        "cancelado"
+      ],
+      "type": "string"
+    },
+    "total_parcelas": {
+      "description": "Total de parcelas da comissao",
+      "type": "number"
+    },
+    "valor_carta": {
+      "description": "Valor da carta de referencia",
+      "type": "number"
+    },
+    "valor_recebivel": {
+      "description": "Valor desta parcela do recebivel",
+      "type": "number"
+    },
+    "venda_vinculada": {
+      "description": "ID da venda de origem",
+      "type": "string"
+    },
+    "vendedor": {
+      "description": "Vendedor",
+      "type": "string"
+    }
+  },
+  "required": [],
+  "type": "object",
+  "name": "RecebiveisConsorcio"
+}
