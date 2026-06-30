@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -16,8 +17,10 @@ import {
   ROLE_LABELS,
 } from '@/lib/modules';
 
-export default function ManageModulesDialog({ open, onOpenChange, user, onSubmit, isLoading }) {
+export default function ManageModulesDialog({ open, onOpenChange, user, onSubmit, isLoading, planoModulos }) {
   const [selectedModules, setSelectedModules] = useState([]);
+
+  const allowedModules = planoModulos || AVAILABLE_MODULES;
 
   useEffect(() => {
     if (user) {
@@ -35,7 +38,8 @@ export default function ManageModulesDialog({ open, onOpenChange, user, onSubmit
 
   const applyRoleDefaults = () => {
     if (user?.role) {
-      setSelectedModules(ROLE_MODULE_DEFAULTS[user.role] || []);
+      const defaults = ROLE_MODULE_DEFAULTS[user.role] || [];
+      setSelectedModules(defaults.filter((m) => allowedModules.includes(m)));
     }
   };
 
@@ -62,19 +66,30 @@ export default function ManageModulesDialog({ open, onOpenChange, user, onSubmit
                 </Button>
               </div>
             )}
+            {planoModulos && (
+              <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-3">
+                <Badge variant="outline" className="text-blue-700 border-blue-300">Limite do plano</Badge>
+                <span className="text-xs text-blue-700">Apenas módulos incluídos no plano contratado estão disponíveis.</span>
+              </div>
+            )}
             <div className="space-y-3">
-              {AVAILABLE_MODULES.map((module) => (
-                <div key={module} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`module-${module}`}
-                    checked={selectedModules.includes(module)}
-                    onCheckedChange={(checked) => toggleModule(module, checked)}
-                  />
-                  <Label htmlFor={`module-${module}`} className="cursor-pointer">
-                    {MODULE_LABELS[module] || module}
-                  </Label>
-                </div>
-              ))}
+              {AVAILABLE_MODULES.map((module) => {
+                const disabled = !allowedModules.includes(module);
+                return (
+                  <div key={module} className={`flex items-center space-x-3 ${disabled ? 'opacity-40' : ''}`}>
+                    <Checkbox
+                      id={`module-${module}`}
+                      checked={selectedModules.includes(module)}
+                      onCheckedChange={(checked) => !disabled && toggleModule(module, checked)}
+                      disabled={disabled}
+                    />
+                    <Label htmlFor={`module-${module}`} className={disabled ? 'cursor-not-allowed' : 'cursor-pointer'}>
+                      {MODULE_LABELS[module] || module}
+                    </Label>
+                    {disabled && <span className="text-xs text-gray-400 ml-auto">fora do plano</span>}
+                  </div>
+                );
+              })}
             </div>
           </div>
           <DialogFooter>

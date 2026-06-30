@@ -44,11 +44,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import KPICard from '@/components/shared/KPICard';
 import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
+import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
 import { ROLE_LABELS } from '@/lib/modules';
+import { PLANOS, PLANO_KEYS, getPlano } from '@/lib/plans';
 import { useAuth } from '@/lib/AuthContext';
 import { hashPassword } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -168,7 +170,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
             </div>
             <div className="space-y-1">
               <Label>CNPJ</Label>
-              <Input value={form.cnpj} onChange={f('cnpj')} placeholder="00.000.000/0001-00" />
+              <CpfCnpjInput value={form.cnpj} onChange={(v) => setForm(p => ({ ...p, cnpj: v }))} />
             </div>
             <div className="space-y-1">
               <Label>Responsável</Label>
@@ -180,11 +182,18 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
             </div>
             <div className="space-y-1">
               <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={f('telefone')} />
+              <PhoneInput value={form.telefone} onChange={(value) => setForm(p => ({ ...p, telefone: value }))} />
             </div>
             <div className="space-y-1">
               <Label>Plano</Label>
-              <Input value={form.plano_contratado} onChange={f('plano_contratado')} placeholder="Ex: Starter, Pro" />
+              <Select value={form.plano_contratado} onValueChange={(v) => setForm(p => ({ ...p, plano_contratado: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
+                <SelectContent>
+                  {PLANO_KEYS.map((k) => (
+                    <SelectItem key={k} value={k}>{PLANOS[k].label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2 space-y-1">
               <Label>Status</Label>
@@ -211,8 +220,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
   );
 }
 
-// ── Aba Usuários ────────────────────────────────────────────────────────────
-function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
+// ── Aba Usuários ──────────────────────────────────────────────────────────────────────────
+function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentUser }) {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -222,8 +231,22 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
   const [lastCreatedUser, setLastCreatedUser] = useState({ name: '', senha: '' });
   const [empresaFiltro, setEmpresaFiltro] = useState('all');
 
+  const { data: empresas = [] } = useQuery({
+    queryKey: ['empresas'],
+    queryFn: () => base44.entities.Empresa.list(),
+  });
+
+  // Returns true if the current user is allowed to perform actions on target
+  const canManage = (target) => {
+    if (isSuperAdmin) return true;
+    if (target.role === 'super_admin') return false;
+    return target.empresa_vinculada === empresa;
+  };
+
   const usuarios = useMemo(() => {
-    const base = isSuperAdmin ? todosUsuarios : todosUsuarios.filter(u => u.empresa_vinculada === empresa);
+    const base = isSuperAdmin
+      ? todosUsuarios
+      : todosUsuarios.filter(u => u.role !== 'super_admin' && u.empresa_vinculada === empresa);
     if (isSuperAdmin && empresaFiltro !== 'all') return base.filter(u => u.empresa_vinculada === empresaFiltro);
     return base;
   }, [todosUsuarios, isSuperAdmin, empresa, empresaFiltro]);
@@ -287,14 +310,23 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
   }), [usuarios]);
 
   const handleCreate = async (data) => {
+    const empresaName = isSuperAdmin ? (data.empresa_vinculada || empresa) : empresa;
+    const emp = empresas.find((e) => e.razao_social === empresaName || e.nome_fantasia === empresaName);
+    const plano = getPlano(emp?.plano_contratado);
+    if (plano && plano.max_usuarios !== Infinity) {
+      const activeCount = todosUsuarios.filter((u) => u.empresa_vinculada === empresaName && u.status !== 'suspenso').length;
+      if (activeCount >= plano.max_usuarios) {
+        toast.error(`Limite de ${plano.max_usuarios} usuários do plano ${plano.label} atingido.`);
+        return;
+      }
+    }
     const senha = generateTempPassword();
     const senha_hash = await hashPassword(senha);
-    // Store before mutate so onSuccess can always read it
     setLastCreatedUser({ name: data.display_name, senha });
     createMutation.mutate({
       ...data,
       status: 'ativo',
-      empresa_vinculada: isSuperAdmin ? (data.empresa_vinculada || empresa) : empresa,
+      empresa_vinculada: empresaName,
       senha_temporaria: senha,
       senha_hash,
     });
@@ -375,35 +407,43 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
                       <Badge className={STATUS_COLORS[user.status] || 'bg-gray-100 text-gray-800'}>{user.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setSelectedUser(user); setEditDialogOpen(true); }}>
-                            <Pencil className="w-4 h-4 mr-2" /> Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setSelectedUser(user); setModulesDialogOpen(true); }}>
-                            <LayoutGrid className="w-4 h-4 mr-2" /> Gerenciar Módulos
-                          </DropdownMenuItem>
-                          {user.status === 'pendente' && user.senha_temporaria && (
-                            <DropdownMenuItem onClick={() => { setLastCreatedUser({ name: user.display_name, senha: user.senha_temporaria }); setSenhaDialogOpen(true); }}>
-                              <KeyRound className="w-4 h-4 mr-2" /> Ver senha temporária
+                      {canManage(user) ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setSelectedUser(user); setEditDialogOpen(true); }}>
+                              <Pencil className="w-4 h-4 mr-2" /> Editar
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleResetSenha(user)}>
-                            <KeyRound className="w-4 h-4 mr-2" /> Resetar Senha
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleStatus(user)}>
-                            {user.status === 'ativo'
-                              ? <><UserX className="w-4 h-4 mr-2" /> Suspender</>
-                              : <><UserCheck className="w-4 h-4 mr-2" /> Ativar</>}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(user.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem onClick={() => { setSelectedUser(user); setModulesDialogOpen(true); }}>
+                              <LayoutGrid className="w-4 h-4 mr-2" /> Gerenciar Módulos
+                            </DropdownMenuItem>
+                            {user.senha_temporaria && (
+                              <DropdownMenuItem onClick={() => { setLastCreatedUser({ name: user.display_name, senha: user.senha_temporaria }); setSenhaDialogOpen(true); }}>
+                                <KeyRound className="w-4 h-4 mr-2" /> Ver senha temporária
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => handleResetSenha(user)}>
+                              <KeyRound className="w-4 h-4 mr-2" /> Resetar Senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleStatus(user)}>
+                              {user.status === 'ativo'
+                                ? <><UserX className="w-4 h-4 mr-2" /> Suspender</>
+                                : <><UserCheck className="w-4 h-4 mr-2" /> Ativar</>}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(user.id)}>
+                              <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <span title="Sem permissão para gerenciar este usuário">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-30 cursor-not-allowed" disabled>
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -435,13 +475,18 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading }) {
         user={selectedUser}
         onSubmit={(data) => updateMutation.mutate({ id: selectedUser.id, data })}
         isLoading={updateMutation.isPending}
+        planoModulos={(() => {
+          if (!selectedUser || isSuperAdmin) return undefined;
+          const emp = empresas.find((e) => e.razao_social === selectedUser.empresa_vinculada || e.nome_fantasia === selectedUser.empresa_vinculada);
+          return getPlano(emp?.plano_contratado)?.modulos;
+        })()}
       />
       <SenhaGeradaDialog open={senhaDialogOpen} onOpenChange={setSenhaDialogOpen} senha={lastCreatedUser.senha} userName={lastCreatedUser.name} />
     </div>
   );
 }
 
-// ── Aba Empresas (super_admin only) ────────────────────────────────────────
+// ── Aba Empresas (super_admin only) ──────────────────────────────────────────────────────
 function EmpresasTab({ todosUsuarios }) {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -549,7 +594,7 @@ function EmpresasTab({ todosUsuarios }) {
                       {emp.responsavel_principal && <div><span className="text-gray-500">Responsável:</span> <span className="font-medium">{emp.responsavel_principal}</span></div>}
                       {emp.email && <div><span className="text-gray-500">Email:</span> <span className="font-medium">{emp.email}</span></div>}
                       {emp.telefone && <div><span className="text-gray-500">Tel:</span> <span className="font-medium">{emp.telefone}</span></div>}
-                      {emp.plano_contratado && <div><span className="text-gray-500">Plano:</span> <span className="font-medium">{emp.plano_contratado}</span></div>}
+                      {emp.plano_contratado && <div><span className="text-gray-500">Plano:</span> <span className="font-medium">{PLANOS[emp.plano_contratado]?.label || emp.plano_contratado}</span></div>}
                       {emp.data_inicio_plataforma && <div><span className="text-gray-500">Início:</span> <span className="font-medium">{new Date(emp.data_inicio_plataforma).toLocaleDateString('pt-BR')}</span></div>}
                     </div>
 
@@ -591,7 +636,7 @@ function EmpresasTab({ todosUsuarios }) {
   );
 }
 
-// ── Página principal ────────────────────────────────────────────────────────
+// ── Página principal ──────────────────────────────────────────────────────────────────────────
 export default function GestaoAcessos() {
   const { user: currentUser } = useAuth();
   const empresa = currentUser?.empresa_vinculada;
@@ -620,14 +665,14 @@ export default function GestaoAcessos() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="usuarios">
-            <UsuariosTab isSuperAdmin={isSuperAdmin} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} />
+            <UsuariosTab isSuperAdmin={isSuperAdmin} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} currentUser={currentUser} />
           </TabsContent>
           <TabsContent value="empresas">
             <EmpresasTab todosUsuarios={todosUsuarios} />
           </TabsContent>
         </Tabs>
       ) : (
-        <UsuariosTab isSuperAdmin={false} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} />
+        <UsuariosTab isSuperAdmin={false} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} currentUser={currentUser} />
       )}
     </div>
   );
