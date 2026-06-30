@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Eye, EyeOff, Lock, Mail, KeyRound, CheckCircle } from 'lucide-react';
 
-const LOGIN_BUILD = 'auth-fix-2026-06-28-v3';
+const LOGIN_BUILD = 'auth-fix-2026-06-30-v4';
 
 function normalizeEmail(value) {
   return String(value || '').toLowerCase().trim();
@@ -23,6 +23,10 @@ function getLoginErrorMessage(err) {
     return 'O domínio publicado não está autorizado a consultar a base de usuários. Revise a configuração de acesso do app.';
   }
   return `Erro ao consultar usuários. Detalhe técnico: ${message || 'sem detalhe retornado'}`;
+}
+
+function getEmptyUsersMessage() {
+  return 'A consulta de usuários não retornou registros. Isso normalmente indica restrição de leitura/RLS na entidade UsuarioAcesso ou build publicado apontando para outro ambiente. O usuário pode existir, mas o login público não está conseguindo ler a base.';
 }
 
 function generateTempPassword() {
@@ -53,12 +57,16 @@ function EsqueciSenhaDialog({ open, onOpenChange }) {
     try {
       const emailNorm = normalizeEmail(emailInput);
       const todos = await base44.entities.UsuarioAcesso.list('-created_date');
-      const usuario = Array.isArray(todos)
-        ? todos.find(u => normalizeEmail(u.email) === emailNorm)
-        : null;
+
+      if (!Array.isArray(todos) || todos.length === 0) {
+        setError(getEmptyUsersMessage());
+        return;
+      }
+
+      const usuario = todos.find(u => normalizeEmail(u.email) === emailNorm) || null;
 
       if (!usuario) {
-        setError('Email não encontrado. Verifique o endereço ou entre em contato com o administrador.');
+        setError('Email não encontrado em Gestão de Acessos. Verifique o endereço cadastrado ou contate o administrador.');
         return;
       }
 
@@ -176,12 +184,15 @@ export default function Login() {
         return;
       }
 
-      const usuario = Array.isArray(todos)
-        ? todos.find((u) => normalizeEmail(u.email) === emailNorm)
-        : null;
+      if (!Array.isArray(todos) || todos.length === 0) {
+        setError(getEmptyUsersMessage());
+        return;
+      }
+
+      const usuario = todos.find((u) => normalizeEmail(u.email) === emailNorm) || null;
 
       if (!usuario) {
-        setError('Usuário não encontrado. Confira o e-mail cadastrado.');
+        setError('Usuário não encontrado em Gestão de Acessos. Confira o e-mail cadastrado no NVION CRM.');
         return;
       }
 
