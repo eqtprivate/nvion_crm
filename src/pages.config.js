@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import GestaoAcessos from './pages/GestaoAcessos';
+import GestaoEmpresas from './pages/GestaoEmpresas';
 import __Layout from './Layout.jsx';
 
 export const PAGES = {
@@ -37,6 +38,7 @@ export const PAGES = {
   Reports,
   Settings,
   GestaoAcessos,
+  GestaoEmpresas,
 };
 
 export const pagesConfig = {

@@ -16,6 +16,7 @@ export const AVAILABLE_MODULES = [
   'Settings',
   'DadosTeste',
   'GestaoAcessos',
+  'GestaoEmpresas',
 ];
 
 export const MODULE_LABELS = {
@@ -36,6 +37,7 @@ export const MODULE_LABELS = {
   Settings: 'Configurações',
   DadosTeste: 'Dados de Teste',
   GestaoAcessos: 'Gestão de Acessos',
+  GestaoEmpresas: 'Gestão de Empresas',
 };
 
 export const ROLE_LABELS = {
