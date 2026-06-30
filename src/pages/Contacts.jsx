@@ -26,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CpfCnpjInput, PhoneInput, formatCpfCnpj, formatPhone } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, contactSchema } from '@/lib/validation';
 
 const origemOptions = ['indicacao', 'instagram', 'google', 'site', 'whatsapp', 'campanha_paga', 'base_propria', 'parceiro', 'evento', 'outro'];
 const statusOptions = ['lead', 'em_negociacao', 'cliente_ativo', 'venda_concluida', 'perdido', 'inativo'];
@@ -54,13 +56,18 @@ const statusLabel = {
 
 function ClienteDialog({ open, onOpenChange, onSubmit, cliente, vendedores, loading }) {
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
 
   React.useEffect(() => {
     setForm(cliente ? { ...emptyForm, ...cliente } : emptyForm);
+    setErrors({});
   }, [cliente, open]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const { ok, errors: errs } = validate(contactSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit(form);
   };
 
@@ -72,10 +79,10 @@ function ClienteDialog({ open, onOpenChange, onSubmit, cliente, vendedores, load
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><Label>Nome *</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Email *</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-            <div><Label>Telefone</Label><PhoneInput value={form.phone || ''} onChange={(value) => setForm({ ...form, phone: value })} /></div>
-            <div><Label>CPF/CNPJ</Label><CpfCnpjInput value={form.cpf_cnpj || ''} onChange={(value) => setForm({ ...form, cpf_cnpj: value })} /></div>
+            <div><Label>Nome *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /><FieldError message={errors.name} /></div>
+            <div><Label>Email *</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /><FieldError message={errors.email} /></div>
+            <div><Label>Telefone</Label><PhoneInput value={form.phone || ''} onChange={(value) => setForm({ ...form, phone: value })} /><FieldError message={errors.phone} /></div>
+            <div><Label>CPF/CNPJ</Label><CpfCnpjInput value={form.cpf_cnpj || ''} onChange={(value) => setForm({ ...form, cpf_cnpj: value })} /><FieldError message={errors.cpf_cnpj} /></div>
             <div><Label>Cidade</Label><Input value={form.cidade || ''} onChange={(e) => setForm({ ...form, cidade: e.target.value })} /></div>
             <div><Label>Estado</Label><Input maxLength={2} value={form.estado || ''} onChange={(e) => setForm({ ...form, estado: e.target.value.toUpperCase() })} /></div>
             <div><Label>Origem</Label><Select value={form.origem} onValueChange={(value) => setForm({ ...form, origem: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{origemOptions.map((item) => <SelectItem key={item} value={item}>{item.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select></div>

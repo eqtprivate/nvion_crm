@@ -13,6 +13,8 @@ import { Plus, Search, UserRound, MoreVertical, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CpfCnpjInput, MoneyInput, PhoneInput, formatCpfCnpj, formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, vendedorSchema } from '@/lib/validation';
 
 const emptyForm = {
   nome: '',
@@ -37,9 +39,11 @@ function money(value) {
 
 function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
 
   React.useEffect(() => {
     setForm(vendedor ? { ...emptyForm, ...vendedor } : emptyForm);
+    setErrors({});
   }, [vendedor, open]);
 
   const handleEquipe = (nomeEquipe) => {
@@ -53,6 +57,9 @@ function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loadi
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const { ok, errors: errs } = validate(vendedorSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     const equipeSelecionada = equipes.find((item) => item.nome_equipe === form.equipe);
     onSubmit({
       ...form,
@@ -71,19 +78,23 @@ function VendedorDialog({ open, onOpenChange, vendedor, equipes, onSubmit, loadi
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Nome *</Label>
-              <Input required value={form.nome || ''} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+              <Input value={form.nome || ''} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+              <FieldError message={errors.nome} />
             </div>
             <div>
               <Label>Email</Label>
               <Input type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <FieldError message={errors.email} />
             </div>
             <div>
               <Label>Telefone</Label>
               <PhoneInput value={form.telefone || ''} onChange={(value) => setForm({ ...form, telefone: value })} />
+              <FieldError message={errors.telefone} />
             </div>
             <div>
               <Label>CPF/CNPJ</Label>
               <CpfCnpjInput value={form.cpf_cnpj || ''} onChange={(value) => setForm({ ...form, cpf_cnpj: value })} />
+              <FieldError message={errors.cpf_cnpj} />
             </div>
             <div>
               <Label>Equipe</Label>
