@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { useAuth } from '@/lib/AuthContext';
+import TableEnhancer from '@/lib/TableEnhancer';
 import {
   LayoutDashboard,
   Users,
@@ -190,6 +191,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="flex h-screen bg-slate-50">
+      <TableEnhancer />
       <div className={`hidden md:flex bg-sidebar flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <SidebarContent />
       </div>
