@@ -31,6 +31,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { MoneyInput, formatCurrency } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, equipeComercialSchema } from '@/lib/validation';
 
 export default function EquipeComercial() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +44,7 @@ export default function EquipeComercial() {
     meta_mensal: '',
     status: 'ativo',
   });
+  const [errors, setErrors] = useState({});
   const queryClient = useQueryClient();
 
   const { user } = useAuth();
@@ -68,7 +71,7 @@ export default function EquipeComercial() {
     enabled: !!empresa,
   });
 
-  const resetForm = () => setForm({ nome_equipe: '', lider_responsavel: '', meta_mensal: '', status: 'ativo' });
+  const resetForm = () => { setForm({ nome_equipe: '', lider_responsavel: '', meta_mensal: '', status: 'ativo' }); setErrors({}); };
 
   const getVendedoresEquipe = (nomeEquipe) => vendedores
     .filter((vendedor) => vendedor.equipe === nomeEquipe)
@@ -155,6 +158,9 @@ export default function EquipeComercial() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const { ok, errors: errs } = validate(equipeComercialSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     const payload = {
       nome_equipe: form.nome_equipe,
       lider_responsavel: form.lider_responsavel,
@@ -242,7 +248,7 @@ export default function EquipeComercial() {
         <DialogContent>
           <DialogHeader><DialogTitle>{selectedEquipe ? 'Editar Equipe Comercial' : 'Nova Equipe Comercial'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div><Label htmlFor="nome_equipe">Nome da Equipe *</Label><Input id="nome_equipe" value={form.nome_equipe} onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))} placeholder="Ex: Equipe Sul" required /></div>
+            <div><Label htmlFor="nome_equipe">Nome da Equipe *</Label><Input id="nome_equipe" value={form.nome_equipe} onChange={(e) => setForm(prev => ({ ...prev, nome_equipe: e.target.value }))} placeholder="Ex: Equipe Sul" /><FieldError message={errors.nome_equipe} /></div>
             <div>
               <Label htmlFor="lider">Líder Responsável</Label>
               <Select value={form.lider_responsavel || ''} onValueChange={(value) => setForm(prev => ({ ...prev, lider_responsavel: value }))}>

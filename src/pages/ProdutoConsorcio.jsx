@@ -25,6 +25,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PercentInput, formatPercent } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, produtoConsorcioSchema } from '@/lib/validation';
 
 const categorias = ['imovel', 'veiculo', 'pesados', 'servicos', 'agro', 'outros'];
 
@@ -49,13 +51,18 @@ const emptyForm = {
 
 function ProdutoDialog({ open, onOpenChange, produto, administradoras, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
 
   React.useEffect(() => {
     setForm(produto ? { ...emptyForm, ...produto } : emptyForm);
+    setErrors({});
   }, [produto, open]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const { ok, errors: errs } = validate(produtoConsorcioSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({
       ...form,
       percentual_comissao_padrao: form.percentual_comissao_padrao ? Number(form.percentual_comissao_padrao) : undefined,
@@ -73,7 +80,8 @@ function ProdutoDialog({ open, onOpenChange, produto, administradoras, onSubmit,
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Nome do Produto *</Label>
-              <Input required value={form.nome_produto} onChange={(e) => setForm({ ...form, nome_produto: e.target.value })} placeholder="Ex: Consórcio Imóvel" />
+              <Input value={form.nome_produto} onChange={(e) => setForm({ ...form, nome_produto: e.target.value })} placeholder="Ex: Consórcio Imóvel" />
+              <FieldError message={errors.nome_produto} />
             </div>
             <div>
               <Label>Administradora</Label>

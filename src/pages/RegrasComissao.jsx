@@ -13,19 +13,25 @@ import { Plus, Search, Percent, MoreVertical, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PercentInput, formatPercent } from '@/components/forms/MaskedInputs';
+import { FieldError } from '@/components/forms/FieldError';
+import { validate, regraComissaoSchema } from '@/lib/validation';
 
 const emptyForm = { nome_regra: '', administradora: '', produto: '', tipo_comissao: 'percentual', percentual_base: '', percentual_vendedor: '', percentual_lider: '', prazo_pagamento_dias: '', num_parcelas_comissao: '', prazo_primeira_parcela_dias: '', status: 'ativa', observacoes: '' };
 const tipoLabel = { percentual: 'Percentual', fixo: 'Valor fixo', hibrido: 'Híbrido' };
 
 function RegraDialog({ open, onOpenChange, regra, produtos, administradoras, onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
-  React.useEffect(() => { setForm(regra ? { ...emptyForm, ...regra } : emptyForm); }, [regra, open]);
+  const [errors, setErrors] = useState({});
+  React.useEffect(() => { setForm(regra ? { ...emptyForm, ...regra } : emptyForm); setErrors({}); }, [regra, open]);
   const handleProduto = (nome) => {
     const produto = produtos.find((item) => item.nome_produto === nome);
     setForm({ ...form, produto: nome, administradora: produto?.administradora_vinculada || form.administradora, percentual_base: produto?.percentual_comissao_padrao || form.percentual_base, prazo_pagamento_dias: produto?.prazo_medio_pagamento || form.prazo_pagamento_dias });
   };
   const handleSubmit = (event) => {
     event.preventDefault();
+    const { ok, errors: errs } = validate(regraComissaoSchema, form);
+    if (!ok) { setErrors(errs); return; }
+    setErrors({});
     onSubmit({ ...form, percentual_base: Number(form.percentual_base || 0), percentual_vendedor: Number(form.percentual_vendedor || 0), percentual_lider: Number(form.percentual_lider || 0), prazo_pagamento_dias: Number(form.prazo_pagamento_dias || 0), num_parcelas_comissao: Number(form.num_parcelas_comissao || 1), prazo_primeira_parcela_dias: Number(form.prazo_primeira_parcela_dias || 30) });
   };
   return (
@@ -34,7 +40,7 @@ function RegraDialog({ open, onOpenChange, regra, produtos, administradoras, onS
         <DialogHeader><DialogTitle>{regra ? 'Editar Regra de Comissão' : 'Nova Regra de Comissão'}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div><Label>Nome da regra *</Label><Input required value={form.nome_regra || ''} onChange={(e) => setForm({ ...form, nome_regra: e.target.value })} /></div>
+            <div><Label>Nome da regra *</Label><Input value={form.nome_regra || ''} onChange={(e) => setForm({ ...form, nome_regra: e.target.value })} /><FieldError message={errors.nome_regra} /></div>
             <div><Label>Produto</Label><Select value={form.produto || ''} onValueChange={handleProduto}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{produtos.map((item) => <SelectItem key={item.id} value={item.nome_produto}>{item.nome_produto}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Administradora</Label><Select value={form.administradora || ''} onValueChange={(value) => setForm({ ...form, administradora: value })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{administradoras.map((item) => <SelectItem key={item.id} value={item.name}>{item.name}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Tipo de comissão</Label><Select value={form.tipo_comissao} onValueChange={(value) => setForm({ ...form, tipo_comissao: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percentual">Percentual</SelectItem><SelectItem value="fixo">Valor fixo</SelectItem><SelectItem value="hibrido">Híbrido</SelectItem></SelectContent></Select></div>
