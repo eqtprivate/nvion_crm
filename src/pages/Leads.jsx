@@ -141,14 +141,89 @@ const ORIGEM_LABELS = Object.fromEntries(ORIGENS.map(o => [o.value, o.label]));
 const TIPO_ACAO_LABELS = Object.fromEntries(TIPOS_PROXIMA_ACAO.map(t => [t.value, t.label]));
 
 const STATUS_COLORS = {
-  novo_contato: 'bg-blue-100 text-blue-800',
-  qualificacao: 'bg-indigo-100 text-indigo-800',
-  simulacao: 'bg-purple-100 text-purple-800',
-  proposta_enviada: 'bg-yellow-100 text-yellow-800',
-  documentacao: 'bg-orange-100 text-orange-800',
-  em_aprovacao: 'bg-cyan-100 text-cyan-800',
-  venda_concluida: 'bg-green-100 text-green-800',
-  perdida: 'bg-red-100 text-red-800',
+  novo_contato: 'bg-blue-100 text-blue-800 border border-blue-200',
+  qualificacao: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+  simulacao: 'bg-violet-100 text-violet-800 border border-violet-200',
+  proposta_enviada: 'bg-amber-100 text-amber-800 border border-amber-200',
+  documentacao: 'bg-orange-100 text-orange-800 border border-orange-200',
+  em_aprovacao: 'bg-cyan-100 text-cyan-800 border border-cyan-200',
+  venda_concluida: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+  perdida: 'bg-rose-100 text-rose-800 border border-rose-200',
+};
+
+const STAGE_VISUALS = {
+  all: {
+    dot: 'bg-slate-500',
+    card: 'border-slate-200 bg-slate-50/70 hover:bg-slate-100/70',
+    active: 'border-slate-700 bg-slate-100 shadow-sm ring-1 ring-slate-200',
+    progress: 'bg-slate-500',
+    row: 'border-l-slate-300',
+    avatar: 'bg-slate-100 text-slate-700',
+  },
+  novo_contato: {
+    dot: 'bg-blue-500',
+    card: 'border-blue-200 bg-blue-50/70 hover:bg-blue-100/70',
+    active: 'border-blue-600 bg-blue-100 shadow-sm ring-1 ring-blue-200',
+    progress: 'bg-blue-500',
+    row: 'border-l-blue-400',
+    avatar: 'bg-blue-100 text-blue-700',
+  },
+  qualificacao: {
+    dot: 'bg-indigo-500',
+    card: 'border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70',
+    active: 'border-indigo-600 bg-indigo-100 shadow-sm ring-1 ring-indigo-200',
+    progress: 'bg-indigo-500',
+    row: 'border-l-indigo-400',
+    avatar: 'bg-indigo-100 text-indigo-700',
+  },
+  simulacao: {
+    dot: 'bg-violet-500',
+    card: 'border-violet-200 bg-violet-50/70 hover:bg-violet-100/70',
+    active: 'border-violet-600 bg-violet-100 shadow-sm ring-1 ring-violet-200',
+    progress: 'bg-violet-500',
+    row: 'border-l-violet-400',
+    avatar: 'bg-violet-100 text-violet-700',
+  },
+  proposta_enviada: {
+    dot: 'bg-amber-500',
+    card: 'border-amber-200 bg-amber-50/70 hover:bg-amber-100/70',
+    active: 'border-amber-600 bg-amber-100 shadow-sm ring-1 ring-amber-200',
+    progress: 'bg-amber-500',
+    row: 'border-l-amber-400',
+    avatar: 'bg-amber-100 text-amber-700',
+  },
+  documentacao: {
+    dot: 'bg-orange-500',
+    card: 'border-orange-200 bg-orange-50/70 hover:bg-orange-100/70',
+    active: 'border-orange-600 bg-orange-100 shadow-sm ring-1 ring-orange-200',
+    progress: 'bg-orange-500',
+    row: 'border-l-orange-400',
+    avatar: 'bg-orange-100 text-orange-700',
+  },
+  em_aprovacao: {
+    dot: 'bg-cyan-500',
+    card: 'border-cyan-200 bg-cyan-50/70 hover:bg-cyan-100/70',
+    active: 'border-cyan-600 bg-cyan-100 shadow-sm ring-1 ring-cyan-200',
+    progress: 'bg-cyan-500',
+    row: 'border-l-cyan-400',
+    avatar: 'bg-cyan-100 text-cyan-700',
+  },
+  venda_concluida: {
+    dot: 'bg-emerald-500',
+    card: 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70',
+    active: 'border-emerald-600 bg-emerald-100 shadow-sm ring-1 ring-emerald-200',
+    progress: 'bg-emerald-500',
+    row: 'border-l-emerald-400',
+    avatar: 'bg-emerald-100 text-emerald-700',
+  },
+  perdida: {
+    dot: 'bg-rose-500',
+    card: 'border-rose-200 bg-rose-50/70 hover:bg-rose-100/70',
+    active: 'border-rose-600 bg-rose-100 shadow-sm ring-1 ring-rose-200',
+    progress: 'bg-rose-500',
+    row: 'border-l-rose-400',
+    avatar: 'bg-rose-100 text-rose-700',
+  },
 };
 
 const TEMP_ICONS = {
@@ -165,6 +240,17 @@ const QUICK_FILTERS = [
   { value: 'sem_proxima_acao', label: 'Sem próxima ação', icon: Clock3 },
   { value: 'quentes', label: 'Quentes', icon: Flame },
 ];
+
+function getStageVisual(status) {
+  return STAGE_VISUALS[status] || STAGE_VISUALS.all;
+}
+
+function getStageProgress(status) {
+  if (status === 'all') return 100;
+  const index = LEAD_STATUSES.findIndex((stage) => stage.value === status);
+  if (index < 0) return 0;
+  return Math.round(((index + 1) / LEAD_STATUSES.length) * 100);
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -336,6 +422,8 @@ export default function Leads() {
         ...stage,
         count: items.length,
         valueTotal: items.reduce((sum, lead) => sum + Number(lead.valor_estimado_carta || 0), 0),
+        progress: getStageProgress(stage.value),
+        visual: getStageVisual(stage.value),
       };
     });
   }, [leads]);
@@ -418,26 +506,38 @@ export default function Leads() {
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-gray-900">Funil de Prospecção</p>
-            <p className="text-xs text-gray-500">Clique em uma etapa para focar a operação</p>
+            <p className="text-xs text-gray-500">Cada etapa possui cor própria para facilitar leitura do pipeline</p>
           </div>
           <Button size="sm" variant="ghost" onClick={() => setActiveStage('all')}>Limpar etapa</Button>
         </div>
         <div className="overflow-x-auto">
-          <div className="min-w-max flex gap-2 p-3">
-            {funnelStages.map((stage) => (
-              <button
-                type="button"
-                key={stage.value}
-                onClick={() => setActiveStage(stage.value)}
-                className={`text-left rounded-lg border px-3 py-2 min-w-[150px] transition ${activeStage === stage.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-gray-200 bg-white hover:bg-gray-50'}`}
-              >
-                <p className="text-xs text-gray-500 truncate">{stage.label}</p>
-                <div className="flex items-end justify-between gap-3 mt-1">
-                  <p className="text-xl font-bold text-gray-900">{stage.count}</p>
-                  <p className="text-xs font-medium text-gray-500">{formatCurrency(stage.valueTotal)}</p>
-                </div>
-              </button>
-            ))}
+          <div className="min-w-max flex gap-3 p-3">
+            {funnelStages.map((stage) => {
+              const visual = stage.visual;
+              return (
+                <button
+                  type="button"
+                  key={stage.value}
+                  onClick={() => setActiveStage(stage.value)}
+                  className={`text-left rounded-xl border px-3 py-3 min-w-[165px] transition ${activeStage === stage.value ? visual.active : visual.card}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`w-2.5 h-2.5 rounded-full ${visual.dot}`} />
+                      <p className="text-xs font-semibold text-gray-700 truncate">{stage.label}</p>
+                    </div>
+                    {activeStage === stage.value && <span className="text-[10px] font-semibold text-gray-500 uppercase">ativo</span>}
+                  </div>
+                  <div className="flex items-end justify-between gap-3 mt-2">
+                    <p className="text-2xl font-bold text-gray-900">{stage.count}</p>
+                    <p className="text-xs font-medium text-gray-600">{formatCurrency(stage.valueTotal)}</p>
+                  </div>
+                  <div className="mt-3 h-1.5 rounded-full bg-white/80 border border-white overflow-hidden">
+                    <div className={`h-full rounded-full ${visual.progress}`} style={{ width: `${stage.progress}%` }} />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -502,43 +602,46 @@ export default function Leads() {
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Target className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhum lead encontrado</span></div></TableCell></TableRow>
               ) : (
-                filtered.map(lead => (
-                  <TableRow key={lead.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-sm flex-shrink-0">{lead.name?.charAt(0)?.toUpperCase()}</div>
-                        <div>
-                          <p className="font-medium">{lead.name}</p>
-                          <p className="text-xs text-gray-500">{lead.email || lead.vendedor_responsavel || ''}</p>
+                filtered.map(lead => {
+                  const stageVisual = getStageVisual(lead.status);
+                  return (
+                    <TableRow key={lead.id} className={`hover:bg-gray-50 border-l-4 ${stageVisual.row}`}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${stageVisual.avatar}`}>{lead.name?.charAt(0)?.toUpperCase()}</div>
+                          <div>
+                            <p className="font-medium">{lead.name}</p>
+                            <p className="text-xs text-gray-500">{lead.email || lead.vendedor_responsavel || ''}</p>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm">{formatPhone(lead.phone) || '-'}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm"><Badge variant="outline">{ORIGEM_LABELS[lead.origem] || '-'}</Badge></TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm"><div><p>{lead.produto_interesse || '-'}</p>{lead.valor_estimado_carta && <p className="text-xs text-gray-500">{formatCurrency(lead.valor_estimado_carta)}</p>}</div></TableCell>
-                    <TableCell><div className="flex items-center gap-1">{TEMP_ICONS[lead.temperatura]}<span className="text-xs hidden sm:inline capitalize">{lead.temperatura || '-'}</span></div></TableCell>
-                    <TableCell>
-                      <Select value={lead.status || 'novo_contato'} onValueChange={v => updateMutation.mutate({ id: lead.id, data: { status: v } })}>
-                        <SelectTrigger className="h-7 text-xs w-36 border-0 p-0 shadow-none">
-                          <Badge className={STATUS_COLORS[lead.status] || 'bg-gray-100 text-gray-800'}>{STATUS_LABELS[lead.status] || lead.status}</Badge>
-                        </SelectTrigger>
-                        <SelectContent>{LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell text-sm"><p>{lead.vendedor_responsavel || '-'}</p>{lead.lider_vinculado && <p className="text-xs text-gray-500">Líder: {lead.lider_vinculado}</p>}</TableCell>
-                    <TableCell><NextActionBadge lead={lead} /></TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(lead)}>Editar</DropdownMenuItem>
-                          <DropdownMenuItem disabled={convertToOpportunityMutation.isPending} onClick={() => setPendingOpportunityLead(lead)}>Criar oportunidade</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(lead.id)}>Excluir</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm">{formatPhone(lead.phone) || '-'}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm"><Badge variant="outline">{ORIGEM_LABELS[lead.origem] || '-'}</Badge></TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm"><div><p>{lead.produto_interesse || '-'}</p>{lead.valor_estimado_carta && <p className="text-xs text-gray-500">{formatCurrency(lead.valor_estimado_carta)}</p>}</div></TableCell>
+                      <TableCell><div className="flex items-center gap-1">{TEMP_ICONS[lead.temperatura]}<span className="text-xs hidden sm:inline capitalize">{lead.temperatura || '-'}</span></div></TableCell>
+                      <TableCell>
+                        <Select value={lead.status || 'novo_contato'} onValueChange={v => updateMutation.mutate({ id: lead.id, data: { status: v } })}>
+                          <SelectTrigger className="h-7 text-xs w-36 border-0 p-0 shadow-none">
+                            <Badge className={STATUS_COLORS[lead.status] || 'bg-gray-100 text-gray-800'}>{STATUS_LABELS[lead.status] || lead.status}</Badge>
+                          </SelectTrigger>
+                          <SelectContent>{LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm"><p>{lead.vendedor_responsavel || '-'}</p>{lead.lider_vinculado && <p className="text-xs text-gray-500">Líder: {lead.lider_vinculado}</p>}</TableCell>
+                      <TableCell><NextActionBadge lead={lead} /></TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(lead)}>Editar</DropdownMenuItem>
+                            <DropdownMenuItem disabled={convertToOpportunityMutation.isPending} onClick={() => setPendingOpportunityLead(lead)}>Criar oportunidade</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(lead.id)}>Excluir</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
