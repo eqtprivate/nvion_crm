@@ -89,6 +89,26 @@
       "format": "date",
       "description": "Data do ultimo contato"
     },
+    "tipo_proxima_acao": {
+      "type": "string",
+      "enum": [
+        "ligacao",
+        "whatsapp",
+        "email",
+        "reuniao",
+        "simulacao",
+        "enviar_proposta",
+        "cobrar_documento",
+        "follow_up",
+        "outro"
+      ],
+      "description": "Tipo da proxima acao comercial"
+    },
+    "data_proxima_acao": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da proxima acao comercial"
+    },
     "proxima_acao": {
       "type": "string",
       "description": "Proxima acao comercial"
