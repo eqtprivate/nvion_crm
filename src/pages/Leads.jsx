@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Target, MoreVertical, Download, Flame, Thermometer, Snowflake, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Search, Target, MoreVertical, Download, Flame, Thermometer, Snowflake, Upload, CheckCircle2, AlertCircle, Clock3, UserX, ListTodo } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import LeadDialog, { LEAD_STATUSES, ORIGENS } from '../components/forms/LeadDialog';
+import LeadDialog, { LEAD_STATUSES, ORIGENS, TIPOS_PROXIMA_ACAO } from '../components/forms/LeadDialog';
 import EditLeadDialog from '../components/forms/EditLeadDialog';
 import KPICard from '../components/leads/KPICard';
 import LeadFilters from '../components/leads/LeadFilters';
@@ -61,6 +61,9 @@ const CSV_FIELD_MAP = {
   lider: 'lider_vinculado', 'lider vinculado': 'lider_vinculado',
   temperatura: 'temperatura',
   status: 'status',
+  'tipo proxima acao': 'tipo_proxima_acao', 'tipo próxima ação': 'tipo_proxima_acao',
+  'data proxima acao': 'data_proxima_acao', 'data próxima ação': 'data_proxima_acao',
+  'proxima acao': 'proxima_acao', 'próxima ação': 'proxima_acao',
   observacoes: 'observacoes', 'observações': 'observacoes',
 };
 
@@ -107,7 +110,7 @@ function ImportCSVDialog({ open, onOpenChange, onImport, isLoading }) {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Importar Leads via CSV</DialogTitle></DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">O arquivo deve ter cabeçalhos em português ou inglês. Colunas reconhecidas: <strong>nome, email, telefone, origem, campanha, produto, valor estimado, administradora, vendedor, lider, temperatura, status, observacoes</strong>.</p>
+          <p className="text-sm text-gray-600">O arquivo deve ter cabeçalhos em português ou inglês. Colunas reconhecidas: <strong>nome, email, telefone, origem, campanha, produto, valor estimado, administradora, vendedor, lider, temperatura, status, tipo próxima ação, data próxima ação, próxima ação, observações</strong>.</p>
           <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
           {error && <div className="flex items-center gap-2 text-red-600 text-sm"><AlertCircle className="w-4 h-4" />{error}</div>}
           {done && <div className="flex items-center gap-2 text-green-700 text-sm"><CheckCircle2 className="w-4 h-4" />{rows.length || 'Os'} leads importados com sucesso!</div>}
@@ -135,6 +138,7 @@ function ImportCSVDialog({ open, onOpenChange, onImport, isLoading }) {
 
 const STATUS_LABELS = Object.fromEntries(LEAD_STATUSES.map(s => [s.value, s.label]));
 const ORIGEM_LABELS = Object.fromEntries(ORIGENS.map(o => [o.value, o.label]));
+const TIPO_ACAO_LABELS = Object.fromEntries(TIPOS_PROXIMA_ACAO.map(t => [t.value, t.label]));
 
 const STATUS_COLORS = {
   novo_contato: 'bg-blue-100 text-blue-800',
@@ -153,6 +157,69 @@ const TEMP_ICONS = {
   frio: <Snowflake className="w-3.5 h-3.5 text-blue-500" />,
 };
 
+const QUICK_FILTERS = [
+  { value: 'all', label: 'Todos', icon: ListTodo },
+  { value: 'hoje', label: 'Hoje', icon: Clock3 },
+  { value: 'atrasados', label: 'Atrasados', icon: AlertCircle },
+  { value: 'sem_responsavel', label: 'Sem responsável', icon: UserX },
+  { value: 'sem_proxima_acao', label: 'Sem próxima ação', icon: Clock3 },
+  { value: 'quentes', label: 'Quentes', icon: Flame },
+];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isFinalStatus(status) {
+  return ['venda_concluida', 'perdida'].includes(status);
+}
+
+function isDueToday(lead) {
+  return !isFinalStatus(lead.status) && lead.data_proxima_acao === todayISO();
+}
+
+function isOverdue(lead) {
+  return !isFinalStatus(lead.status) && lead.data_proxima_acao && lead.data_proxima_acao < todayISO();
+}
+
+function hasNoNextAction(lead) {
+  return !isFinalStatus(lead.status) && !lead.proxima_acao && !lead.data_proxima_acao;
+}
+
+function formatDateBR(date) {
+  if (!date) return '';
+  return new Date(`${date}T00:00:00`).toLocaleDateString('pt-BR');
+}
+
+function matchesQuickFilter(lead, quickFilter) {
+  if (quickFilter === 'hoje') return isDueToday(lead);
+  if (quickFilter === 'atrasados') return isOverdue(lead);
+  if (quickFilter === 'sem_responsavel') return !lead.vendedor_responsavel;
+  if (quickFilter === 'sem_proxima_acao') return hasNoNextAction(lead);
+  if (quickFilter === 'quentes') return lead.temperatura === 'quente';
+  return true;
+}
+
+function NextActionBadge({ lead }) {
+  if (!lead.proxima_acao && !lead.data_proxima_acao) {
+    return <Badge className="bg-gray-100 text-gray-700">Sem próxima ação</Badge>;
+  }
+
+  const overdue = isOverdue(lead);
+  const today = isDueToday(lead);
+  const label = TIPO_ACAO_LABELS[lead.tipo_proxima_acao] || 'Ação';
+  const dateText = lead.data_proxima_acao ? formatDateBR(lead.data_proxima_acao) : 'Sem data';
+
+  return (
+    <div className="space-y-1 max-w-[220px]">
+      <Badge className={overdue ? 'bg-red-100 text-red-800' : today ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}>
+        {label} · {dateText}
+      </Badge>
+      {lead.proxima_acao && <p className="text-xs text-gray-600 truncate">{lead.proxima_acao}</p>}
+    </div>
+  );
+}
+
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -161,6 +228,8 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [pendingOpportunityLead, setPendingOpportunityLead] = useState(null);
   const [filters, setFilters] = useState({ status: 'all', origem: 'all', temperatura: 'all' });
+  const [activeStage, setActiveStage] = useState('all');
+  const [quickFilter, setQuickFilter] = useState('all');
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const empresa = user?.empresa_vinculada;
@@ -252,45 +321,73 @@ export default function Leads() {
 
   const handleEdit = (lead) => { setSelectedLead(lead); setEditDialogOpen(true); };
   const handleFilterChange = (key, value) => setFilters(p => ({ ...p, [key]: value }));
-  const handleClearFilters = () => setFilters({ status: 'all', origem: 'all', temperatura: 'all' });
+  const handleClearFilters = () => { setFilters({ status: 'all', origem: 'all', temperatura: 'all' }); setActiveStage('all'); setQuickFilter('all'); };
   const handleConfirmOpportunityFromLead = () => {
     if (!pendingOpportunityLead) return;
     convertToOpportunityMutation.mutate(pendingOpportunityLead);
     setPendingOpportunityLead(null);
   };
 
+  const funnelStages = useMemo(() => {
+    const stages = [{ value: 'all', label: 'Todos' }, ...LEAD_STATUSES];
+    return stages.map((stage) => {
+      const items = stage.value === 'all' ? leads : leads.filter((lead) => lead.status === stage.value);
+      return {
+        ...stage,
+        count: items.length,
+        valueTotal: items.reduce((sum, lead) => sum + Number(lead.valor_estimado_carta || 0), 0),
+      };
+    });
+  }, [leads]);
+
+  const quickCounts = useMemo(() => Object.fromEntries(
+    QUICK_FILTERS.map((item) => [item.value, leads.filter((lead) => matchesQuickFilter(lead, item.value)).length])
+  ), [leads]);
+
   const filtered = useMemo(() => {
+    const term = searchTerm.toLowerCase();
     return leads.filter(lead => {
-      const matchSearch = !searchTerm ||
-        lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.vendedor_responsavel?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchSearch = !term ||
+        lead.name?.toLowerCase().includes(term) ||
+        lead.email?.toLowerCase().includes(term) ||
+        lead.phone?.toLowerCase().includes(term) ||
+        formatPhone(lead.phone).toLowerCase().includes(term) ||
+        lead.produto_interesse?.toLowerCase().includes(term) ||
+        lead.campanha?.toLowerCase().includes(term) ||
+        lead.vendedor_responsavel?.toLowerCase().includes(term) ||
+        lead.lider_vinculado?.toLowerCase().includes(term);
+      const matchStage = activeStage === 'all' || lead.status === activeStage;
       const matchStatus = filters.status === 'all' || lead.status === filters.status;
       const matchOrigem = filters.origem === 'all' || lead.origem === filters.origem;
       const matchTemp = filters.temperatura === 'all' || lead.temperatura === filters.temperatura;
-      return matchSearch && matchStatus && matchOrigem && matchTemp;
+      const matchQuick = matchesQuickFilter(lead, quickFilter);
+      return matchSearch && matchStage && matchStatus && matchOrigem && matchTemp && matchQuick;
     });
-  }, [leads, searchTerm, filters]);
+  }, [leads, searchTerm, filters, activeStage, quickFilter]);
 
   const kpis = useMemo(() => {
     const total = filtered.length;
     const ativos = filtered.filter(l => !['venda_concluida', 'perdida'].includes(l.status)).length;
     const concluidos = filtered.filter(l => l.status === 'venda_concluida').length;
     const perdidos = filtered.filter(l => l.status === 'perdida').length;
-    const valorTotal = filtered.reduce((s, l) => s + (l.valor_estimado_carta || 0), 0);
+    const valorTotal = filtered.reduce((s, l) => s + Number(l.valor_estimado_carta || 0), 0);
+    const ticketMedio = total > 0 ? valorTotal / total : 0;
     const taxa = total > 0 ? ((concluidos / total) * 100).toFixed(1) : 0;
-    return { total, ativos, concluidos, perdidos, valorTotal, taxa };
+    const atrasados = filtered.filter(isOverdue).length;
+    const semResponsavel = filtered.filter(l => !l.vendedor_responsavel).length;
+    const semProximaAcao = filtered.filter(hasNoNextAction).length;
+    return { total, ativos, concluidos, perdidos, valorTotal, ticketMedio, taxa, atrasados, semResponsavel, semProximaAcao };
   }, [filtered]);
 
   const exportToCSV = () => {
-    const headers = ['Nome', 'Email', 'Telefone', 'Origem', 'Campanha', 'Produto', 'Valor Estimado (R$)', 'Administradora', 'Vendedor', 'Líder', 'Temperatura', 'Status', 'Último Contato', 'Próxima Ação'];
+    const headers = ['Nome', 'Email', 'Telefone', 'Origem', 'Campanha', 'Produto', 'Valor Estimado (R$)', 'Administradora', 'Vendedor', 'Líder', 'Temperatura', 'Status', 'Último Contato', 'Tipo Próxima Ação', 'Data Próxima Ação', 'Próxima Ação'];
     const rows = filtered.map(l => [
       l.name || '', l.email || '', l.phone || '',
       ORIGEM_LABELS[l.origem] || l.origem || '', l.campanha || '',
       l.produto_interesse || '', l.valor_estimado_carta || 0,
       l.administradora_interesse || '', l.vendedor_responsavel || '',
       l.lider_vinculado || '', l.temperatura || '', STATUS_LABELS[l.status] || l.status || '',
-      l.data_ultimo_contato || '', l.proxima_acao || '',
+      l.data_ultimo_contato || '', TIPO_ACAO_LABELS[l.tipo_proxima_acao] || l.tipo_proxima_acao || '', l.data_proxima_acao || '', l.proxima_acao || '',
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `leads_${new Date().toISOString().split('T')[0]}.csv` });
@@ -302,7 +399,7 @@ export default function Leads() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Prospecção</h1>
-          <p className="text-gray-500 mt-1">Gerencie seus leads e prospecções de consórcio</p>
+          <p className="text-gray-500 mt-1">Cockpit de leads, ações comerciais e conversão para oportunidades</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" onClick={exportToCSV} disabled={filtered.length === 0}>
@@ -317,6 +414,34 @@ export default function Leads() {
         </div>
       </div>
 
+      <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
+        <div className="px-4 py-3 border-b flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Funil de Prospecção</p>
+            <p className="text-xs text-gray-500">Clique em uma etapa para focar a operação</p>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setActiveStage('all')}>Limpar etapa</Button>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-max flex gap-2 p-3">
+            {funnelStages.map((stage) => (
+              <button
+                type="button"
+                key={stage.value}
+                onClick={() => setActiveStage(stage.value)}
+                className={`text-left rounded-lg border px-3 py-2 min-w-[150px] transition ${activeStage === stage.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-gray-200 bg-white hover:bg-gray-50'}`}
+              >
+                <p className="text-xs text-gray-500 truncate">{stage.label}</p>
+                <div className="flex items-end justify-between gap-3 mt-1">
+                  <p className="text-xl font-bold text-gray-900">{stage.count}</p>
+                  <p className="text-xs font-medium text-gray-500">{formatCurrency(stage.valueTotal)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
         <KPICard title="Total de Leads" value={kpis.total} Icon={Target} color="blue" />
         <KPICard title="Em Andamento" value={kpis.ativos} Icon={Target} color="orange" />
@@ -327,12 +452,33 @@ export default function Leads() {
       </div>
 
       <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input placeholder="Buscar por nome, email ou vendedor..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+        <div className="p-4 border-b space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input placeholder="Buscar por nome, telefone, email, produto ou responsável..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+            </div>
+            <LeadFilters filters={filters} onFilterChange={handleFilterChange} onClearFilters={handleClearFilters} />
           </div>
-          <LeadFilters filters={filters} onFilterChange={handleFilterChange} onClearFilters={handleClearFilters} />
+          <div className="flex flex-wrap gap-2">
+            {QUICK_FILTERS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Button
+                  key={item.value}
+                  type="button"
+                  size="sm"
+                  variant={quickFilter === item.value ? 'default' : 'outline'}
+                  onClick={() => setQuickFilter(item.value)}
+                  className="h-8"
+                >
+                  <Icon className="w-3.5 h-3.5 mr-1.5" />
+                  {item.label}
+                  <span className="ml-1.5 text-xs opacity-75">{quickCounts[item.value] || 0}</span>
+                </Button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -340,35 +486,27 @@ export default function Leads() {
             <TableHeader>
               <TableRow>
                 <TableHead>Lead</TableHead>
-                <TableHead className="hidden md:table-cell">Telefone</TableHead>
+                <TableHead className="hidden md:table-cell">Contato</TableHead>
                 <TableHead className="hidden lg:table-cell">Origem</TableHead>
                 <TableHead className="hidden lg:table-cell">Produto / Valor</TableHead>
                 <TableHead>Temp.</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="hidden xl:table-cell">Próxima Ação</TableHead>
+                <TableHead className="hidden xl:table-cell">Responsável</TableHead>
+                <TableHead>Próxima Ação</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-gray-500">
-                    <div className="flex flex-col items-center gap-2">
-                      <Target className="w-12 h-12 text-gray-300" />
-                      <span className="font-medium">Nenhum lead encontrado</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Target className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhum lead encontrado</span></div></TableCell></TableRow>
               ) : (
                 filtered.map(lead => (
                   <TableRow key={lead.id} className="hover:bg-gray-50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-sm flex-shrink-0">
-                          {lead.name?.charAt(0)?.toUpperCase()}
-                        </div>
+                        <div className="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-sm flex-shrink-0">{lead.name?.charAt(0)?.toUpperCase()}</div>
                         <div>
                           <p className="font-medium">{lead.name}</p>
                           <p className="text-xs text-gray-500">{lead.email || lead.vendedor_responsavel || ''}</p>
@@ -376,49 +514,25 @@ export default function Leads() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-sm">{formatPhone(lead.phone) || '-'}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm">{ORIGEM_LABELS[lead.origem] || '-'}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm">
-                      <div>
-                        <p>{lead.produto_interesse || '-'}</p>
-                        {lead.valor_estimado_carta && (
-                          <p className="text-xs text-gray-500">{formatCurrency(lead.valor_estimado_carta)}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {TEMP_ICONS[lead.temperatura]}
-                        <span className="text-xs hidden sm:inline capitalize">{lead.temperatura || '-'}</span>
-                      </div>
-                    </TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm"><Badge variant="outline">{ORIGEM_LABELS[lead.origem] || '-'}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm"><div><p>{lead.produto_interesse || '-'}</p>{lead.valor_estimado_carta && <p className="text-xs text-gray-500">{formatCurrency(lead.valor_estimado_carta)}</p>}</div></TableCell>
+                    <TableCell><div className="flex items-center gap-1">{TEMP_ICONS[lead.temperatura]}<span className="text-xs hidden sm:inline capitalize">{lead.temperatura || '-'}</span></div></TableCell>
                     <TableCell>
                       <Select value={lead.status || 'novo_contato'} onValueChange={v => updateMutation.mutate({ id: lead.id, data: { status: v } })}>
                         <SelectTrigger className="h-7 text-xs w-36 border-0 p-0 shadow-none">
-                          <Badge className={STATUS_COLORS[lead.status] || 'bg-gray-100 text-gray-800'}>
-                            {STATUS_LABELS[lead.status] || lead.status}
-                          </Badge>
+                          <Badge className={STATUS_COLORS[lead.status] || 'bg-gray-100 text-gray-800'}>{STATUS_LABELS[lead.status] || lead.status}</Badge>
                         </SelectTrigger>
-                        <SelectContent>
-                          {LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell text-sm text-gray-600 max-w-[160px] truncate">
-                      {lead.proxima_acao || '-'}
-                    </TableCell>
+                    <TableCell className="hidden xl:table-cell text-sm"><p>{lead.vendedor_responsavel || '-'}</p>{lead.lider_vinculado && <p className="text-xs text-gray-500">Líder: {lead.lider_vinculado}</p>}</TableCell>
+                    <TableCell><NextActionBadge lead={lead} /></TableCell>
                     <TableCell>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
-                        </DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEdit(lead)}>Editar</DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={convertToOpportunityMutation.isPending}
-                            onClick={() => setPendingOpportunityLead(lead)}
-                          >
-                            Criar oportunidade
-                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled={convertToOpportunityMutation.isPending} onClick={() => setPendingOpportunityLead(lead)}>Criar oportunidade</DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(lead.id)}>Excluir</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -429,46 +543,30 @@ export default function Leads() {
             </TableBody>
           </Table>
         </div>
+        <div className="border-t bg-gray-50 px-4 py-3 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+          <div><p className="text-gray-500">Valor filtrado</p><p className="font-semibold text-green-700">{formatCurrency(kpis.valorTotal)}</p></div>
+          <div><p className="text-gray-500">Ticket médio</p><p className="font-semibold">{formatCurrency(kpis.ticketMedio)}</p></div>
+          <div><p className="text-gray-500">Total</p><p className="font-semibold">{kpis.total}</p></div>
+          <div><p className="text-gray-500">Atrasados</p><p className="font-semibold text-red-700">{kpis.atrasados}</p></div>
+          <div><p className="text-gray-500">Sem responsável</p><p className="font-semibold text-orange-700">{kpis.semResponsavel}</p></div>
+          <div><p className="text-gray-500">Sem próxima ação</p><p className="font-semibold text-gray-700">{kpis.semProximaAcao}</p></div>
+        </div>
       </div>
 
       <LeadsAnalytics leads={filtered} />
 
-      <LeadDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSubmit={data => createMutation.mutate(data)}
-        isLoading={createMutation.isPending}
-        currentUser={user}
-        produtos={produtos}
-        administradoras={administradoras}
-        vendedores={vendedores}
-        equipes={equipes}
-      />
-      <EditLeadDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        lead={selectedLead}
-        onSubmit={data => updateMutation.mutate({ id: selectedLead.id, data })}
-        isLoading={updateMutation.isPending}
-        produtos={produtos}
-        administradoras={administradoras}
-        vendedores={vendedores}
-        equipes={equipes}
-      />
+      <LeadDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} produtos={produtos} administradoras={administradoras} vendedores={vendedores} equipes={equipes} />
+      <EditLeadDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} lead={selectedLead} onSubmit={data => updateMutation.mutate({ id: selectedLead.id, data })} isLoading={updateMutation.isPending} produtos={produtos} administradoras={administradoras} vendedores={vendedores} equipes={equipes} />
       <ImportCSVDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} isLoading={importMutation.isPending} />
       <AlertDialog open={Boolean(pendingOpportunityLead)} onOpenChange={(open) => { if (!open) setPendingOpportunityLead(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar criação da oportunidade?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Será criada uma oportunidade para {pendingOpportunityLead?.name || 'este lead'} usando os dados comerciais do lead. O status do lead será atualizado após a criação.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Será criada uma oportunidade para {pendingOpportunityLead?.name || 'este lead'} usando os dados comerciais do lead. O status do lead será atualizado após a criação.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmOpportunityFromLead} disabled={convertToOpportunityMutation.isPending}>
-              {convertToOpportunityMutation.isPending ? 'Criando...' : 'Confirmar criação'}
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmOpportunityFromLead} disabled={convertToOpportunityMutation.isPending}>{convertToOpportunityMutation.isPending ? 'Criando...' : 'Confirmar criação'}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
