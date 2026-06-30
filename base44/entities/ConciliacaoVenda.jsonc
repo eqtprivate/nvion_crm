@@ -131,5 +131,54 @@
     "importacao_vinculada",
     "administradora"
   ],
-  "rls": {}
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
+        },
+        {
+          "user_condition": {
+            "role": "super_admin"
+          }
+        }
+      ]
+    }
+  }
 }
