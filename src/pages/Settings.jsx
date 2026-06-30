@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle, Building2, Download, Save, Trash2 } from 'lucide-react';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
-import { PLANOS } from '@/lib/plans';
+import { usePlanos } from '@/lib/usePlanos';
 
 const UF_LIST = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 
@@ -18,6 +18,8 @@ function MinhaEmpresaTab({ empresa_vinculada }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
+
+  const { data: planos = [] } = usePlanos();
 
   const { data: empresaRecord, isLoading } = useQuery({
     queryKey: ['minhaEmpresa', empresa_vinculada],
@@ -106,7 +108,7 @@ function MinhaEmpresaTab({ empresa_vinculada }) {
             <div><Label>Website</Label><Input value={form.website || ''} onChange={(e) => set('website', e.target.value)} placeholder="https://" /></div>
             <div>
               <Label>Plano contratado</Label>
-              <Input value={form.plano_contratado ? (PLANOS[form.plano_contratado]?.label || form.plano_contratado) : 'Não definido'} readOnly className="bg-gray-50 cursor-default" />
+              <Input value={form.plano_contratado ? (planos.find((p) => p.slug === form.plano_contratado)?.label || form.plano_contratado) : 'Não definido'} readOnly className="bg-gray-50 cursor-default" />
             </div>
             <div className="md:col-span-2"><Label>URL do Logotipo</Label><Input value={form.logo_url || ''} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://..." /></div>
           </div>

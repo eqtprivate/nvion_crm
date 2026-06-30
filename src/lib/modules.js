@@ -4,10 +4,19 @@ export const AVAILABLE_MODULES = [
   'Oportunidades',
   'Contacts',
   'Accounts',
+  'Vendedores',
+  'VendasConsorcio',
+  'Comissoes',
+  'ProdutoConsorcio',
   'EquipeComercial',
+  'Recebiveis',
+  'RegrasComissao',
   'Reports',
   'Settings',
   'GestaoAcessos',
+  'ConciliacaoAdministradora',
+  'GestaoEmpresas',
+  'GestaoPlanos',
 ];
 
 export const MODULE_LABELS = {
@@ -16,10 +25,19 @@ export const MODULE_LABELS = {
   Oportunidades: 'Oportunidades',
   Contacts: 'Clientes',
   Accounts: 'Administradoras',
-  EquipeComercial: 'Equipe e Vendedores',
+  Vendedores: 'Vendedores',
+  VendasConsorcio: 'Vendas de Consórcio',
+  Comissoes: 'Comissões',
+  ProdutoConsorcio: 'Produtos de Consórcio',
+  EquipeComercial: 'Equipe Comercial',
+  Recebiveis: 'Recebíveis',
+  RegrasComissao: 'Regras de Comissão',
   Reports: 'Relatórios Gerenciais',
   Settings: 'Configurações',
   GestaoAcessos: 'Gestão de Acessos',
+  ConciliacaoAdministradora: 'Conciliação Administradora',
+  GestaoEmpresas: 'Gestão de Empresas',
+  GestaoPlanos: 'Gestão de Planos',
 };
 
 export const ROLE_LABELS = {

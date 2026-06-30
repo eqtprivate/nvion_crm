@@ -13,7 +13,7 @@ import { Plus, Search, Building2, MoreVertical } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
-import { PLANOS, PLANO_KEYS } from '@/lib/plans';
+import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
 
 const STATUS_LIST = ['em_implantacao', 'ativa', 'em_analise', 'elegivel_para_credito', 'suspensa', 'inativa'];
 const STATUS_LABEL = {
@@ -48,7 +48,7 @@ function money(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading }) {
+function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading, planos }) {
   const [form, setForm] = useState(emptyForm);
   React.useEffect(() => { setForm(empresa ? { ...emptyForm, ...empresa } : emptyForm); }, [empresa, open]);
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -143,8 +143,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, loading }) {
                 <Select value={form.plano_contratado} onValueChange={(v) => set('plano_contratado', v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
                   <SelectContent>
-                    {PLANO_KEYS.map((k) => (
-                      <SelectItem key={k} value={k}>{PLANOS[k].label} — até {PLANOS[k].max_usuarios === Infinity ? 'ilimitado' : PLANOS[k].max_usuarios} usuários</SelectItem>
+                    {(planos || []).map((p) => (
+                      <SelectItem key={p.slug} value={p.slug}>{p.label} — até {maxUsuarios(p) === Infinity ? 'ilimitado' : maxUsuarios(p)} usuários</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -178,6 +178,8 @@ export default function GestaoEmpresas() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState(null);
+
+  const { data: planos = [] } = usePlanos();
 
   const { data: empresas = [], isLoading } = useQuery({
     queryKey: ['empresas'],
@@ -302,7 +304,7 @@ export default function GestaoEmpresas() {
                   <TableCell className="font-mono text-sm">{emp.cnpj || '-'}</TableCell>
                   <TableCell>{emp.responsavel_principal || '-'}</TableCell>
                   <TableCell>{emp.cidade ? `${emp.cidade}/${emp.estado}` : '-'}</TableCell>
-                  <TableCell>{emp.plano_contratado ? (PLANOS[emp.plano_contratado]?.label || emp.plano_contratado) : '-'}</TableCell>
+                  <TableCell>{emp.plano_contratado ? (planos.find((p) => p.slug === emp.plano_contratado)?.label || emp.plano_contratado) : '-'}</TableCell>
                   <TableCell>{emp.limite_atual_sugerido ? money(emp.limite_atual_sugerido) : '-'}</TableCell>
                   <TableCell>
                     <Badge className={STATUS_COLORS[emp.status] || ''}>{STATUS_LABEL[emp.status] || emp.status}</Badge>
@@ -331,6 +333,7 @@ export default function GestaoEmpresas() {
         empresa={selected}
         onSubmit={handleSubmit}
         loading={createMutation.isPending || updateMutation.isPending}
+        planos={planos}
       />
     </div>
   );

@@ -50,7 +50,7 @@ import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
 import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
 import { ROLE_LABELS } from '@/lib/modules';
-import { PLANOS, PLANO_KEYS, getPlano } from '@/lib/plans';
+import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
 import { useAuth } from '@/lib/AuthContext';
 import { hashPassword } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -126,7 +126,7 @@ function SenhaGeradaDialog({ open, onOpenChange, senha, userName }) {
   );
 }
 
-function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
+function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, planos }) {
   const [form, setForm] = useState({
     razao_social: '', nome_fantasia: '', cnpj: '', responsavel_principal: '',
     email: '', telefone: '', plano_contratado: '', status: 'em_implantacao',
@@ -189,8 +189,8 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
               <Select value={form.plano_contratado} onValueChange={(v) => setForm(p => ({ ...p, plano_contratado: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
                 <SelectContent>
-                  {PLANO_KEYS.map((k) => (
-                    <SelectItem key={k} value={k}>{PLANOS[k].label}</SelectItem>
+                  {(planos || []).map((p) => (
+                    <SelectItem key={p.slug} value={p.slug}>{p.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -235,6 +235,8 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentU
     queryKey: ['empresas'],
     queryFn: () => base44.entities.Empresa.list(),
   });
+
+  const { data: planos = [] } = usePlanos();
 
   // Returns true if the current user is allowed to perform actions on target
   const canManage = (target) => {
@@ -312,11 +314,12 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentU
   const handleCreate = async (data) => {
     const empresaName = isSuperAdmin ? (data.empresa_vinculada || empresa) : empresa;
     const emp = empresas.find((e) => e.razao_social === empresaName || e.nome_fantasia === empresaName);
-    const plano = getPlano(emp?.plano_contratado);
-    if (plano && plano.max_usuarios !== Infinity) {
+    const plano = planos.find((p) => p.slug === emp?.plano_contratado);
+    const maxU = maxUsuarios(plano);
+    if (plano && maxU !== Infinity) {
       const activeCount = todosUsuarios.filter((u) => u.empresa_vinculada === empresaName && u.status !== 'suspenso').length;
-      if (activeCount >= plano.max_usuarios) {
-        toast.error(`Limite de ${plano.max_usuarios} usuários do plano ${plano.label} atingido.`);
+      if (activeCount >= maxU) {
+        toast.error(`Limite de ${maxU} usuários do plano ${plano.label} atingido.`);
         return;
       }
     }
@@ -478,7 +481,7 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentU
         planoModulos={(() => {
           if (!selectedUser || isSuperAdmin) return undefined;
           const emp = empresas.find((e) => e.razao_social === selectedUser.empresa_vinculada || e.nome_fantasia === selectedUser.empresa_vinculada);
-          return getPlano(emp?.plano_contratado)?.modulos;
+          return planos.find((p) => p.slug === emp?.plano_contratado)?.modulos;
         })()}
       />
       <SenhaGeradaDialog open={senhaDialogOpen} onOpenChange={setSenhaDialogOpen} senha={lastCreatedUser.senha} userName={lastCreatedUser.name} />
@@ -630,8 +633,8 @@ function EmpresasTab({ todosUsuarios }) {
         )}
       </div>
 
-      <EmpresaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} />
-      <EmpresaDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} empresa={selectedEmpresa} onSubmit={data => updateMutation.mutate({ id: selectedEmpresa.id, data })} isLoading={updateMutation.isPending} />
+      <EmpresaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} planos={planos} />
+      <EmpresaDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} empresa={selectedEmpresa} onSubmit={data => updateMutation.mutate({ id: selectedEmpresa.id, data })} isLoading={updateMutation.isPending} planos={planos} />
     </div>
   );
 }
