@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoneyInput, PercentInput, formatCurrency } from '@/components/forms/MaskedInputs';
 import { FieldError } from '@/components/forms/FieldError';
 import { validate, vendaConsorcioSchema } from '@/lib/validation';
+import { isRegraNova, calcularComissao, round2 as round2Comissao } from '@/lib/comissao';
 
 const emptyForm = { cliente: '', oportunidade_vinculada: '', vendedor: '', lider: '', equipe: '', administradora: '', produto: '', grupo: '', cota: '', valor_carta: '', data_venda: '', percentual_comissao_prevista: '', percentual_vendedor: '', percentual_lider: '', num_parcelas_comissao: '', prazo_primeira_parcela_dias: '', data_prevista_pagamento: '', observacoes: '', status_operacional: 'lancada', status_conciliacao: 'nao_conciliada', status_financeiro: 'comissao_prevista' };
 const statusConciliacaoLabel = { nao_conciliada: 'Não conciliada', em_conciliacao: 'Em conciliação', conciliada: 'Conciliada', divergente: 'Divergente' };
@@ -125,8 +126,90 @@ export default function VendasConsorcio() {
   const encontrarRegraAtiva = (venda) =>
     regras.find((r) => r.status === 'ativa' && r.produto === venda.produto && (!r.administradora || r.administradora === venda.administradora));
 
-  const gerarComissao = async (vendaId, data) => {
+  const getParcelasRegra = async (regraId) => {
+    if (!regraId) return [];
+    const all = await base44.entities.ParcelasRegraComissao.list();
+    return filterEmpresa(all).filter((p) => p.regra_comissao_vinculada === regraId);
+  };
+
+  // Materializa as ParcelasComissao a partir do cálculo da regra nova.
+  const gerarParcelasComissao = async (comissaoId, vendaId, regra, data, calc) => {
+    const dataBase = data.data_venda || new Date().toISOString().slice(0, 10);
+    await Promise.all(calc.parcelas.map((p) => {
+      const d = new Date(dataBase + 'T00:00:00');
+      d.setDate(d.getDate() + Number(p.dias_apos_venda || 0));
+      return base44.entities.ParcelasComissao.create({
+        empresa_vinculada: empresa,
+        comissao_vinculada: comissaoId,
+        venda_vinculada: vendaId,
+        regra_comissao_vinculada: regra.id,
+        numero_parcela: p.numero_parcela,
+        percentual_parcela: round2Comissao(p.percentual_parcela),
+        valor_parcela_total: p.valor_parcela_total,
+        valor_parcela_vendedor: p.valor_parcela_vendedor,
+        valor_parcela_lider: p.valor_parcela_lider,
+        valor_parcela_empresa: p.valor_parcela_empresa,
+        data_prevista_pagamento: d.toISOString().slice(0, 10),
+        status_parcela: 'prevista',
+        gatilho_parcela: p.gatilho_parcela || regra.gatilho_pagamento || 'venda_criada',
+        estornavel: !!p.estornavel,
+      });
+    }));
+  };
+
+  const deletarParcelasComissaoDaVenda = async (vendaId) => {
+    const all = await base44.entities.ParcelasComissao.list();
+    const vinculadas = filterEmpresa(all).filter((p) => p.venda_vinculada === vendaId);
+    await Promise.all(vinculadas.map((p) => base44.entities.ParcelasComissao.delete(p.id)));
+  };
+
+  const cancelarParcelasComissaoDaVenda = async (vendaId) => {
+    const all = await base44.entities.ParcelasComissao.list();
+    const vinculadas = filterEmpresa(all).filter((p) => p.venda_vinculada === vendaId && !['paga', 'cancelada'].includes(p.status_parcela));
+    await Promise.all(vinculadas.map((p) => base44.entities.ParcelasComissao.update(p.id, { status_parcela: 'cancelada' })));
+  };
+
+  const gerarComissao = async (vendaId, data, { comParcelas = false } = {}) => {
     const regra = encontrarRegraAtiva(data);
+
+    // Caminho novo: regra com cabeçalho flexível → calcula via lib e materializa parcelas.
+    if (regra && isRegraNova(regra)) {
+      const parcelasRegra = regra.tipo_regra_comissao === 'percentual_parcelado_customizado'
+        ? await getParcelasRegra(regra.id)
+        : [];
+      const calc = calcularComissao(regra, data, parcelasRegra);
+      const comissao = await base44.entities.Comissoes.create({
+        empresa_vinculada: empresa,
+        venda_vinculada: vendaId,
+        cliente: data.cliente,
+        administradora: data.administradora,
+        produto: data.produto,
+        vendedor: data.vendedor,
+        lider: data.lider,
+        equipe: data.equipe,
+        valor_carta: Number(data.valor_carta || 0),
+        regra_comissao: regra?.nome_regra || '',
+        regra_comissao_id: regra?.id || '',
+        percentual_base: Number(regra.percentual_total || 0),
+        valor_comissao_total: calc.valorComissaoTotal,
+        percentual_vendedor: Number(regra.percentual_vendedor || 0),
+        valor_comissao_vendedor: calc.totalVendedor,
+        percentual_lider: Number(regra.percentual_lider || 0),
+        valor_comissao_lider: calc.totalLider,
+        percentual_empresa: Number(regra.percentual_empresa || 0),
+        valor_comissao_empresa: calc.totalEmpresa,
+        valor_comissao_confirmada: 0,
+        quantidade_parcelas: calc.parcelas.length,
+        tem_parcelas: comParcelas && calc.parcelas.length > 0,
+        data_prevista_pagamento: data.data_prevista_pagamento,
+        status_comissao: 'prevista',
+        origem: 'venda',
+      });
+      if (comParcelas) await gerarParcelasComissao(comissao.id, vendaId, regra, data, calc);
+      return comissao;
+    }
+
+    // Caminho legado (regra simples): mantém comportamento existente.
     const valorCarta = Number(data.valor_carta || 0);
     const percentualBase = fallbackNumber(data.percentual_comissao_prevista, regra?.percentual_base);
     const valorComissaoTotal = fallbackNumber(data.valor_comissao_prevista, calcComissao(valorCarta, percentualBase));
@@ -255,8 +338,38 @@ export default function VendasConsorcio() {
   };
 
   const atualizarComissao = async (vendaId, data) => {
+    const regra = encontrarRegraAtiva(data);
     const todas = await base44.entities.Comissoes.list('-created_date');
     const existente = filterEmpresa(todas).find((c) => c.venda_vinculada === vendaId);
+
+    // Caminho novo: recalcula totais e regenera as parcelas materializadas.
+    if (regra && isRegraNova(regra)) {
+      const parcelasRegra = regra.tipo_regra_comissao === 'percentual_parcelado_customizado'
+        ? await getParcelasRegra(regra.id)
+        : [];
+      const calc = calcularComissao(regra, data, parcelasRegra);
+      const header = {
+        cliente: data.cliente, administradora: data.administradora, produto: data.produto,
+        vendedor: data.vendedor, lider: data.lider, equipe: data.equipe,
+        valor_carta: Number(data.valor_carta || 0),
+        regra_comissao: regra.nome_regra || '', regra_comissao_id: regra.id || '',
+        percentual_base: Number(regra.percentual_total || 0),
+        valor_comissao_total: calc.valorComissaoTotal,
+        percentual_vendedor: Number(regra.percentual_vendedor || 0), valor_comissao_vendedor: calc.totalVendedor,
+        percentual_lider: Number(regra.percentual_lider || 0), valor_comissao_lider: calc.totalLider,
+        percentual_empresa: Number(regra.percentual_empresa || 0), valor_comissao_empresa: calc.totalEmpresa,
+        quantidade_parcelas: calc.parcelas.length, tem_parcelas: calc.parcelas.length > 0,
+        data_prevista_pagamento: data.data_prevista_pagamento,
+      };
+      await deletarParcelasComissaoDaVenda(vendaId);
+      const comissaoId = existente
+        ? (await base44.entities.Comissoes.update(existente.id, header), existente.id)
+        : (await base44.entities.Comissoes.create({ ...header, empresa_vinculada: empresa, venda_vinculada: vendaId, valor_comissao_confirmada: 0, status_comissao: 'prevista', origem: 'venda' })).id;
+      await gerarParcelasComissao(comissaoId, vendaId, regra, data, calc);
+      return;
+    }
+
+    // Caminho legado.
     const payload = {
       cliente: data.cliente, administradora: data.administradora, produto: data.produto,
       vendedor: data.vendedor, lider: data.lider, equipe: data.equipe, valor_carta: data.valor_carta,
@@ -306,7 +419,7 @@ export default function VendasConsorcio() {
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const venda = await base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
-      const comissao = await gerarComissao(venda.id, data);
+      const comissao = await gerarComissao(venda.id, data, { comParcelas: true });
       await gerarRecebiveis(venda.id, comissao?.id, data);
       await concluirOportunidadeVinculada(data);
       return venda;
@@ -328,6 +441,7 @@ export default function VendasConsorcio() {
         status_financeiro: 'comissao_cancelada',
       });
       await cancelarComissoesDaVenda(venda.id);
+      await cancelarParcelasComissaoDaVenda(venda.id);
       await cancelarRecebiveisDaVenda(venda.id);
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['recebiveis', empresa] }); },
@@ -335,6 +449,7 @@ export default function VendasConsorcio() {
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       await cancelarComissoesDaVenda(id);
+      await deletarParcelasComissaoDaVenda(id);
       await cancelarRecebiveisDaVenda(id);
       return base44.entities.VendasConsorcio.delete(id);
     },
