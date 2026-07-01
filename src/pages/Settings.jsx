@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
+import { assertSupabaseConfigured } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -110,41 +111,104 @@ function CentralTab({ user, showEmpresaTab }) {
   );
 }
 
-function MinhaEmpresaTab({ empresa_vinculada }) {
+function normalizeCompanyName(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function mapSupabaseEmpresaToForm(empresa) {
+  return {
+    id: empresa.id,
+    source: 'supabase',
+    razao_social: empresa.nome || '',
+    nome_fantasia: empresa.nome || '',
+    cnpj: empresa.cnpj || '',
+    status: empresa.status || '',
+    plano_contratado: empresa.plano || '',
+  };
+}
+
+function mapBase44EmpresaToForm(empresa) {
+  return { ...empresa, source: 'base44' };
+}
+
+function MinhaEmpresaTab({ user }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
+  const empresa_vinculada = user?.empresa_vinculada;
+  const empresa_id = user?.empresa_id;
 
   const { data: planos = [] } = usePlanos();
 
   const { data: empresaRecord, isLoading } = useQuery({
-    queryKey: ['minhaEmpresa', empresa_vinculada],
+    queryKey: ['minhaEmpresa', empresa_id, empresa_vinculada],
     queryFn: async () => {
+      if (empresa_id) {
+        const client = assertSupabaseConfigured();
+        const { data, error } = await client
+          .from('empresas')
+          .select('id, nome, cnpj, status, plano')
+          .eq('id', empresa_id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) return mapSupabaseEmpresaToForm(data);
+      }
+
       const all = await base44.entities.Empresa.list();
-      return all.find((e) => e.razao_social === empresa_vinculada || e.nome_fantasia === empresa_vinculada) || null;
+      const linkedName = normalizeCompanyName(empresa_vinculada);
+      const legacyRecord = all.find((e) =>
+        normalizeCompanyName(e.razao_social) === linkedName ||
+        normalizeCompanyName(e.nome_fantasia) === linkedName
+      );
+      return legacyRecord ? mapBase44EmpresaToForm(legacyRecord) : null;
     },
-    enabled: Boolean(empresa_vinculada),
+    enabled: Boolean(empresa_id || empresa_vinculada),
   });
 
   const { data: usuariosEmpresa = [] } = useQuery({
-    queryKey: ['usuariosMinhaEmpresa', empresa_vinculada],
+    queryKey: ['usuariosMinhaEmpresa', empresa_id, empresa_vinculada],
     queryFn: async () => {
+      if (empresa_id) {
+        const client = assertSupabaseConfigured();
+        const { data, error } = await client
+          .from('profiles')
+          .select('id, display_name, email')
+          .eq('empresa_id', empresa_id)
+          .order('display_name', { ascending: true });
+        if (error) throw error;
+        return data || [];
+      }
+
       const all = await base44.entities.UsuarioAcesso.list();
       return all.filter((u) => u.empresa_vinculada === empresa_vinculada);
     },
-    enabled: Boolean(empresa_vinculada),
+    enabled: Boolean(empresa_id || empresa_vinculada),
   });
 
   useEffect(() => {
-    if (empresaRecord && !form) {
+    if (empresaRecord) {
       setForm({ ...empresaRecord });
     }
-  }, [empresaRecord]);
+  }, [empresaRecord?.id, empresaRecord?.source]);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Empresa.update(id, data),
+    mutationFn: async ({ id, data, source }) => {
+      if (source === 'supabase') {
+        const client = assertSupabaseConfigured();
+        const payload = {
+          nome: String(data.nome_fantasia || data.razao_social || '').trim(),
+          cnpj: String(data.cnpj || '').trim() || null,
+        };
+        const { error } = await client.from('empresas').update(payload).eq('id', id);
+        if (error) throw error;
+        return;
+      }
+
+      return base44.entities.Empresa.update(id, data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['minhaEmpresa', empresa_vinculada] });
+      queryClient.invalidateQueries({ queryKey: ['minhaEmpresa', empresa_id, empresa_vinculada] });
+      queryClient.invalidateQueries({ queryKey: ['gestaoEmpresas'] });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     },
@@ -154,7 +218,7 @@ function MinhaEmpresaTab({ empresa_vinculada }) {
 
   const handleSave = () => {
     if (!form?.id) return;
-    updateMutation.mutate({ id: form.id, data: form });
+    updateMutation.mutate({ id: form.id, data: form, source: form.source });
   };
 
   if (isLoading) return <p className="text-gray-500 py-8 text-center">Carregando dados da empresa...</p>;
@@ -191,7 +255,7 @@ function MinhaEmpresaTab({ empresa_vinculada }) {
                   <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
                   <SelectContent>
                     {usuariosEmpresa.map((u) => (
-                      <SelectItem key={u.id} value={u.display_name}>{u.display_name}</SelectItem>
+                      <SelectItem key={u.id} value={u.display_name || u.email}>{u.display_name || u.email}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -362,7 +426,7 @@ export default function Settings() {
 
           {showEmpresaTab && (
             <TabsContent value="empresa">
-              <MinhaEmpresaTab empresa_vinculada={empresa} />
+              <MinhaEmpresaTab user={user} />
             </TabsContent>
           )}
 
