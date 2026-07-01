@@ -52,6 +52,7 @@ import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
 import { CpfCnpjInput } from '@/components/forms/MaskedInputs';
 import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
 import { useAuth } from '@/lib/AuthContext';
+import { getPasswordRecoveryRedirectUrl } from '@/lib/passwordRecovery';
 import { toast } from 'sonner';
 
 const ROLE_COLORS = {
@@ -500,7 +501,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
   const resetPasswordMutation = useMutation({
     mutationFn: async (target) => {
       const supabase = assertSupabaseConfigured();
-      const { error } = await supabase.auth.resetPasswordForEmail(target.email, { redirectTo: window.location.origin });
+      const { error } = await supabase.auth.resetPasswordForEmail(target.email, { redirectTo: getPasswordRecoveryRedirectUrl() });
       if (error) throw error;
     },
     onSuccess: () => toast.success('E-mail de recuperação enviado pelo Supabase Auth.'),

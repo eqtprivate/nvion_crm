@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Eye, EyeOff, Lock, Mail, KeyRound, CheckCircle } from 'lucide-react';
+import { getPasswordRecoveryRedirectUrl } from '@/lib/passwordRecovery';
 
 const LOGIN_BUILD = 'supabase-auth-2026-06-30-v1';
 
@@ -56,7 +57,7 @@ function EsqueciSenhaDialog({ open, onOpenChange }) {
       const client = assertSupabaseConfigured();
       const emailNorm = normalizeEmail(emailInput);
       const { error: resetError } = await client.auth.resetPasswordForEmail(emailNorm, {
-        redirectTo: window.location.origin,
+        redirectTo: getPasswordRecoveryRedirectUrl(),
       });
 
       if (resetError) throw resetError;
