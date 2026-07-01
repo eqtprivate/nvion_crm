@@ -1,109 +1,23 @@
 {
   "name": "ParcelasRegraComissao",
+  "type": "object",
   "properties": {
-    "dias_apos_confirmacao": {
-      "description": "Dias apos a confirmacao/conciliacao para vencimento",
-      "type": "number"
-    },
-    "dias_apos_venda": {
-      "description": "Dias apos a venda para vencimento desta parcela",
-      "type": "number"
-    },
-    "empresa_vinculada": {
-      "description": "Empresa vinculada",
-      "type": "string"
-    },
-    "estornavel": {
-      "default": false,
-      "description": "Indica se esta parcela e passivel de estorno",
-      "type": "boolean"
-    },
-    "gatilho_parcela": {
-      "default": "venda_criada",
-      "description": "Gatilho que libera esta parcela",
-      "enum": [
-        "venda_criada",
-        "venda_confirmada",
-        "conciliacao_confirmada",
-        "pagamento_administradora",
-        "pagamento_cliente"
-      ],
-      "type": "string"
-    },
-    "numero_parcela": {
-      "description": "Numero da parcela (1, 2, 3...)",
-      "type": "number"
-    },
-    "observacoes": {
-      "description": "Observacoes",
-      "type": "string"
-    },
-    "percentual_parcela": {
-      "description": "Percentual desta parcela sobre a base de calculo",
-      "type": "number"
-    },
-    "regra_comissao_vinculada": {
-      "description": "ID da regra de comissao vinculada",
-      "type": "string"
-    },
-    "valor_fixo_parcela": {
-      "description": "Valor fixo desta parcela (para regras de valor fixo)",
-      "type": "number"
-    }
+    "empresa_vinculada": { "type": "string", "description": "Empresa vinculada" },
+    "regra_comissao_vinculada": { "type": "string", "description": "ID da regra de comissao vinculada" },
+    "numero_parcela": { "type": "number", "description": "Numero da parcela (1, 2, 3...)" },
+    "percentual_parcela": { "type": "number", "description": "Percentual desta parcela sobre a base de calculo" },
+    "valor_fixo_parcela": { "type": "number", "description": "Valor fixo desta parcela (para regras de valor fixo)" },
+    "dias_apos_venda": { "type": "number", "description": "Dias apos a venda para vencimento desta parcela" },
+    "dias_apos_confirmacao": { "type": "number", "description": "Dias apos a confirmacao/conciliacao para vencimento" },
+    "gatilho_parcela": { "type": "string", "enum": ["venda_criada", "venda_confirmada", "conciliacao_confirmada", "pagamento_administradora", "pagamento_cliente"], "default": "venda_criada", "description": "Gatilho que libera esta parcela" },
+    "estornavel": { "type": "boolean", "default": false, "description": "Indica se esta parcela e passivel de estorno" },
+    "observacoes": { "type": "string", "description": "Observacoes" }
   },
-  "required": [
-    "regra_comissao_vinculada",
-    "numero_parcela"
-  ],
+  "required": ["regra_comissao_vinculada", "numero_parcela"],
   "rls": {
-    "create": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    },
-    "delete": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    },
-    "read": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    }
-  },
-  "type": "object"
+    "create": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] },
+    "read": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] },
+    "update": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] },
+    "delete": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] }
+  }
 }

@@ -1,158 +1,41 @@
 {
-  "properties": {
-    "administradora": {
-      "title": "Administradora",
-      "type": "string"
-    },
-    "cliente": {
-      "title": "Cliente",
-      "type": "string"
-    },
-    "data_confirmacao": {
-      "format": "date",
-      "title": "Data Confirma\u00e7\u00e3o",
-      "type": "string"
-    },
-    "data_pagamento": {
-      "format": "date",
-      "title": "Data Pagamento",
-      "type": "string"
-    },
-    "data_prevista_pagamento": {
-      "format": "date",
-      "title": "Data Prevista Pagamento",
-      "type": "string"
-    },
-    "empresa_vinculada": {
-      "title": "Empresa",
-      "type": "string"
-    },
-    "equipe": {
-      "title": "Equipe",
-      "type": "string"
-    },
-    "lider": {
-      "title": "L\u00edder",
-      "type": "string"
-    },
-    "observacoes": {
-      "title": "Observa\u00e7\u00f5es",
-      "type": "string"
-    },
-    "origem": {
-      "title": "Origem",
-      "type": "string"
-    },
-    "percentual_base": {
-      "title": "Percentual Base (%)",
-      "type": "number"
-    },
-    "percentual_lider": {
-      "title": "Percentual L\u00edder (%)",
-      "type": "number"
-    },
-    "percentual_vendedor": {
-      "title": "Percentual Vendedor (%)",
-      "type": "number"
-    },
-    "produto": {
-      "title": "Produto",
-      "type": "string"
-    },
-    "regra_comissao": {
-      "title": "Regra de Comiss\u00e3o",
-      "type": "string"
-    },
-    "status_comissao": {
-      "default": "prevista",
-      "enum": [
-        "prevista",
-        "confirmada",
-        "liberada",
-        "paga",
-        "bloqueada",
-        "estornada",
-        "cancelada"
-      ],
-      "title": "Status",
-      "type": "string"
-    },
-    "valor_carta": {
-      "title": "Valor da Carta",
-      "type": "number"
-    },
-    "valor_comissao_lider": {
-      "title": "Comiss\u00e3o L\u00edder",
-      "type": "number"
-    },
-    "valor_comissao_total": {
-      "title": "Comiss\u00e3o Total",
-      "type": "number"
-    },
-    "valor_comissao_vendedor": {
-      "title": "Comiss\u00e3o Vendedor",
-      "type": "number"
-    },
-    "venda_vinculada": {
-      "title": "ID da Venda",
-      "type": "string"
-    },
-    "vendedor": {
-      "title": "Vendedor",
-      "type": "string"
-    }
-  },
-  "type": "object",
-  "required": [],
   "name": "Comissoes",
+  "type": "object",
+  "properties": {
+    "empresa_vinculada": { "title": "Empresa", "type": "string" },
+    "venda_vinculada": { "title": "ID da Venda", "type": "string" },
+    "regra_comissao": { "title": "Regra de Comissão", "type": "string" },
+    "regra_comissao_id": { "title": "ID da Regra de Comissão", "type": "string" },
+    "cliente": { "title": "Cliente", "type": "string" },
+    "administradora": { "title": "Administradora", "type": "string" },
+    "produto": { "title": "Produto", "type": "string" },
+    "vendedor": { "title": "Vendedor", "type": "string" },
+    "lider": { "title": "Líder", "type": "string" },
+    "equipe": { "title": "Equipe", "type": "string" },
+    "origem": { "title": "Origem", "type": "string" },
+    "valor_carta": { "title": "Valor da Carta", "type": "number" },
+    "percentual_base": { "title": "Percentual Base (%)", "type": "number" },
+    "percentual_vendedor": { "title": "Percentual Vendedor (%)", "type": "number" },
+    "percentual_lider": { "title": "Percentual Líder (%)", "type": "number" },
+    "percentual_empresa": { "title": "Percentual Empresa (%)", "type": "number" },
+    "valor_comissao_total": { "title": "Comissão Total", "type": "number" },
+    "valor_comissao_vendedor": { "title": "Comissão Vendedor", "type": "number" },
+    "valor_comissao_lider": { "title": "Comissão Líder", "type": "number" },
+    "valor_comissao_empresa": { "title": "Comissão Empresa", "type": "number" },
+    "valor_comissao_confirmada": { "title": "Comissão Confirmada Total", "type": "number" },
+    "quantidade_parcelas": { "title": "Quantidade de Parcelas", "type": "number" },
+    "tem_parcelas": { "title": "Possui parcelas materializadas", "type": "boolean" },
+    "data_prevista_pagamento": { "format": "date", "title": "Data Prevista Pagamento", "type": "string" },
+    "data_confirmacao": { "format": "date", "title": "Data Confirmação", "type": "string" },
+    "data_pagamento": { "format": "date", "title": "Data Pagamento", "type": "string" },
+    "status_comissao": { "default": "prevista", "enum": ["prevista", "confirmada", "liberada", "paga", "bloqueada", "estornada", "cancelada"], "title": "Status", "type": "string" },
+    "observacoes": { "title": "Observações", "type": "string" }
+  },
+  "required": [],
   "rls": {
-    "create": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    },
-    "read": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    },
-    "delete": {
-      "$or": [
-        {
-          "data.empresa_vinculada": "{{user.data.empresa_vinculada}}"
-        },
-        {
-          "user_condition": {
-            "role": "super_admin"
-          }
-        }
-      ]
-    }
+    "create": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] },
+    "read": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] },
+    "update": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] },
+    "delete": { "$or": [{ "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" }, { "user_condition": { "role": "super_admin" } }] }
   }
 }
