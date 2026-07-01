@@ -128,6 +128,7 @@ async function fetchProfilesWithModules() {
 
 function TemporaryPasswordDialog({ open, onOpenChange, payload }) {
   const [copied, setCopied] = useState(false);
+  const isReset = payload?.mode === 'reset';
 
   const handleCopy = async () => {
     if (!payload?.temporary_password) return;
@@ -142,12 +143,16 @@ function TemporaryPasswordDialog({ open, onOpenChange, payload }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-primary" />
-            Acesso criado
+            {isReset ? 'Nova senha temporária' : 'Acesso criado'}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <p className="text-sm text-gray-600">
-            Usuário <strong>{payload?.display_name}</strong> criado no Supabase Auth e no perfil operacional do NVION.
+            {isReset ? (
+              <>Nova senha temporária gerada para <strong>{payload?.display_name}</strong>.</>
+            ) : (
+              <>Usuário <strong>{payload?.display_name}</strong> criado no Supabase Auth e no perfil operacional do NVION.</>
+            )}
           </p>
           <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3 text-sm">
             Copie a senha temporária agora. Ela é exibida apenas nesta confirmação.
@@ -159,7 +164,7 @@ function TemporaryPasswordDialog({ open, onOpenChange, payload }) {
             </Button>
           </div>
           <p className="text-xs text-gray-500">
-            Oriente o usuário a acessar o NVION com esta senha e depois usar recuperação/troca de senha pelo Supabase Auth.
+            Oriente o usuário a acessar o NVION com esta senha e depois alterar a senha no perfil.
           </p>
         </div>
         <DialogFooter>
@@ -500,6 +505,30 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
     onError: (error) => toast.error(`Erro ao enviar recuperação: ${error?.message || 'sem detalhe'}`),
   });
 
+  const resetTemporaryPasswordMutation = useMutation({
+    mutationFn: async (target) => {
+      const supabase = assertSupabaseConfigured();
+      const { data: result, error } = await supabase.functions.invoke('admin-reset-temp-password', {
+        body: { user_id: target.id },
+      });
+
+      if (error) throw error;
+      if (result?.error) throw new Error(result.detail || result.error);
+      return result;
+    },
+    onSuccess: (result) => {
+      setCreatedAccess({
+        mode: 'reset',
+        display_name: result?.display_name,
+        email: result?.email,
+        temporary_password: result?.temporary_password,
+      });
+      setPasswordDialogOpen(true);
+      toast.success('Nova senha temporária gerada.');
+    },
+    onError: (error) => toast.error(`Erro ao gerar senha temporária: ${error?.message || 'sem detalhe'}`),
+  });
+
   const toggleStatus = (target) => {
     if (target.id === currentUser?.id) {
       toast.error('Você não pode suspender o próprio usuário logado.');
@@ -600,6 +629,9 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => resetPasswordMutation.mutate(target)}>
                               <Mail className="w-4 h-4 mr-2" /> Enviar recuperação de senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => resetTemporaryPasswordMutation.mutate(target)} disabled={target.id === currentUser?.id}>
+                              <KeyRound className="w-4 h-4 mr-2" /> Gerar senha temporária
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleStatus(target)} disabled={target.id === currentUser?.id}>
                               {target.status === 'ativo'
