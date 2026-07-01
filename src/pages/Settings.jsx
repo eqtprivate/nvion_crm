@@ -11,12 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, BarChart3, Building2, CreditCard, Database, Download, Megaphone, Package, Percent, Save, ShieldCheck, SlidersHorizontal, Target, Trash2, UserRound, Users } from 'lucide-react';
+import { AlertCircle, BarChart3, Building2, CreditCard, Database, Download, Megaphone, Package, Percent, Save, ShieldCheck, SlidersHorizontal, Target, Trash2, Upload, UserRound, Users } from 'lucide-react';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
 import { usePlanos } from '@/lib/usePlanos';
 import { isAdminRole } from '@/lib/modules';
 
 const UF_LIST = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+const COMPANY_ASSETS_BUCKET = 'company-assets';
+const LOGO_MAX_SIZE_BYTES = 2 * 1024 * 1024;
+const LOGO_ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 function SettingsShortcutCard({ item }) {
   const openButton = item.tab ? (
@@ -132,6 +135,7 @@ function mapSupabaseEmpresaToForm(empresa) {
     cnpj: empresa.cnpj || '',
     status: empresa.status || '',
     plano_contratado: empresa.plano || '',
+    logo_url: empresa.logo_url || '',
   };
 }
 
@@ -143,6 +147,7 @@ function MinhaEmpresaTab({ user }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const empresa_vinculada = user?.empresa_vinculada;
   const empresa_id = user?.empresa_id;
 
@@ -155,7 +160,7 @@ function MinhaEmpresaTab({ user }) {
         const client = assertSupabaseConfigured();
         const { data, error } = await client
           .from('empresas')
-          .select('id, nome, cnpj, status, plano')
+          .select('id, nome, cnpj, status, plano, logo_url')
           .eq('id', empresa_id)
           .maybeSingle();
         if (error) throw error;
@@ -206,6 +211,7 @@ function MinhaEmpresaTab({ user }) {
         const payload = {
           nome: String(data.nome_fantasia || data.razao_social || '').trim(),
           cnpj: String(data.cnpj || '').trim() || null,
+          logo_url: String(data.logo_url || '').trim() || null,
         };
         const { error } = await client.from('empresas').update(payload).eq('id', id);
         if (error) throw error;
@@ -229,6 +235,59 @@ function MinhaEmpresaTab({ user }) {
     updateMutation.mutate({ id: form.id, data: form, source: form.source });
   };
 
+  const uploadLogoMutation = useMutation({
+    mutationFn: async (file) => {
+      if (!form?.id || form.source !== 'supabase') {
+        throw new Error('Upload de logomarca disponivel apenas para empresas vinculadas ao Supabase.');
+      }
+      if (!LOGO_ALLOWED_TYPES.includes(file.type)) {
+        throw new Error('Envie uma imagem PNG, JPG ou WebP.');
+      }
+      if (file.size > LOGO_MAX_SIZE_BYTES) {
+        throw new Error('A logomarca deve ter no maximo 2 MB.');
+      }
+
+      const client = assertSupabaseConfigured();
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const path = `empresas/${form.id}/logo-${Date.now()}.${extension}`;
+      const { error: uploadError } = await client.storage
+        .from(COMPANY_ASSETS_BUCKET)
+        .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = client.storage
+        .from(COMPANY_ASSETS_BUCKET)
+        .getPublicUrl(path);
+      const logoUrl = publicUrlData?.publicUrl;
+      if (!logoUrl) throw new Error('Nao foi possivel gerar URL publica da logomarca.');
+
+      const { error: updateError } = await client
+        .from('empresas')
+        .update({ logo_url: logoUrl })
+        .eq('id', form.id);
+      if (updateError) throw updateError;
+
+      return logoUrl;
+    },
+    onSuccess: (logoUrl) => {
+      setUploadError('');
+      setForm((current) => ({ ...current, logo_url: logoUrl }));
+      queryClient.invalidateQueries({ queryKey: ['minhaEmpresa', empresa_id, empresa_vinculada] });
+      queryClient.invalidateQueries({ queryKey: ['gestaoEmpresas'] });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    },
+    onError: (error) => setUploadError(error.message || 'Erro ao enviar logomarca.'),
+  });
+
+  const handleLogoUpload = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setUploadError('');
+    uploadLogoMutation.mutate(file);
+  };
+
   if (isLoading) return <p className="text-gray-500 py-8 text-center">Carregando dados da empresa...</p>;
   if (!form) return (
     <Card className="border-yellow-200 bg-yellow-50">
@@ -247,11 +306,29 @@ function MinhaEmpresaTab({ user }) {
           <CardDescription>Razão social, CNPJ e dados de contato</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {form.logo_url && (
-            <div className="mb-2">
-              <img src={form.logo_url} alt="Logo" className="h-16 object-contain rounded border p-1" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border bg-gray-50 p-4">
+            <div className="h-20 w-32 rounded border bg-white p-2 flex items-center justify-center">
+              {form.logo_url ? (
+                <img src={form.logo_url} alt="Logo" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <Building2 className="w-8 h-8 text-gray-300" />
+              )}
             </div>
-          )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">Logomarca da empresa</p>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG ou WebP ate 2 MB.</p>
+              {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
+            </div>
+            <div>
+              <input id="company-logo-upload" type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoUpload} disabled={uploadLogoMutation.isPending || form.source !== 'supabase'} />
+              <Button asChild variant="outline" disabled={uploadLogoMutation.isPending || form.source !== 'supabase'}>
+                <label htmlFor="company-logo-upload" className="cursor-pointer">
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploadLogoMutation.isPending ? 'Enviando...' : 'Enviar logomarca'}
+                </label>
+              </Button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><Label>Razão Social</Label><Input value={form.razao_social || ''} onChange={(e) => set('razao_social', e.target.value)} /></div>
             <div><Label>Nome Fantasia</Label><Input value={form.nome_fantasia || ''} onChange={(e) => set('nome_fantasia', e.target.value)} /></div>
