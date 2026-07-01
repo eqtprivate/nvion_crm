@@ -1,4 +1,5 @@
 import Accounts from './pages/Accounts';
+import Campaigns from './pages/Campanhas';
 import Contacts from './pages/Contacts';
 import Dashboard from './pages/Dashboard';
 import DadosTeste from './pages/DadosTeste';
@@ -19,6 +20,7 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
   Accounts,
+  Campanhas: Campaigns,
   Contacts,
   Dashboard,
   DadosTeste,
