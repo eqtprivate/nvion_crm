@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
+import { assertSupabaseConfigured } from '@/lib/supabaseClient';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
+import { ROLE_LABELS } from '@/lib/modules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +33,36 @@ function isMissingNumber(value) {
   return value === null || value === undefined || value === '' || Number(value || 0) === 0;
 }
 
-function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, onSubmit, loading }) {
+const ROLES_ACIMA_DE_VENDEDOR = new Set([
+  'super_admin',
+  'admin_empresa',
+  'gestor_comercial',
+  'lider_comercial',
+  'gestor_financeiro',
+  'analista_plataforma',
+]);
+
+function uniqueByName(items) {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = String(item.nome || '').trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function mergeUniqueById(items) {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = item.id || `${item.cliente || ''}:${item.vendedor || ''}:${item.valor_carta || ''}:${item.data_venda || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equipes, regras, responsaveis = [], onSubmit, loading }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   React.useEffect(() => { setForm(venda ? { ...emptyForm, ...venda } : emptyForm); setErrors({}); }, [venda, open]);
@@ -39,6 +70,12 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
   const valorComissao = calcComissao(form.valor_carta, form.percentual_comissao_prevista);
   const valorVendedor = calcComissao(valorComissao, form.percentual_vendedor);
   const valorLider = calcComissao(valorComissao, form.percentual_lider);
+  const responsavelOptions = useMemo(() => {
+    if (form.vendedor && !responsaveis.some((item) => item.nome === form.vendedor)) {
+      return [{ nome: form.vendedor, origem: 'valor atual' }, ...responsaveis];
+    }
+    return responsaveis;
+  }, [form.vendedor, responsaveis]);
 
   const applyRegra = (nomeProduto, administradora, currentForm) => {
     const regra = regras.find(r => r.status === 'ativa' && r.produto === nomeProduto && (!r.administradora || r.administradora === administradora));
@@ -78,7 +115,7 @@ function VendaDialog({ open, onOpenChange, venda, oportunidades, produtos, equip
             <div><Label>Produto</Label><Select value={form.produto || ''} onValueChange={handleProduto}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{produtos.map((item) => <SelectItem key={item.id} value={item.nome_produto}>{item.nome_produto}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Administradora</Label><Input value={form.administradora || ''} onChange={(e) => setForm({ ...form, administradora: e.target.value })} /></div>
             <div><Label>Equipe</Label><Select value={form.equipe || ''} onValueChange={(value) => setForm({ ...form, equipe: value })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{equipes.map((item) => <SelectItem key={item.id} value={item.nome_equipe}>{item.nome_equipe}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Vendedor</Label><Input value={form.vendedor || ''} onChange={(e) => setForm({ ...form, vendedor: e.target.value })} /></div>
+            <div><Label>Responsável pela venda</Label><Select value={form.vendedor || ''} onValueChange={(value) => setForm({ ...form, vendedor: value })}><SelectTrigger><SelectValue placeholder="Selecione o responsável" /></SelectTrigger><SelectContent>{responsavelOptions.map((item) => <SelectItem key={`${item.origem}-${item.nome}`} value={item.nome}>{item.nome}{item.origem ? ` - ${item.origem}` : ''}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Líder</Label><Input value={form.lider || ''} onChange={(e) => setForm({ ...form, lider: e.target.value })} /></div>
             <div><Label>Valor da carta *</Label><MoneyInput value={form.valor_carta || ''} onChange={(value) => setForm({ ...form, valor_carta: value })} /><FieldError message={errors.valor_carta} /></div>
             <div><Label>Grupo</Label><Input value={form.grupo || ''} onChange={(e) => setForm({ ...form, grupo: e.target.value })} /></div>
@@ -113,15 +150,46 @@ export default function VendasConsorcio() {
   const filterEmpresa = (items) => items.filter((item) => item.empresa_vinculada === empresa);
 
   const { data: allVendas = [], isLoading } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const vendas = useMemo(
-    () => applyAccessFilter(allVendas, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }),
-    [allVendas, user, teamMembers]
-  );
+  const vendas = useMemo(() => {
+    const filtradas = applyAccessFilter(allVendas, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers });
+    if (user?.role !== 'lider_comercial' || !user?.display_name) return filtradas;
+    const propriasComoResponsavel = allVendas.filter((item) =>
+      item.empresa_vinculada === empresa && item.vendedor === user.display_name
+    );
+    return mergeUniqueById([...filtradas, ...propriasComoResponsavel]);
+  }, [allVendas, empresa, user, teamMembers]);
   const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await base44.entities.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
   const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
   const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
   const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
   const { data: comissoes = [], isLoading: isLoadingComissoes } = useQuery({ queryKey: ['comissoes', empresa], queryFn: async () => filterEmpresa(await base44.entities.Comissoes.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendedoresCadastrados = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: perfisResponsaveis = [] } = useQuery({
+    queryKey: ['profilesResponsaveisVenda', empresa],
+    queryFn: async () => {
+      const supabase = assertSupabaseConfigured();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, email, role, status, empresa_vinculada')
+        .eq('empresa_vinculada', empresa)
+        .eq('status', 'ativo');
+      if (error) {
+        console.warn('Nao foi possivel carregar perfis para responsavel da venda:', error);
+        return [];
+      }
+      return (data || []).filter((profile) => ROLES_ACIMA_DE_VENDEDOR.has(profile.role));
+    },
+    enabled: Boolean(empresa),
+  });
+  const responsaveisVenda = useMemo(() => uniqueByName([
+    ...vendedoresCadastrados
+      .filter((vendedor) => !['inativo', 'suspenso'].includes(vendedor.status))
+      .map((vendedor) => ({ nome: vendedor.nome, origem: 'vendedor' })),
+    ...perfisResponsaveis.map((profile) => ({
+      nome: profile.display_name || profile.email,
+      origem: ROLE_LABELS[profile.role] || profile.role,
+    })),
+  ]).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')), [vendedoresCadastrados, perfisResponsaveis]);
 
   const encontrarRegraAtiva = (venda) =>
     regras.find((r) => r.status === 'ativa' && r.produto === venda.produto && (!r.administradora || r.administradora === venda.administradora));
@@ -466,7 +534,7 @@ export default function VendasConsorcio() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"><div><h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vendas de Consórcio</h1><p className="text-gray-500 mt-1">Registro das vendas realizadas e comissão prevista</p></div><div className="flex gap-2"><Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}><Download className="w-4 h-4 mr-2" />Exportar CSV</Button><Button onClick={() => { setSelectedVenda(null); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nova Venda</Button></div></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendas</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Valor Total de Cartas</p><p className="text-2xl font-bold text-blue-700">{money(kpis.valorCartas)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Prevista</p><p className="text-2xl font-bold text-green-700">{money(kpis.comissaoPrevista)}</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-sm text-gray-500">Repasse Vendedores</p><p className="text-2xl font-bold text-primary">{money(kpis.comissaoVendedores)}</p></CardContent></Card></div>
       <div className="bg-white rounded-lg shadow"><div className="p-4 border-b"><div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar vendas..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" /></div></div><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Produto</TableHead><TableHead>Administradora</TableHead><TableHead>Vendedor</TableHead><TableHead>Valor Carta</TableHead><TableHead>Comissão</TableHead><TableHead>Status</TableHead><TableHead>Conciliação</TableHead><TableHead></TableHead></TableRow></TableHeader><TableBody>{isLoading ? <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando vendas...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500"><ReceiptText className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma venda encontrada</TableCell></TableRow> : filtered.map((venda) => <TableRow key={venda.id}><TableCell>{venda.cliente}</TableCell><TableCell>{venda.produto || '-'}</TableCell><TableCell>{venda.administradora || '-'}</TableCell><TableCell>{venda.vendedor || '-'}</TableCell><TableCell>{money(venda.valor_carta)}</TableCell><TableCell>{money(venda.valor_comissao_prevista)}</TableCell><TableCell><Badge variant={venda.status_operacional === 'cancelada' ? 'secondary' : 'default'}>{statusOperacionalLabel[venda.status_operacional] || venda.status_operacional || '-'}</Badge></TableCell><TableCell><Badge>{statusConciliacaoLabel[venda.status_conciliacao] || venda.status_conciliacao}</Badge></TableCell><TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => { setSelectedVenda(venda); setDialogOpen(true); }}>Editar</DropdownMenuItem>{venda.status_operacional !== 'cancelada' && <DropdownMenuItem onClick={() => cancelMutation.mutate(venda)}>Cancelar venda</DropdownMenuItem>}<DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(venda.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell></TableRow>)}</TableBody></Table></div></div>
-      <VendaDialog open={dialogOpen} onOpenChange={setDialogOpen} venda={selectedVenda} oportunidades={oportunidades} produtos={produtos} equipes={equipes} regras={regras} onSubmit={handleSubmit} loading={createMutation.isPending || updateMutation.isPending || cancelMutation.isPending} />
+      <VendaDialog open={dialogOpen} onOpenChange={setDialogOpen} venda={selectedVenda} oportunidades={oportunidades} produtos={produtos} equipes={equipes} regras={regras} responsaveis={responsaveisVenda} onSubmit={handleSubmit} loading={createMutation.isPending || updateMutation.isPending || cancelMutation.isPending} />
     </div>
   );
 }
