@@ -36,6 +36,14 @@ import { CpfCnpjInput } from '@/components/forms/MaskedInputs';
 const STATUS_OPTIONS = ['ativa', 'em_implantacao', 'em_analise', 'suspensa', 'inativa'];
 const PLAN_OPTIONS = ['mvp', 'starter', 'business', 'enterprise', 'interno'];
 
+const PLAN_LABELS = {
+  mvp: 'MVP',
+  starter: 'Starter',
+  business: 'Business',
+  enterprise: 'Enterprise',
+  interno: 'Interno',
+};
+
 const STATUS_LABELS = {
   ativa: 'Ativa',
   em_implantacao: 'Em implantação',
@@ -99,6 +107,11 @@ function EmpresaDialog({ open, onOpenChange, empresa, role, onSubmit, loading })
 
   const set = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
+  const planOptions = useMemo(() => {
+    if (!form.plano || PLAN_OPTIONS.includes(form.plano)) return PLAN_OPTIONS;
+    return [form.plano, ...PLAN_OPTIONS];
+  }, [form.plano]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!form.nome.trim()) {
@@ -147,15 +160,15 @@ function EmpresaDialog({ open, onOpenChange, empresa, role, onSubmit, loading })
               <Label>Plano</Label>
               {isSuperAdmin ? (
                 <Select value={form.plano} onValueChange={(value) => set('plano', value)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
                   <SelectContent>
-                    {PLAN_OPTIONS.map((plan) => (
-                      <SelectItem key={plan} value={plan}>{plan}</SelectItem>
+                    {planOptions.map((plan) => (
+                      <SelectItem key={plan} value={plan}>{PLAN_LABELS[plan] || plan}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               ) : (
-                <Input value={form.plano || '-'} readOnly className="bg-gray-50" />
+                <Input value={PLAN_LABELS[form.plano] || form.plano || '-'} readOnly className="bg-gray-50" />
               )}
             </div>
           </div>
