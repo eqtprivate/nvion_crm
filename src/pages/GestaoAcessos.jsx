@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useEffect, useMemo, useState } from 'react';
+import { assertSupabaseConfigured } from '@/lib/supabaseClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +13,12 @@ import {
   Clock,
   MoreVertical,
   Pencil,
-  Trash2,
   LayoutGrid,
-  KeyRound,
-  Copy,
-  Check,
   Building2,
   ChevronDown,
   ChevronRight,
+  Mail,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   Dialog,
@@ -44,28 +42,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import KPICard from '@/components/shared/KPICard';
-import UsuarioAcessoDialog from '@/components/forms/UsuarioAcessoDialog';
-import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
-import { FieldError } from '@/components/forms/FieldError';
-import { validate, empresaSchema } from '@/lib/validation';
-import { ROLE_LABELS } from '@/lib/modules';
-import { usePlanos, maxUsuarios } from '@/lib/usePlanos';
+import KPICard from '@/components/shared/KPICard';
+import ManageModulesDialog from '@/components/forms/ManageModulesDialog';
+import { CpfCnpjInput } from '@/components/forms/MaskedInputs';
+import { ROLE_LABELS, ROLE_MODULE_DEFAULTS } from '@/lib/modules';
 import { useAuth } from '@/lib/AuthContext';
-import { hashPassword } from '@/lib/auth';
 import { toast } from 'sonner';
-
-function generateTempPassword() {
-  const digits = Math.floor(1000 + Math.random() * 9000);
-  const letters = Array.from({ length: 2 }, () =>
-    String.fromCharCode(65 + Math.floor(Math.random() * 26))
-  ).join('');
-  const specials = ['@', '#', '!', '$'];
-  const special = specials[Math.floor(Math.random() * specials.length)];
-  return `Nvion${digits}${special}${letters}`;
-}
 
 const ROLE_COLORS = {
   super_admin: 'bg-purple-100 text-purple-800',
@@ -92,75 +75,213 @@ const EMPRESA_STATUS_COLORS = {
   inativa: 'bg-gray-100 text-gray-800',
 };
 
-function SenhaGeradaDialog({ open, onOpenChange, senha, userName }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(senha);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+const ALL_ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getEmpresaNome(empresa) {
+  return empresa?.nome || empresa?.razao_social || empresa?.nome_fantasia || '';
+}
+
+async function fetchEmpresas() {
+  const supabase = assertSupabaseConfigured();
+  const { data, error } = await supabase
+    .from('empresas')
+    .select('id, nome, cnpj, status, plano, created_at, updated_at')
+    .order('nome', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+async function fetchProfilesWithModules() {
+  const supabase = assertSupabaseConfigured();
+  const [{ data: profiles, error: profilesError }, { data: modules, error: modulesError }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, display_name, email, empresa_id, empresa_vinculada, role, status, profile_picture, created_at, updated_at')
+      .order('display_name', { ascending: true }),
+    supabase
+      .from('user_modules')
+      .select('user_id, module_key, enabled')
+      .eq('enabled', true),
+  ]);
+
+  if (profilesError) throw profilesError;
+  if (modulesError) throw modulesError;
+
+  const modulesByUser = new Map();
+  (modules || []).forEach((row) => {
+    if (!modulesByUser.has(row.user_id)) modulesByUser.set(row.user_id, []);
+    modulesByUser.get(row.user_id).push(row.module_key);
+  });
+
+  return (profiles || []).map((profile) => ({
+    ...profile,
+    modulos_permitidos: modulesByUser.get(profile.id) || [],
+  }));
+}
+
+function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empresas, empresaAtual, isSuperAdmin }) {
+  const roles = isSuperAdmin ? ALL_ROLES : ALL_ROLES.filter((role) => role.value !== 'super_admin');
+  const [form, setForm] = useState({
+    id: '',
+    display_name: '',
+    email: '',
+    role: 'vendedor',
+    status: 'ativo',
+    empresa_id: '',
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        id: profile.id || '',
+        display_name: profile.display_name || '',
+        email: profile.email || '',
+        role: profile.role || 'vendedor',
+        status: profile.status || 'ativo',
+        empresa_id: profile.empresa_id || '',
+      });
+    } else {
+      const defaultEmpresa = isSuperAdmin ? '' : (empresaAtual?.id || '');
+      setForm({
+        id: '',
+        display_name: '',
+        email: '',
+        role: 'vendedor',
+        status: 'ativo',
+        empresa_id: defaultEmpresa,
+      });
+    }
+  }, [profile, open, isSuperAdmin, empresaAtual]);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const selectedEmpresa = empresas.find((empresa) => empresa.id === form.empresa_id);
+    onSubmit({
+      ...form,
+      email: normalizeEmail(form.email),
+      empresa_vinculada: getEmpresaNome(selectedEmpresa) || empresaAtual?.nome || empresaAtual?.empresa_vinculada || '',
+    });
   };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <KeyRound className="w-5 h-5 text-primary" />
-            Senha Temporária Gerada
-          </DialogTitle>
+          <DialogTitle>{profile ? 'Editar Perfil de Acesso' : 'Novo Perfil de Acesso'}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <p className="text-sm text-gray-600">
-            Usuário <strong>{userName}</strong> criado. Copie a senha — ela é exibida <strong>uma única vez</strong>.
-          </p>
-          <div className="flex items-center gap-2">
-            <Input value={senha} readOnly className="font-mono text-base tracking-wider" />
-            <Button type="button" variant="outline" size="icon" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-            </Button>
+
+        {!profile && (
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3">
+            <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <p className="text-sm">
+              Crie primeiro o usuário em <strong>Supabase Auth</strong> e cole aqui o <strong>User UID</strong>. Esta tela cria o perfil operacional e os módulos do NVION.
+            </p>
           </div>
-          <p className="text-xs text-gray-500">Oriente o usuário a trocar a senha no primeiro acesso.</p>
-        </div>
-        <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>Entendido</Button>
-        </DialogFooter>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>User UID do Supabase Auth *</Label>
+            <Input
+              value={form.id}
+              disabled={Boolean(profile)}
+              required
+              placeholder="uuid do usuário em Authentication → Users"
+              onChange={(event) => setForm((prev) => ({ ...prev, id: event.target.value.trim() }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Nome de Exibição *</Label>
+            <Input
+              value={form.display_name}
+              required
+              onChange={(event) => setForm((prev) => ({ ...prev, display_name: event.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Email *</Label>
+            <Input
+              type="email"
+              value={form.email}
+              required
+              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+            />
+          </div>
+
+          {isSuperAdmin && (
+            <div className="space-y-2">
+              <Label>Empresa *</Label>
+              <Select value={form.empresa_id} onValueChange={(value) => setForm((prev) => ({ ...prev, empresa_id: value }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
+                <SelectContent>
+                  {empresas.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id}>{getEmpresaNome(empresa)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Perfil</Label>
+              <Select value={form.role} onValueChange={(value) => setForm((prev) => ({ ...prev, role: value }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="suspenso">Suspenso</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Salvando...' : profile ? 'Salvar Alterações' : 'Criar Perfil'}</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 }
 
-function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, planos }) {
-  const [form, setForm] = useState({
-    razao_social: '', nome_fantasia: '', cnpj: '', responsavel_principal: '',
-    email: '', telefone: '', plano_contratado: '', status: 'em_implantacao',
-  });
-  const [errors, setErrors] = useState({});
+function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading }) {
+  const [form, setForm] = useState({ nome: '', cnpj: '', status: 'ativa', plano: 'mvp' });
 
-  React.useEffect(() => {
-    setErrors({});
+  useEffect(() => {
     if (empresa) {
       setForm({
-        razao_social: empresa.razao_social || '',
-        nome_fantasia: empresa.nome_fantasia || '',
+        nome: empresa.nome || '',
         cnpj: empresa.cnpj || '',
-        responsavel_principal: empresa.responsavel_principal || '',
-        email: empresa.email || '',
-        telefone: empresa.telefone || '',
-        plano_contratado: empresa.plano_contratado || '',
-        status: empresa.status || 'em_implantacao',
+        status: empresa.status || 'ativa',
+        plano: empresa.plano || 'mvp',
       });
     } else {
-      setForm({ razao_social: '', nome_fantasia: '', cnpj: '', responsavel_principal: '', email: '', telefone: '', plano_contratado: '', status: 'em_implantacao' });
+      setForm({ nome: '', cnpj: '', status: 'ativa', plano: 'mvp' });
     }
   }, [empresa, open]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const { ok, errors: errs } = validate(empresaSchema, form);
-    if (!ok) { setErrors(errs); return; }
-    setErrors({});
+  const handleSubmit = (event) => {
+    event.preventDefault();
     onSubmit(form);
   };
-  const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,60 +289,33 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
         <DialogHeader>
           <DialogTitle>{empresa ? 'Editar Empresa' : 'Nova Empresa'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 space-y-1">
-              <Label>Razão Social *</Label>
-              <Input value={form.razao_social} onChange={f('razao_social')} />
-              <FieldError message={errors.razao_social} />
-            </div>
-            <div className="space-y-1">
-              <Label>Nome Fantasia</Label>
-              <Input value={form.nome_fantasia} onChange={f('nome_fantasia')} />
-            </div>
-            <div className="space-y-1">
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>Nome *</Label>
+            <Input value={form.nome} required onChange={(event) => setForm((prev) => ({ ...prev, nome: event.target.value }))} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label>CNPJ</Label>
-              <CpfCnpjInput value={form.cnpj} onChange={(v) => setForm(p => ({ ...p, cnpj: v }))} />
-              <FieldError message={errors.cnpj} />
+              <CpfCnpjInput value={form.cnpj} onChange={(value) => setForm((prev) => ({ ...prev, cnpj: value }))} />
             </div>
-            <div className="space-y-1">
-              <Label>Responsável</Label>
-              <Input value={form.responsavel_principal} onChange={f('responsavel_principal')} />
-            </div>
-            <div className="space-y-1">
-              <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={f('email')} />
-              <FieldError message={errors.email} />
-            </div>
-            <div className="space-y-1">
-              <Label>Telefone</Label>
-              <PhoneInput value={form.telefone} onChange={(value) => setForm(p => ({ ...p, telefone: value }))} />
-              <FieldError message={errors.telefone} />
-            </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label>Plano</Label>
-              <Select value={form.plano_contratado} onValueChange={(v) => setForm(p => ({ ...p, plano_contratado: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione o plano" /></SelectTrigger>
-                <SelectContent>
-                  {(planos || []).map((p) => (
-                    <SelectItem key={p.slug} value={p.slug}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input value={form.plano} onChange={(event) => setForm((prev) => ({ ...prev, plano: event.target.value }))} />
             </div>
-            <div className="col-span-2 space-y-1">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm(p => ({ ...p, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="em_implantacao">Em Implantação</SelectItem>
-                  <SelectItem value="ativa">Ativa</SelectItem>
-                  <SelectItem value="em_analise">Em Análise</SelectItem>
-                  <SelectItem value="suspensa">Suspensa</SelectItem>
-                  <SelectItem value="inativa">Inativa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ativa">Ativa</SelectItem>
+                <SelectItem value="em_implantacao">Em implantação</SelectItem>
+                <SelectItem value="em_analise">Em análise</SelectItem>
+                <SelectItem value="suspensa">Suspensa</SelectItem>
+                <SelectItem value="inativa">Inativa</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
@@ -233,126 +327,171 @@ function EmpresaDialog({ open, onOpenChange, empresa, onSubmit, isLoading, plano
   );
 }
 
-// ── Aba Usuários ──────────────────────────────────────────────────────────────────────────
-function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentUser }) {
+function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLoading, currentUser }) {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [modulesDialogOpen, setModulesDialogOpen] = useState(false);
-  const [senhaDialogOpen, setSenhaDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [lastCreatedUser, setLastCreatedUser] = useState({ name: '', senha: '' });
   const [empresaFiltro, setEmpresaFiltro] = useState('all');
 
-  // Returns true if the current user is allowed to perform actions on target
+  const currentEmpresaNome = currentUser?.empresa_vinculada;
+
   const canManage = (target) => {
+    if (!target) return false;
     if (isSuperAdmin) return true;
     if (target.role === 'super_admin') return false;
-    return target.empresa_vinculada === empresa;
+    return target.empresa_id === currentUser?.empresa_id || target.empresa_vinculada === currentEmpresaNome;
   };
 
   const usuarios = useMemo(() => {
     const base = isSuperAdmin
       ? todosUsuarios
-      : todosUsuarios.filter(u => u.role !== 'super_admin' && u.empresa_vinculada === empresa);
-    if (isSuperAdmin && empresaFiltro !== 'all') return base.filter(u => u.empresa_vinculada === empresaFiltro);
+      : todosUsuarios.filter((usuario) => usuario.role !== 'super_admin' && (usuario.empresa_id === currentUser?.empresa_id || usuario.empresa_vinculada === currentEmpresaNome));
+    if (isSuperAdmin && empresaFiltro !== 'all') return base.filter((usuario) => usuario.empresa_id === empresaFiltro);
     return base;
-  }, [todosUsuarios, isSuperAdmin, empresa, empresaFiltro]);
-
-  const empresasDisponiveis = useMemo(() => {
-    const set = new Set(todosUsuarios.map(u => u.empresa_vinculada).filter(Boolean));
-    return Array.from(set).sort();
-  }, [todosUsuarios]);
+  }, [todosUsuarios, isSuperAdmin, currentUser?.empresa_id, currentEmpresaNome, empresaFiltro]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.UsuarioAcesso.create(data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['todosUsuarios'] });
-      setCreateDialogOpen(false);
-      setLastCreatedUser(prev => ({
-        name: variables.display_name || prev.name,
-        senha: variables.senha_temporaria || prev.senha,
-      }));
-      setSenhaDialogOpen(true);
+    mutationFn: async (data) => {
+      const supabase = assertSupabaseConfigured();
+      const selectedEmpresa = empresas.find((empresa) => empresa.id === data.empresa_id) || empresaAtual;
+      const modules = ROLE_MODULE_DEFAULTS[data.role] || [];
+
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: data.id,
+        display_name: data.display_name,
+        email: data.email,
+        role: data.role,
+        status: data.status || 'ativo',
+        empresa_id: data.empresa_id || selectedEmpresa?.id || currentUser?.empresa_id || null,
+        empresa_vinculada: data.empresa_vinculada || getEmpresaNome(selectedEmpresa) || currentEmpresaNome,
+      });
+      if (profileError) throw profileError;
+
+      if (modules.length > 0) {
+        const { error: modulesError } = await supabase.from('user_modules').upsert(
+          modules.map((moduleKey) => ({ user_id: data.id, module_key: moduleKey, enabled: true })),
+          { onConflict: 'user_id,module_key' }
+        );
+        if (modulesError) throw modulesError;
+      }
     },
-    onError: (err) => {
-      console.error('Erro ao criar usuário:', err);
-      toast.error('Erro ao criar usuário. Verifique os dados e tente novamente.');
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] });
+      setCreateDialogOpen(false);
+      toast.success('Perfil operacional criado. O usuário já pode acessar com a senha do Supabase Auth.');
+    },
+    onError: (error) => {
+      console.error('Erro ao criar perfil:', error);
+      toast.error(`Erro ao criar perfil: ${error?.message || 'verifique RLS/policies e UID do usuário'}`);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.UsuarioAcesso.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todosUsuarios'] });
-      setEditDialogOpen(false);
-      setModulesDialogOpen(false);
+    mutationFn: async ({ id, data }) => {
+      const supabase = assertSupabaseConfigured();
+      const selectedEmpresa = empresas.find((empresa) => empresa.id === data.empresa_id);
+      const { error } = await supabase.from('profiles').update({
+        display_name: data.display_name,
+        email: data.email,
+        role: data.role,
+        status: data.status,
+        empresa_id: data.empresa_id || null,
+        empresa_vinculada: data.empresa_vinculada || getEmpresaNome(selectedEmpresa) || data.empresa_vinculada || '',
+      }).eq('id', id);
+      if (error) throw error;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] });
+      setEditDialogOpen(false);
+      setSelectedUser(null);
+      toast.success('Perfil atualizado.');
+    },
+    onError: (error) => toast.error(`Erro ao atualizar perfil: ${error?.message || 'sem detalhe'}`),
   });
 
-  const handleResetSenha = async (user) => {
-    const senha = generateTempPassword();
-    const senha_hash = await hashPassword(senha);
-    updateMutation.mutate(
-      { id: user.id, data: { senha_hash, senha_temporaria: senha } },
-      {
-        onSuccess: () => {
-          setLastCreatedUser({ name: user.display_name, senha });
-          setSenhaDialogOpen(true);
-        },
-        onError: () => toast.error('Erro ao resetar senha.'),
+  const modulesMutation = useMutation({
+    mutationFn: async ({ id, modules }) => {
+      const supabase = assertSupabaseConfigured();
+      const { error: deleteError } = await supabase.from('user_modules').delete().eq('user_id', id);
+      if (deleteError) throw deleteError;
+
+      if (modules.length > 0) {
+        const { error: insertError } = await supabase.from('user_modules').insert(
+          modules.map((moduleKey) => ({ user_id: id, module_key: moduleKey, enabled: true }))
+        );
+        if (insertError) throw insertError;
       }
-    );
-  };
-
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.UsuarioAcesso.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todosUsuarios'] }),
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] });
+      setModulesDialogOpen(false);
+      setSelectedUser(null);
+      toast.success('Módulos atualizados.');
+    },
+    onError: (error) => toast.error(`Erro ao atualizar módulos: ${error?.message || 'sem detalhe'}`),
   });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }) => {
+      const supabase = assertSupabaseConfigured();
+      const { error } = await supabase.from('profiles').update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] });
+      toast.success('Status atualizado.');
+    },
+    onError: (error) => toast.error(`Erro ao alterar status: ${error?.message || 'sem detalhe'}`),
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (target) => {
+      const supabase = assertSupabaseConfigured();
+      const { error } = await supabase.auth.resetPasswordForEmail(target.email, { redirectTo: window.location.origin });
+      if (error) throw error;
+    },
+    onSuccess: () => toast.success('E-mail de recuperação enviado pelo Supabase Auth.'),
+    onError: (error) => toast.error(`Erro ao enviar recuperação: ${error?.message || 'sem detalhe'}`),
+  });
+
+  const toggleStatus = (target) => {
+    if (target.id === currentUser?.id) {
+      toast.error('Você não pode suspender o próprio usuário logado.');
+      return;
+    }
+    statusMutation.mutate({ id: target.id, status: target.status === 'ativo' ? 'suspenso' : 'ativo' });
+  };
 
   const kpis = useMemo(() => ({
     total: usuarios.length,
-    ativos: usuarios.filter(u => u.status === 'ativo').length,
-    suspensos: usuarios.filter(u => u.status === 'suspenso').length,
-    pendentes: usuarios.filter(u => u.status === 'pendente').length,
+    ativos: usuarios.filter((usuario) => usuario.status === 'ativo').length,
+    suspensos: usuarios.filter((usuario) => usuario.status === 'suspenso').length,
+    pendentes: usuarios.filter((usuario) => usuario.status === 'pendente').length,
   }), [usuarios]);
-
-  const handleCreate = async (data) => {
-    const senha = generateTempPassword();
-    const senha_hash = await hashPassword(senha);
-    // Store before mutate so onSuccess can always read it
-    setLastCreatedUser({ name: data.display_name, senha });
-    createMutation.mutate({
-      ...data,
-      status: 'ativo',
-      empresa_vinculada: isSuperAdmin ? (data.empresa_vinculada || empresa) : empresa,
-      senha_temporaria: senha,
-      senha_hash,
-    });
-  };
-
-  const toggleStatus = (user) => {
-    const newStatus = user.status === 'ativo' ? 'suspenso' : 'ativo';
-    updateMutation.mutate({ id: user.id, data: { status: newStatus } });
-  };
 
   return (
     <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-4 text-sm">
+        <strong>Modelo Supabase:</strong> usuários e senhas ficam em Supabase Auth. Esta tela administra o perfil operacional, status, empresa e módulos do NVION em <code>public.profiles</code> e <code>public.user_modules</code>.
+      </div>
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {isSuperAdmin && (
             <select
               value={empresaFiltro}
-              onChange={e => setEmpresaFiltro(e.target.value)}
+              onChange={(event) => setEmpresaFiltro(event.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
             >
               <option value="all">Todas as empresas</option>
-              {empresasDisponiveis.map(e => <option key={e} value={e}>{e}</option>)}
+              {empresas.map((empresa) => <option key={empresa.id} value={empresa.id}>{getEmpresaNome(empresa)}</option>)}
             </select>
           )}
         </div>
         <Button className="bg-primary hover:bg-primary-dark" onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />Novo Usuário
+          <Plus className="w-4 h-4 mr-2" />Novo Perfil
         </Button>
       </div>
 
@@ -384,64 +523,51 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentU
               ) : usuarios.length === 0 ? (
                 <TableRow><TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center py-12 text-gray-400">
                   <Users className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-                  Nenhum usuário encontrado
+                  Nenhum perfil encontrado
                 </TableCell></TableRow>
               ) : (
-                usuarios.map(user => (
-                  <TableRow key={user.id} className="hover:bg-gray-50 border-b border-gray-100">
+                usuarios.map((target) => (
+                  <TableRow key={target.id} className="hover:bg-gray-50 border-b border-gray-100">
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{user.display_name}</span>
-                        <span className="text-sm text-gray-500">{user.email}</span>
+                        <span className="font-medium text-gray-900">{target.display_name}</span>
+                        <span className="text-sm text-gray-500">{target.email}</span>
+                        <span className="text-[11px] text-gray-300 font-mono">{target.id}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={ROLE_COLORS[user.role] || 'bg-gray-100 text-gray-800'}>
-                        {ROLE_LABELS[user.role] || user.role}
+                      <Badge className={ROLE_COLORS[target.role] || 'bg-gray-100 text-gray-800'}>
+                        {ROLE_LABELS[target.role] || target.role}
                       </Badge>
                     </TableCell>
-                    {isSuperAdmin && <TableCell className="text-sm text-gray-600">{user.empresa_vinculada || '-'}</TableCell>}
-                    <TableCell className="text-sm text-gray-600">{user.modulos_permitidos?.length || 0} módulos</TableCell>
+                    {isSuperAdmin && <TableCell className="text-sm text-gray-600">{target.empresa_vinculada || '-'}</TableCell>}
+                    <TableCell className="text-sm text-gray-600">{target.modulos_permitidos?.length || 0} módulos</TableCell>
+                    <TableCell><Badge className={STATUS_COLORS[target.status] || 'bg-gray-100 text-gray-800'}>{target.status}</Badge></TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[user.status] || 'bg-gray-100 text-gray-800'}>{user.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {canManage(user) ? (
+                      {canManage(target) ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setSelectedUser(user); setEditDialogOpen(true); }}>
-                              <Pencil className="w-4 h-4 mr-2" /> Editar
+                            <DropdownMenuItem onClick={() => { setSelectedUser(target); setEditDialogOpen(true); }}>
+                              <Pencil className="w-4 h-4 mr-2" /> Editar Perfil
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { setSelectedUser(user); setModulesDialogOpen(true); }}>
+                            <DropdownMenuItem onClick={() => { setSelectedUser(target); setModulesDialogOpen(true); }}>
                               <LayoutGrid className="w-4 h-4 mr-2" /> Gerenciar Módulos
                             </DropdownMenuItem>
-                            {user.senha_temporaria && (
-                              <DropdownMenuItem onClick={() => { setLastCreatedUser({ name: user.display_name, senha: user.senha_temporaria }); setSenhaDialogOpen(true); }}>
-                                <KeyRound className="w-4 h-4 mr-2" /> Ver senha temporária
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => handleResetSenha(user)}>
-                              <KeyRound className="w-4 h-4 mr-2" /> Resetar Senha
+                            <DropdownMenuItem onClick={() => resetPasswordMutation.mutate(target)}>
+                              <Mail className="w-4 h-4 mr-2" /> Enviar recuperação de senha
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toggleStatus(user)}>
-                              {user.status === 'ativo'
+                            <DropdownMenuItem onClick={() => toggleStatus(target)} disabled={target.id === currentUser?.id}>
+                              {target.status === 'ativo'
                                 ? <><UserX className="w-4 h-4 mr-2" /> Suspender</>
                                 : <><UserCheck className="w-4 h-4 mr-2" /> Ativar</>}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(user.id)}>
-                              <Trash2 className="w-4 h-4 mr-2" /> Excluir
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : (
-                        <span title="Sem permissão para gerenciar este usuário">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-30 cursor-not-allowed" disabled>
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-30 cursor-not-allowed" disabled><MoreVertical className="w-4 h-4" /></Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -452,70 +578,69 @@ function UsuariosTab({ isSuperAdmin, empresa, todosUsuarios, isLoading, currentU
         </div>
       </div>
 
-      <UsuarioAcessoDialog
+      <ProfileDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onSubmit={handleCreate}
+        onSubmit={(data) => createMutation.mutate(data)}
         isLoading={createMutation.isPending}
-        empresaVinculada={empresa}
+        empresas={empresas}
+        empresaAtual={empresaAtual}
         isSuperAdmin={isSuperAdmin}
       />
-      <UsuarioAcessoDialog
+      <ProfileDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        user={selectedUser}
+        profile={selectedUser}
         onSubmit={(data) => updateMutation.mutate({ id: selectedUser.id, data })}
         isLoading={updateMutation.isPending}
+        empresas={empresas}
+        empresaAtual={empresaAtual}
         isSuperAdmin={isSuperAdmin}
       />
       <ManageModulesDialog
         open={modulesDialogOpen}
         onOpenChange={setModulesDialogOpen}
         user={selectedUser}
-        onSubmit={(data) => updateMutation.mutate({ id: selectedUser.id, data })}
-        isLoading={updateMutation.isPending}
+        onSubmit={(data) => modulesMutation.mutate({ id: selectedUser.id, modules: data.modulos_permitidos || [] })}
+        isLoading={modulesMutation.isPending}
       />
-      <SenhaGeradaDialog open={senhaDialogOpen} onOpenChange={setSenhaDialogOpen} senha={lastCreatedUser.senha} userName={lastCreatedUser.name} />
     </div>
   );
 }
 
-// ── Aba Empresas (super_admin only) ──────────────────────────────────────────────────────
-function EmpresasTab({ todosUsuarios }) {
+function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedEmpresa, setSelectedEmpresa] = useState(null);
   const [expandedEmpresa, setExpandedEmpresa] = useState(null);
-  const { data: planos = [] } = usePlanos();
-
-  const { data: empresas = [], isLoading } = useQuery({
-    queryKey: ['empresas'],
-    queryFn: () => base44.entities.Empresa.list('-created_date'),
-  });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Empresa.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['empresas'] }); setCreateDialogOpen(false); },
+    mutationFn: async (data) => {
+      const supabase = assertSupabaseConfigured();
+      const { error } = await supabase.from('empresas').insert(data);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['supabaseEmpresas'] }); setCreateDialogOpen(false); toast.success('Empresa criada.'); },
+    onError: (error) => toast.error(`Erro ao criar empresa: ${error?.message || 'sem detalhe'}`),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Empresa.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['empresas'] }); setEditDialogOpen(false); setSelectedEmpresa(null); },
+    mutationFn: async ({ id, data }) => {
+      const supabase = assertSupabaseConfigured();
+      const { error } = await supabase.from('empresas').update(data).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['supabaseEmpresas'] }); queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] }); setEditDialogOpen(false); setSelectedEmpresa(null); toast.success('Empresa atualizada.'); },
+    onError: (error) => toast.error(`Erro ao atualizar empresa: ${error?.message || 'sem detalhe'}`),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Empresa.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['empresas'] }),
-  });
-
-  const getUsersForEmpresa = (nomeEmpresa) =>
-    todosUsuarios.filter(u => u.empresa_vinculada === nomeEmpresa);
+  const getUsersForEmpresa = (empresa) => todosUsuarios.filter((usuario) => usuario.empresa_id === empresa.id || usuario.empresa_vinculada === getEmpresaNome(empresa));
 
   const kpis = useMemo(() => ({
     total: empresas.length,
-    ativas: empresas.filter(e => e.status === 'ativa').length,
-    implantacao: empresas.filter(e => e.status === 'em_implantacao').length,
+    ativas: empresas.filter((empresa) => empresa.status === 'ativa').length,
+    implantacao: empresas.filter((empresa) => empresa.status === 'em_implantacao').length,
     totalUsuarios: todosUsuarios.length,
   }), [empresas, todosUsuarios]);
 
@@ -531,7 +656,7 @@ function EmpresasTab({ todosUsuarios }) {
         <KPICard title="Total" value={kpis.total} icon={Building2} iconColor="bg-blue-500" />
         <KPICard title="Ativas" value={kpis.ativas} icon={UserCheck} iconColor="bg-green-500" />
         <KPICard title="Implantação" value={kpis.implantacao} icon={Clock} iconColor="bg-yellow-500" />
-        <KPICard title="Usuários Cadastrados" value={kpis.totalUsuarios} icon={Users} iconColor="bg-purple-500" />
+        <KPICard title="Perfis" value={kpis.totalUsuarios} icon={Users} iconColor="bg-purple-500" />
       </div>
 
       <div className="bg-white rounded-lg shadow border border-gray-200 divide-y divide-gray-100">
@@ -546,37 +671,37 @@ function EmpresasTab({ todosUsuarios }) {
             Nenhuma empresa cadastrada
           </div>
         ) : (
-          empresas.map(emp => {
-            const users = getUsersForEmpresa(emp.razao_social);
-            const isExpanded = expandedEmpresa === emp.id;
+          empresas.map((empresa) => {
+            const users = getUsersForEmpresa(empresa);
+            const isExpanded = expandedEmpresa === empresa.id;
             return (
-              <div key={emp.id}>
-                <div className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedEmpresa(isExpanded ? null : emp.id)}>
+              <div key={empresa.id}>
+                <div
+                  className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setExpandedEmpresa(isExpanded ? null : empresa.id)}
+                >
                   <div className="flex items-center gap-3">
                     {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
-                    <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-4 h-4 text-blue-600" />
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{emp.razao_social}</p>
-                      <p className="text-xs text-gray-500">{emp.nome_fantasia || emp.cnpj || ''}</p>
+                      <p className="font-medium text-gray-900">{getEmpresaNome(empresa)}</p>
+                      <p className="text-xs text-gray-500">{empresa.cnpj || empresa.plano || ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 hidden sm:inline">{users.length} usuário(s)</span>
-                    <Badge className={EMPRESA_STATUS_COLORS[emp.status] || 'bg-gray-100 text-gray-800'} onClick={e => e.stopPropagation()}>
-                      {emp.status?.replace(/_/g, ' ')}
+                    <span className="text-xs text-gray-500 hidden sm:inline">{users.length} perfil(is)</span>
+                    <Badge className={EMPRESA_STATUS_COLORS[empresa.status] || 'bg-gray-100 text-gray-800'} onClick={(event) => event.stopPropagation()}>
+                      {empresa.status?.replace(/_/g, ' ')}
                     </Badge>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                      <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedEmpresa(emp); setEditDialogOpen(true); }}>
+                        <DropdownMenuItem onClick={(event) => { event.stopPropagation(); setSelectedEmpresa(empresa); setEditDialogOpen(true); }}>
                           <Pencil className="w-4 h-4 mr-2" /> Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(emp.id); }}>
-                          <Trash2 className="w-4 h-4 mr-2" /> Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -585,33 +710,25 @@ function EmpresasTab({ todosUsuarios }) {
 
                 {isExpanded && (
                   <div className="px-6 pb-4 bg-gray-50 border-t border-gray-100">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 mb-4 text-sm">
-                      {emp.responsavel_principal && <div><span className="text-gray-500">Responsável:</span> <span className="font-medium">{emp.responsavel_principal}</span></div>}
-                      {emp.email && <div><span className="text-gray-500">Email:</span> <span className="font-medium">{emp.email}</span></div>}
-                      {emp.telefone && <div><span className="text-gray-500">Tel:</span> <span className="font-medium">{emp.telefone}</span></div>}
-                      {emp.plano_contratado && <div><span className="text-gray-500">Plano:</span> <span className="font-medium">{planos.find(p => p.slug === emp.plano_contratado)?.label || emp.plano_contratado}</span></div>}
-                      {emp.data_inicio_plataforma && <div><span className="text-gray-500">Início:</span> <span className="font-medium">{new Date(emp.data_inicio_plataforma).toLocaleDateString('pt-BR')}</span></div>}
-                    </div>
-
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Usuários vinculados</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-3">Perfis vinculados</p>
                     {users.length === 0 ? (
-                      <p className="text-sm text-gray-400 italic">Nenhum usuário vinculado a esta empresa.</p>
+                      <p className="text-sm text-gray-400 italic">Nenhum perfil vinculado a esta empresa.</p>
                     ) : (
                       <div className="space-y-1.5">
-                        {users.map(u => (
-                          <div key={u.id} className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-100">
+                        {users.map((profile) => (
+                          <div key={profile.id} className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                {u.display_name?.charAt(0)?.toUpperCase()}
+                                {profile.display_name?.charAt(0)?.toUpperCase()}
                               </div>
                               <div>
-                                <p className="text-sm font-medium">{u.display_name}</p>
-                                <p className="text-xs text-gray-500">{u.email}</p>
+                                <p className="text-sm font-medium">{profile.display_name}</p>
+                                <p className="text-xs text-gray-500">{profile.email}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge className={`text-xs ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-800'}`}>{ROLE_LABELS[u.role] || u.role}</Badge>
-                              <Badge className={`text-xs ${STATUS_COLORS[u.status] || 'bg-gray-100 text-gray-800'}`}>{u.status}</Badge>
+                              <Badge className={`text-xs ${ROLE_COLORS[profile.role] || 'bg-gray-100 text-gray-800'}`}>{ROLE_LABELS[profile.role] || profile.role}</Badge>
+                              <Badge className={`text-xs ${STATUS_COLORS[profile.status] || 'bg-gray-100 text-gray-800'}`}>{profile.status}</Badge>
                             </div>
                           </div>
                         ))}
@@ -625,28 +742,37 @@ function EmpresasTab({ todosUsuarios }) {
         )}
       </div>
 
-      <EmpresaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} planos={planos} />
-      <EmpresaDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} empresa={selectedEmpresa} onSubmit={data => updateMutation.mutate({ id: selectedEmpresa.id, data })} isLoading={updateMutation.isPending} planos={planos} />
+      <EmpresaDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={(data) => createMutation.mutate(data)} isLoading={createMutation.isPending} />
+      <EmpresaDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} empresa={selectedEmpresa} onSubmit={(data) => updateMutation.mutate({ id: selectedEmpresa.id, data })} isLoading={updateMutation.isPending} />
     </div>
   );
 }
 
-// ── Página principal ──────────────────────────────────────────────────────────────────────────
 export default function GestaoAcessos() {
   const { user: currentUser } = useAuth();
-  const empresa = currentUser?.empresa_vinculada;
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
-  const { data: todosUsuarios = [], isLoading } = useQuery({
-    queryKey: ['todosUsuarios'],
-    queryFn: () => base44.entities.UsuarioAcesso.list('-created_date'),
+  const { data: empresas = [], isLoading: isLoadingEmpresas } = useQuery({
+    queryKey: ['supabaseEmpresas'],
+    queryFn: fetchEmpresas,
   });
+
+  const { data: todosUsuarios = [], isLoading: isLoadingUsuarios } = useQuery({
+    queryKey: ['supabaseProfiles'],
+    queryFn: fetchProfilesWithModules,
+  });
+
+  const empresaAtual = useMemo(() => {
+    return empresas.find((empresa) => empresa.id === currentUser?.empresa_id)
+      || empresas.find((empresa) => getEmpresaNome(empresa) === currentUser?.empresa_vinculada)
+      || null;
+  }, [empresas, currentUser?.empresa_id, currentUser?.empresa_vinculada]);
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Acessos</h1>
-        <p className="text-gray-500 mt-1">Gerencie usuários, permissões e empresas do sistema</p>
+        <p className="text-gray-500 mt-1">Gerencie perfis, permissões, módulos e empresas usando Supabase</p>
       </div>
 
       {isSuperAdmin ? (
@@ -660,14 +786,28 @@ export default function GestaoAcessos() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="usuarios">
-            <UsuariosTab isSuperAdmin={isSuperAdmin} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} currentUser={currentUser} />
+            <UsuariosTab
+              isSuperAdmin={isSuperAdmin}
+              empresaAtual={empresaAtual}
+              empresas={empresas}
+              todosUsuarios={todosUsuarios}
+              isLoading={isLoadingUsuarios || isLoadingEmpresas}
+              currentUser={currentUser}
+            />
           </TabsContent>
           <TabsContent value="empresas">
-            <EmpresasTab todosUsuarios={todosUsuarios} />
+            <EmpresasTab todosUsuarios={todosUsuarios} empresas={empresas} isLoading={isLoadingEmpresas} />
           </TabsContent>
         </Tabs>
       ) : (
-        <UsuariosTab isSuperAdmin={false} empresa={empresa} todosUsuarios={todosUsuarios} isLoading={isLoading} currentUser={currentUser} />
+        <UsuariosTab
+          isSuperAdmin={false}
+          empresaAtual={empresaAtual}
+          empresas={empresas}
+          todosUsuarios={todosUsuarios}
+          isLoading={isLoadingUsuarios || isLoadingEmpresas}
+          currentUser={currentUser}
+        />
       )}
     </div>
   );
