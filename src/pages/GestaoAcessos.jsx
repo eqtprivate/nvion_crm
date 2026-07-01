@@ -19,6 +19,9 @@ import {
   ChevronRight,
   Mail,
   ShieldAlert,
+  KeyRound,
+  Copy,
+  Check,
 } from 'lucide-react';
 import {
   Dialog,
@@ -123,10 +126,53 @@ async function fetchProfilesWithModules() {
   }));
 }
 
+function TemporaryPasswordDialog({ open, onOpenChange, payload }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!payload?.temporary_password) return;
+    await navigator.clipboard.writeText(payload.temporary_password);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-primary" />
+            Acesso criado
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-gray-600">
+            Usuário <strong>{payload?.display_name}</strong> criado no Supabase Auth e no perfil operacional do NVION.
+          </p>
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3 text-sm">
+            Copie a senha temporária agora. Ela é exibida apenas nesta confirmação.
+          </div>
+          <div className="flex items-center gap-2">
+            <Input value={payload?.temporary_password || ''} readOnly className="font-mono text-base tracking-wider" />
+            <Button type="button" variant="outline" size="icon" onClick={handleCopy}>
+              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+            </Button>
+          </div>
+          <p className="text-xs text-gray-500">
+            Oriente o usuário a acessar o NVION com esta senha e depois usar recuperação/troca de senha pelo Supabase Auth.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Entendido</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empresas, empresaAtual, isSuperAdmin }) {
   const roles = isSuperAdmin ? ALL_ROLES : ALL_ROLES.filter((role) => role.value !== 'super_admin');
   const [form, setForm] = useState({
-    id: '',
     display_name: '',
     email: '',
     role: 'vendedor',
@@ -137,7 +183,6 @@ function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empre
   useEffect(() => {
     if (profile) {
       setForm({
-        id: profile.id || '',
         display_name: profile.display_name || '',
         email: profile.email || '',
         role: profile.role || 'vendedor',
@@ -147,7 +192,6 @@ function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empre
     } else {
       const defaultEmpresa = isSuperAdmin ? '' : (empresaAtual?.id || '');
       setForm({
-        id: '',
         display_name: '',
         email: '',
         role: 'vendedor',
@@ -171,30 +215,25 @@ function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empre
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{profile ? 'Editar Perfil de Acesso' : 'Novo Perfil de Acesso'}</DialogTitle>
+          <DialogTitle>{profile ? 'Editar Perfil de Acesso' : 'Novo Acesso'}</DialogTitle>
         </DialogHeader>
 
         {!profile && (
-          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3">
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3">
             <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <p className="text-sm">
-              Crie primeiro o usuário em <strong>Supabase Auth</strong> e cole aqui o <strong>User UID</strong>. Esta tela cria o perfil operacional e os módulos do NVION.
+              O app criará o usuário no <strong>Supabase Auth</strong>, criará o perfil operacional e liberará os módulos padrão do perfil selecionado.
             </p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label>User UID do Supabase Auth *</Label>
-            <Input
-              value={form.id}
-              disabled={Boolean(profile)}
-              required
-              placeholder="uuid do usuário em Authentication → Users"
-              onChange={(event) => setForm((prev) => ({ ...prev, id: event.target.value.trim() }))}
-            />
+        {profile && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
+            UID Supabase: <span className="font-mono">{profile.id}</span>
           </div>
+        )}
 
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-2">
             <Label>Nome de Exibição *</Label>
             <Input
@@ -210,8 +249,10 @@ function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empre
               type="email"
               value={form.email}
               required
+              disabled={Boolean(profile)}
               onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
             />
+            {profile && <p className="text-xs text-gray-400">Para alterar e-mail de autenticação, use o painel do Supabase Auth.</p>}
           </div>
 
           {isSuperAdmin && (
@@ -254,7 +295,7 @@ function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empre
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={isLoading}>{isLoading ? 'Salvando...' : profile ? 'Salvar Alterações' : 'Criar Perfil'}</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Salvando...' : profile ? 'Salvar Alterações' : 'Criar Acesso'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -332,6 +373,8 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [modulesDialogOpen, setModulesDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [createdAccess, setCreatedAccess] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [empresaFiltro, setEmpresaFiltro] = useState('all');
 
@@ -357,34 +400,36 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
       const supabase = assertSupabaseConfigured();
       const selectedEmpresa = empresas.find((empresa) => empresa.id === data.empresa_id) || empresaAtual;
       const modules = ROLE_MODULE_DEFAULTS[data.role] || [];
-
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.id,
-        display_name: data.display_name,
-        email: data.email,
-        role: data.role,
-        status: data.status || 'ativo',
-        empresa_id: data.empresa_id || selectedEmpresa?.id || currentUser?.empresa_id || null,
-        empresa_vinculada: data.empresa_vinculada || getEmpresaNome(selectedEmpresa) || currentEmpresaNome,
+      const { data: result, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          display_name: data.display_name,
+          email: data.email,
+          role: data.role,
+          status: data.status || 'ativo',
+          empresa_id: data.empresa_id || selectedEmpresa?.id || currentUser?.empresa_id || null,
+          empresa_vinculada: data.empresa_vinculada || getEmpresaNome(selectedEmpresa) || currentEmpresaNome,
+          modules,
+        },
       });
-      if (profileError) throw profileError;
 
-      if (modules.length > 0) {
-        const { error: modulesError } = await supabase.from('user_modules').upsert(
-          modules.map((moduleKey) => ({ user_id: data.id, module_key: moduleKey, enabled: true })),
-          { onConflict: 'user_id,module_key' }
-        );
-        if (modulesError) throw modulesError;
-      }
+      if (error) throw error;
+      if (result?.error) throw new Error(result.detail || result.error);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] });
       setCreateDialogOpen(false);
-      toast.success('Perfil operacional criado. O usuário já pode acessar com a senha do Supabase Auth.');
+      setCreatedAccess({
+        display_name: result?.display_name,
+        email: result?.email,
+        temporary_password: result?.temporary_password,
+      });
+      setPasswordDialogOpen(true);
+      toast.success('Acesso criado com sucesso.');
     },
     onError: (error) => {
-      console.error('Erro ao criar perfil:', error);
-      toast.error(`Erro ao criar perfil: ${error?.message || 'verifique RLS/policies e UID do usuário'}`);
+      console.error('Erro ao criar acesso:', error);
+      toast.error(`Erro ao criar acesso: ${error?.message || 'verifique Edge Function e permissões'}`);
     },
   });
 
@@ -394,7 +439,6 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
       const selectedEmpresa = empresas.find((empresa) => empresa.id === data.empresa_id);
       const { error } = await supabase.from('profiles').update({
         display_name: data.display_name,
-        email: data.email,
         role: data.role,
         status: data.status,
         empresa_id: data.empresa_id || null,
@@ -474,7 +518,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-4 text-sm">
-        <strong>Modelo Supabase:</strong> usuários e senhas ficam em Supabase Auth. Esta tela administra o perfil operacional, status, empresa e módulos do NVION em <code>public.profiles</code> e <code>public.user_modules</code>.
+        <strong>Modelo Supabase:</strong> esta tela cria usuários no Supabase Auth por Edge Function e administra perfil, status, empresa e módulos em <code>public.profiles</code> e <code>public.user_modules</code>.
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -491,7 +535,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
           )}
         </div>
         <Button className="bg-primary hover:bg-primary-dark" onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />Novo Perfil
+          <Plus className="w-4 h-4 mr-2" />Novo Acesso
         </Button>
       </div>
 
@@ -536,9 +580,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={ROLE_COLORS[target.role] || 'bg-gray-100 text-gray-800'}>
-                        {ROLE_LABELS[target.role] || target.role}
-                      </Badge>
+                      <Badge className={ROLE_COLORS[target.role] || 'bg-gray-100 text-gray-800'}>{ROLE_LABELS[target.role] || target.role}</Badge>
                     </TableCell>
                     {isSuperAdmin && <TableCell className="text-sm text-gray-600">{target.empresa_vinculada || '-'}</TableCell>}
                     <TableCell className="text-sm text-gray-600">{target.modulos_permitidos?.length || 0} módulos</TableCell>
@@ -604,6 +646,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
         onSubmit={(data) => modulesMutation.mutate({ id: selectedUser.id, modules: data.modulos_permitidos || [] })}
         isLoading={modulesMutation.isPending}
       />
+      <TemporaryPasswordDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} payload={createdAccess} />
     </div>
   );
 }
@@ -676,15 +719,10 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
             const isExpanded = expandedEmpresa === empresa.id;
             return (
               <div key={empresa.id}>
-                <div
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => setExpandedEmpresa(isExpanded ? null : empresa.id)}
-                >
+                <div className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedEmpresa(isExpanded ? null : empresa.id)}>
                   <div className="flex items-center gap-3">
                     {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
-                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-blue-600" />
-                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center"><Building2 className="w-5 h-5 text-blue-600" /></div>
                     <div>
                       <p className="font-medium text-gray-900">{getEmpresaNome(empresa)}</p>
                       <p className="text-xs text-gray-500">{empresa.cnpj || empresa.plano || ''}</p>
@@ -692,9 +730,7 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-500 hidden sm:inline">{users.length} perfil(is)</span>
-                    <Badge className={EMPRESA_STATUS_COLORS[empresa.status] || 'bg-gray-100 text-gray-800'} onClick={(event) => event.stopPropagation()}>
-                      {empresa.status?.replace(/_/g, ' ')}
-                    </Badge>
+                    <Badge className={EMPRESA_STATUS_COLORS[empresa.status] || 'bg-gray-100 text-gray-800'} onClick={(event) => event.stopPropagation()}>{empresa.status?.replace(/_/g, ' ')}</Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
@@ -718,9 +754,7 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
                         {users.map((profile) => (
                           <div key={profile.id} className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-100">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                {profile.display_name?.charAt(0)?.toUpperCase()}
-                              </div>
+                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{profile.display_name?.charAt(0)?.toUpperCase()}</div>
                               <div>
                                 <p className="text-sm font-medium">{profile.display_name}</p>
                                 <p className="text-xs text-gray-500">{profile.email}</p>
@@ -772,42 +806,24 @@ export default function GestaoAcessos() {
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Acessos</h1>
-        <p className="text-gray-500 mt-1">Gerencie perfis, permissões, módulos e empresas usando Supabase</p>
+        <p className="text-gray-500 mt-1">Crie acessos, gerencie perfis, módulos e empresas usando Supabase</p>
       </div>
 
       {isSuperAdmin ? (
         <Tabs defaultValue="usuarios" className="space-y-6">
           <TabsList className="bg-white border h-auto">
-            <TabsTrigger value="usuarios" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-              <Users className="w-4 h-4 mr-2" />Usuários
-            </TabsTrigger>
-            <TabsTrigger value="empresas" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-              <Building2 className="w-4 h-4 mr-2" />Empresas
-            </TabsTrigger>
+            <TabsTrigger value="usuarios" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
+            <TabsTrigger value="empresas" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"><Building2 className="w-4 h-4 mr-2" />Empresas</TabsTrigger>
           </TabsList>
           <TabsContent value="usuarios">
-            <UsuariosTab
-              isSuperAdmin={isSuperAdmin}
-              empresaAtual={empresaAtual}
-              empresas={empresas}
-              todosUsuarios={todosUsuarios}
-              isLoading={isLoadingUsuarios || isLoadingEmpresas}
-              currentUser={currentUser}
-            />
+            <UsuariosTab isSuperAdmin={isSuperAdmin} empresaAtual={empresaAtual} empresas={empresas} todosUsuarios={todosUsuarios} isLoading={isLoadingUsuarios || isLoadingEmpresas} currentUser={currentUser} />
           </TabsContent>
           <TabsContent value="empresas">
             <EmpresasTab todosUsuarios={todosUsuarios} empresas={empresas} isLoading={isLoadingEmpresas} />
           </TabsContent>
         </Tabs>
       ) : (
-        <UsuariosTab
-          isSuperAdmin={false}
-          empresaAtual={empresaAtual}
-          empresas={empresas}
-          todosUsuarios={todosUsuarios}
-          isLoading={isLoadingUsuarios || isLoadingEmpresas}
-          currentUser={currentUser}
-        />
+        <UsuariosTab isSuperAdmin={false} empresaAtual={empresaAtual} empresas={empresas} todosUsuarios={todosUsuarios} isLoading={isLoadingUsuarios || isLoadingEmpresas} currentUser={currentUser} />
       )}
     </div>
   );
