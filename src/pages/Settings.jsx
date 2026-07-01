@@ -1,18 +1,114 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
+import { createPageUrl } from '@/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, Building2, Download, Save, Trash2 } from 'lucide-react';
+import { AlertCircle, BarChart3, Building2, CreditCard, Database, Download, Megaphone, Package, Percent, Save, ShieldCheck, SlidersHorizontal, Target, Trash2, UserRound, Users } from 'lucide-react';
 import { PhoneInput, CpfCnpjInput } from '@/components/forms/MaskedInputs';
 import { usePlanos } from '@/lib/usePlanos';
+import { isAdminRole } from '@/lib/modules';
 
 const UF_LIST = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+
+function SettingsShortcutCard({ item }) {
+  return (
+    <Card className="h-full">
+      <CardContent className="p-4 flex flex-col h-full">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+            <item.icon className="w-5 h-5 text-gray-700" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-gray-900 leading-tight">{item.title}</h3>
+            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+          </div>
+        </div>
+        <Button asChild variant="outline" className="mt-4 w-full">
+          <Link to={createPageUrl(item.path)}>Abrir</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SettingsSection({ title, description, items }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {items.map((item) => <SettingsShortcutCard key={item.key || item.path} item={item} />)}
+      </div>
+    </section>
+  );
+}
+
+function CentralTab({ user, showEmpresaTab }) {
+  const modulosPermitidos = user?.modulos_permitidos;
+  const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
+  const isSuperAdmin = user?.role === 'super_admin';
+  const isAdmin = isAdminRole(user?.role);
+  const hasModuleAccess = (moduleKey) => isSuperAdmin || !hasModules || modulosPermitidos.includes(moduleKey);
+  const canOpen = (item) => {
+    if (item.superAdminOnly && !isSuperAdmin) return false;
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.adminEmpresaAllowed && !isAdmin) return false;
+    return hasModuleAccess(item.moduleKey || item.path);
+  };
+
+  const sections = [
+    {
+      title: 'Administração',
+      description: 'Usuários, empresas, planos e governança operacional.',
+      items: [
+        { title: 'Gestão de Acessos', description: 'Usuários, perfis, módulos liberados e senhas temporárias.', icon: ShieldCheck, path: 'GestaoAcessos', adminOnly: true },
+        { title: 'Gestão de Empresas', description: 'Empresas, status, plano contratado e usuários vinculados.', icon: Building2, path: 'GestaoEmpresas', adminEmpresaAllowed: true },
+        { title: 'Gestão de Planos', description: 'Planos comerciais, limites e pacotes disponíveis.', icon: CreditCard, path: 'GestaoPlanos', superAdminOnly: true },
+        ...(showEmpresaTab ? [{ key: 'minha-empresa', title: 'Minha Empresa', description: 'Identidade, contato, endereço e dados cadastrais.', icon: SlidersHorizontal, path: 'Settings', moduleKey: 'Settings' }] : []),
+      ],
+    },
+    {
+      title: 'Comercial',
+      description: 'Parâmetros usados pelo funil, campanhas e vendas.',
+      items: [
+        { title: 'Campanhas Comerciais', description: 'Criação, status, metas e KPIs de campanhas.', icon: Megaphone, path: 'Campanhas' },
+        { title: 'Equipes Comerciais', description: 'Líderes, times e organização comercial.', icon: Users, path: 'EquipeComercial' },
+        { title: 'Vendedores', description: 'Cadastro e manutenção de vendedores.', icon: UserRound, path: 'Vendedores' },
+        { title: 'Produtos de Consórcio', description: 'Produtos, administradoras vinculadas e parâmetros comerciais.', icon: Package, path: 'ProdutoConsorcio' },
+        { title: 'Regras de Comissão', description: 'Percentuais, parcelamento e regras de repasse.', icon: Percent, path: 'RegrasComissao' },
+      ],
+    },
+    {
+      title: 'Dados e Operação',
+      description: 'Importação, exportação, testes e acompanhamento gerencial.',
+      items: [
+        { key: 'padroes-sistema', title: 'Padrões do Sistema', description: 'Moeda padrão e prazo padrão de follow-up.', icon: SlidersHorizontal, path: 'Settings', moduleKey: 'Settings' },
+        { key: 'dados-templates', title: 'Dados e Templates', description: 'Modelos CSV, exportações e reset controlado de dados.', icon: Database, path: 'Settings', moduleKey: 'Settings' },
+        { title: 'Dados de Teste', description: 'Carga controlada de dados de demonstração.', icon: Database, path: 'DadosTeste', adminOnly: true },
+        { title: 'Relatórios Gerenciais', description: 'Indicadores de CRM e performance comercial.', icon: BarChart3, path: 'Reports' },
+        { title: 'Prospecção', description: 'Leads, origens e entradas do funil comercial.', icon: Target, path: 'Leads' },
+      ],
+    },
+  ].map((section) => ({ ...section, items: section.items.filter(canOpen) }));
+
+  return (
+    <div className="space-y-8">
+      {sections.map((section) => (
+        <SettingsSection key={section.title} title={section.title} description={section.description} items={section.items} />
+      ))}
+    </div>
+  );
+}
 
 function MinhaEmpresaTab({ empresa_vinculada }) {
   const queryClient = useQueryClient();
@@ -243,22 +339,26 @@ export default function Settings() {
   };
 
   const showEmpresaTab = isAdminEmpresa;
-  const tabCount = showEmpresaTab ? 3 : 2;
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-          <p className="text-gray-500 mt-1">Gerencie as preferências da plataforma</p>
+          <p className="text-gray-500 mt-1">Central administrativa, preferências da plataforma e operação de dados</p>
         </div>
 
-        <Tabs defaultValue={showEmpresaTab ? 'empresa' : 'defaults'} className="space-y-6">
-          <TabsList className={`grid w-full grid-cols-${tabCount}`}>
+        <Tabs defaultValue="central" className="space-y-6">
+          <TabsList className={`grid w-full ${showEmpresaTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            <TabsTrigger value="central">Central</TabsTrigger>
             {showEmpresaTab && <TabsTrigger value="empresa">Minha Empresa</TabsTrigger>}
             <TabsTrigger value="defaults">Padrões</TabsTrigger>
             <TabsTrigger value="data">Dados</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="central">
+            <CentralTab user={user} showEmpresaTab={showEmpresaTab} />
+          </TabsContent>
 
           {showEmpresaTab && (
             <TabsContent value="empresa">
