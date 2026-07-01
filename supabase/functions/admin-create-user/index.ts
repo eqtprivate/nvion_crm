@@ -27,6 +27,21 @@ function normalizeEmail(value: unknown) {
   return String(value || '').trim().toLowerCase();
 }
 
+function getSupabaseSecretKey() {
+  const legacyServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (legacyServiceRoleKey) return legacyServiceRoleKey;
+
+  const secretKeysRaw = Deno.env.get('SUPABASE_SECRET_KEYS');
+  if (!secretKeysRaw) return null;
+
+  try {
+    const secretKeys = JSON.parse(secretKeysRaw);
+    return secretKeys?.default || Object.values(secretKeys || {})[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 function generateTemporaryPassword() {
   const bytes = new Uint8Array(12);
   crypto.getRandomValues(bytes);
@@ -40,9 +55,9 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return jsonResponse({ error: 'method_not_allowed' }, 405);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const secretKey = getSupabaseSecretKey();
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !secretKey) {
     return jsonResponse({ error: 'missing_server_configuration' }, 500);
   }
 
@@ -50,7 +65,7 @@ Deno.serve(async (req) => {
   const token = authHeader.replace('Bearer ', '').trim();
   if (!token) return jsonResponse({ error: 'missing_authorization' }, 401);
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
+  const admin = createClient(supabaseUrl, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
