@@ -331,6 +331,14 @@ export default function Leads() {
   const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
   const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
   const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: campanhas = [] } = useQuery({
+    queryKey: ['campanhas', empresa],
+    queryFn: async () => {
+      if (!base44.entities.Campanhas) return [];
+      return filterEmpresa(await base44.entities.Campanhas.list('-created_date'));
+    },
+    enabled: Boolean(empresa),
+  });
 
   const leads = useMemo(
     () => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }),
@@ -658,8 +666,8 @@ export default function Leads() {
 
       <LeadsAnalytics leads={filtered} />
 
-      <LeadDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} produtos={produtos} administradoras={administradoras} vendedores={vendedores} equipes={equipes} />
-      <EditLeadDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} lead={selectedLead} onSubmit={data => updateMutation.mutate({ id: selectedLead.id, data })} isLoading={updateMutation.isPending} produtos={produtos} administradoras={administradoras} vendedores={vendedores} equipes={equipes} />
+      <LeadDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={data => createMutation.mutate(data)} isLoading={createMutation.isPending} currentUser={user} produtos={produtos} administradoras={administradoras} vendedores={vendedores} equipes={equipes} campanhas={campanhas} />
+      <EditLeadDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} lead={selectedLead} onSubmit={data => updateMutation.mutate({ id: selectedLead.id, data })} isLoading={updateMutation.isPending} produtos={produtos} administradoras={administradoras} vendedores={vendedores} equipes={equipes} campanhas={campanhas} />
       <ImportCSVDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} isLoading={importMutation.isPending} />
       <AlertDialog open={Boolean(pendingOpportunityLead)} onOpenChange={(open) => { if (!open) setPendingOpportunityLead(null); }}>
         <AlertDialogContent>

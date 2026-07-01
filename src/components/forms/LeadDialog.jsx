@@ -62,6 +62,15 @@ const emptyForm = {
   proxima_acao: '', observacoes: '',
 };
 
+function getCampaignOptionValue(campanha) {
+  return campanha?.codigo_campanha || campanha?.nome_campanha || '';
+}
+
+function getCampaignOptionLabel(campanha) {
+  if (!campanha?.codigo_campanha) return campanha?.nome_campanha || '';
+  return `${campanha.nome_campanha || campanha.codigo_campanha} (${campanha.codigo_campanha})`;
+}
+
 export default function LeadDialog({
   open,
   onOpenChange,
@@ -72,6 +81,7 @@ export default function LeadDialog({
   administradoras = [],
   vendedores = [],
   equipes = [],
+  campanhas = [],
 }) {
   const getInitialForm = () => {
     const base = { ...emptyForm };
@@ -90,6 +100,10 @@ export default function LeadDialog({
     ]);
     return Array.from(nomes).sort();
   }, [vendedores, equipes]);
+
+  const campanhaOptions = useMemo(() => campanhas
+    .map((campanha) => ({ value: getCampaignOptionValue(campanha), label: getCampaignOptionLabel(campanha) }))
+    .filter((option) => option.value && option.label), [campanhas]);
 
   useEffect(() => { if (open) { setForm(getInitialForm()); setErrors({}); } }, [open]);
 
@@ -123,7 +137,7 @@ export default function LeadDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Origem</Label><Select value={form.origem} onValueChange={v => set('origem', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ORIGENS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></div>
-            <div className="space-y-1"><Label>Campanha</Label><Input value={form.campanha} onChange={e => set('campanha', e.target.value)} /></div>
+            <div className="space-y-1"><Label>Campanha</Label><Select value={form.campanha || ''} onValueChange={v => set('campanha', v)}><SelectTrigger><SelectValue placeholder="Selecione a campanha" /></SelectTrigger><SelectContent>{campanhaOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1"><Label>Produto de Interesse</Label><Select value={form.produto_interesse || ''} onValueChange={handleProdutoChange}><SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger><SelectContent>{produtos.filter(p => p.nome_produto).map(p => <SelectItem key={p.id} value={p.nome_produto}>{p.nome_produto}</SelectItem>)}</SelectContent></Select></div>
