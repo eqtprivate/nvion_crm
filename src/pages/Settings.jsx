@@ -19,6 +19,16 @@ import { isAdminRole } from '@/lib/modules';
 const UF_LIST = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 
 function SettingsShortcutCard({ item }) {
+  const openButton = item.tab ? (
+    <Button type="button" variant="outline" className="mt-4 w-full" onClick={() => item.onOpenTab(item.tab)}>
+      Abrir
+    </Button>
+  ) : (
+    <Button asChild variant="outline" className="mt-4 w-full">
+      <Link to={createPageUrl(item.path)}>Abrir</Link>
+    </Button>
+  );
+
   return (
     <Card className="h-full">
       <CardContent className="p-4 flex flex-col h-full">
@@ -31,9 +41,7 @@ function SettingsShortcutCard({ item }) {
             <p className="text-sm text-gray-500 mt-1">{item.description}</p>
           </div>
         </div>
-        <Button asChild variant="outline" className="mt-4 w-full">
-          <Link to={createPageUrl(item.path)}>Abrir</Link>
-        </Button>
+        {openButton}
       </CardContent>
     </Card>
   );
@@ -54,7 +62,7 @@ function SettingsSection({ title, description, items }) {
   );
 }
 
-function CentralTab({ user, showEmpresaTab }) {
+function CentralTab({ user, showEmpresaTab, onOpenTab }) {
   const modulosPermitidos = user?.modulos_permitidos;
   const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
   const isSuperAdmin = user?.role === 'super_admin';
@@ -75,7 +83,7 @@ function CentralTab({ user, showEmpresaTab }) {
         { title: 'Gestão de Acessos', description: 'Usuários, perfis, módulos liberados e senhas temporárias.', icon: ShieldCheck, path: 'GestaoAcessos', adminOnly: true },
         { title: 'Gestão de Empresas', description: 'Empresas, status, plano contratado e usuários vinculados.', icon: Building2, path: 'GestaoEmpresas', adminEmpresaAllowed: true },
         { title: 'Gestão de Planos', description: 'Planos comerciais, limites e pacotes disponíveis.', icon: CreditCard, path: 'GestaoPlanos', superAdminOnly: true },
-        ...(showEmpresaTab ? [{ key: 'minha-empresa', title: 'Minha Empresa', description: 'Identidade, contato, endereço e dados cadastrais.', icon: SlidersHorizontal, path: 'Settings', moduleKey: 'Settings' }] : []),
+        ...(showEmpresaTab ? [{ key: 'minha-empresa', title: 'Minha Empresa', description: 'Identidade, contato, endereço e dados cadastrais.', icon: SlidersHorizontal, path: 'Settings', tab: 'empresa', onOpenTab, moduleKey: 'Settings' }] : []),
       ],
     },
     {
@@ -93,8 +101,8 @@ function CentralTab({ user, showEmpresaTab }) {
       title: 'Dados e Operação',
       description: 'Importação, exportação, testes e acompanhamento gerencial.',
       items: [
-        { key: 'padroes-sistema', title: 'Padrões do Sistema', description: 'Moeda padrão e prazo padrão de follow-up.', icon: SlidersHorizontal, path: 'Settings', moduleKey: 'Settings' },
-        { key: 'dados-templates', title: 'Dados e Templates', description: 'Modelos CSV, exportações e reset controlado de dados.', icon: Database, path: 'Settings', moduleKey: 'Settings' },
+        { key: 'padroes-sistema', title: 'Padrões do Sistema', description: 'Moeda padrão e prazo padrão de follow-up.', icon: SlidersHorizontal, path: 'Settings', tab: 'defaults', onOpenTab, moduleKey: 'Settings' },
+        { key: 'dados-templates', title: 'Dados e Templates', description: 'Modelos CSV, exportações e reset controlado de dados.', icon: Database, path: 'Settings', tab: 'data', onOpenTab, moduleKey: 'Settings' },
         { title: 'Dados de Teste', description: 'Carga controlada de dados de demonstração.', icon: Database, path: 'DadosTeste', adminOnly: true },
         { title: 'Relatórios Gerenciais', description: 'Indicadores de CRM e performance comercial.', icon: BarChart3, path: 'Reports' },
         { title: 'Prospecção', description: 'Leads, origens e entradas do funil comercial.', icon: Target, path: 'Leads' },
@@ -314,6 +322,8 @@ export default function Settings() {
   const isSuperAdmin = user?.role === 'super_admin';
   const isAdminEmpresa = user?.role === 'admin_empresa';
   const isAdmin = isSuperAdmin || isAdminEmpresa;
+  const showEmpresaTab = isAdminEmpresa;
+  const [activeTab, setActiveTab] = useState('central');
   const [resetConfirmation, setResetConfirmation] = useState('');
   const queryClient = useQueryClient();
 
@@ -402,8 +412,6 @@ export default function Settings() {
     window.URL.revokeObjectURL(url);
   };
 
-  const showEmpresaTab = isAdminEmpresa;
-
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto">
@@ -412,7 +420,7 @@ export default function Settings() {
           <p className="text-gray-500 mt-1">Central administrativa, preferências da plataforma e operação de dados</p>
         </div>
 
-        <Tabs defaultValue="central" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`grid w-full ${showEmpresaTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="central">Central</TabsTrigger>
             {showEmpresaTab && <TabsTrigger value="empresa">Minha Empresa</TabsTrigger>}
@@ -421,7 +429,7 @@ export default function Settings() {
           </TabsList>
 
           <TabsContent value="central">
-            <CentralTab user={user} showEmpresaTab={showEmpresaTab} />
+            <CentralTab user={user} showEmpresaTab={showEmpresaTab} onOpenTab={setActiveTab} />
           </TabsContent>
 
           {showEmpresaTab && (
