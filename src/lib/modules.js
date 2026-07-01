@@ -1,7 +1,7 @@
 export const AVAILABLE_MODULES = [
   'Dashboard',
   'Leads',
-  'Marketing',
+  'Campanhas',
   'Oportunidades',
   'Contacts',
   'Accounts',
@@ -23,7 +23,7 @@ export const AVAILABLE_MODULES = [
 export const MODULE_LABELS = {
   Dashboard: 'Painel Geral',
   Leads: 'Prospecção',
-  Marketing: 'Campanhas',
+  Campanhas: 'Campanhas Comerciais',
   Oportunidades: 'Oportunidades',
   Contacts: 'Clientes',
   Accounts: 'Administradoras',
@@ -55,8 +55,8 @@ export const ROLE_LABELS = {
 export const ROLE_MODULE_DEFAULTS = {
   super_admin: AVAILABLE_MODULES,
   admin_empresa: AVAILABLE_MODULES,
-  gestor_comercial: ['Dashboard', 'Leads', 'Marketing', 'Oportunidades', 'Contacts', 'Accounts', 'EquipeComercial', 'Reports'],
-  lider_comercial: ['Dashboard', 'Leads', 'Marketing', 'Oportunidades', 'Contacts', 'Accounts', 'EquipeComercial', 'Reports'],
+  gestor_comercial: ['Dashboard', 'Leads', 'Campanhas', 'Oportunidades', 'Contacts', 'Accounts', 'EquipeComercial', 'Reports'],
+  lider_comercial: ['Dashboard', 'Leads', 'Campanhas', 'Oportunidades', 'Contacts', 'Accounts', 'EquipeComercial', 'Reports'],
   gestor_financeiro: ['Dashboard', 'Reports', 'Accounts'],
   vendedor: ['Dashboard', 'Leads', 'Oportunidades', 'Contacts'],
   analista_plataforma: ['Dashboard', 'Reports', 'Leads', 'Oportunidades'],

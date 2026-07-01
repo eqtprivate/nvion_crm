@@ -45,7 +45,7 @@ export default function Layout({ children, currentPageName }) {
   const allMenuItems = [
     { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
     { name: 'Prospecção', icon: Target, path: 'Leads' },
-    { name: 'Campanhas', icon: Megaphone, path: 'Campanhas', moduleKey: 'Marketing' },
+    { name: 'Campanhas', icon: Megaphone, path: 'Campanhas' },
     { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
     { name: 'Clientes', icon: Users, path: 'Contacts' },
     { name: 'Administradoras', icon: Building2, path: 'Accounts' },

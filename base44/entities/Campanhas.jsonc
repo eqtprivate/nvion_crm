@@ -1,0 +1,141 @@
+{
+  "name": "Campanhas",
+  "type": "object",
+  "properties": {
+    "nome_campanha": {
+      "type": "string",
+      "description": "Nome da campanha comercial"
+    },
+    "codigo_campanha": {
+      "type": "string",
+      "description": "Codigo unico ou apelido operacional da campanha"
+    },
+    "empresa_vinculada": {
+      "type": "string",
+      "description": "Empresa vinculada"
+    },
+    "tipo_campanha": {
+      "type": "string",
+      "enum": ["digital", "indicacao", "parceria", "evento", "mailing", "inbound", "outbound", "corban", "institucional", "outro"],
+      "default": "digital",
+      "description": "Tipo da campanha"
+    },
+    "status_campanha": {
+      "type": "string",
+      "enum": ["rascunho", "ativa", "pausada", "encerrada", "cancelada"],
+      "default": "rascunho",
+      "description": "Status da campanha"
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de inicio"
+    },
+    "data_fim": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de fim"
+    },
+    "orcamento_previsto": {
+      "type": "number",
+      "description": "Orcamento previsto"
+    },
+    "orcamento_realizado": {
+      "type": "number",
+      "description": "Orcamento realizado"
+    },
+    "meta_leads": {
+      "type": "number",
+      "description": "Meta de leads"
+    },
+    "meta_oportunidades": {
+      "type": "number",
+      "description": "Meta de oportunidades"
+    },
+    "meta_vendas": {
+      "type": "number",
+      "description": "Meta de vendas"
+    },
+    "meta_valor_cartas": {
+      "type": "number",
+      "description": "Meta de valor em cartas"
+    },
+    "produto_foco": {
+      "type": "string",
+      "description": "Produto foco"
+    },
+    "administradora_foco": {
+      "type": "string",
+      "description": "Administradora foco"
+    },
+    "equipe_responsavel": {
+      "type": "string",
+      "description": "Equipe responsavel"
+    },
+    "responsavel": {
+      "type": "string",
+      "description": "Responsavel pela campanha"
+    },
+    "canal": {
+      "type": "string",
+      "enum": ["whatsapp", "email", "landing_page", "trafego_pago", "organic_social", "parceiro", "evento", "telefone", "outro"],
+      "default": "outro",
+      "description": "Canal principal"
+    },
+    "origem": {
+      "type": "string",
+      "description": "Origem da campanha"
+    },
+    "utm_source": {
+      "type": "string",
+      "description": "UTM source"
+    },
+    "utm_medium": {
+      "type": "string",
+      "description": "UTM medium"
+    },
+    "utm_campaign": {
+      "type": "string",
+      "description": "UTM campaign"
+    },
+    "publico_alvo": {
+      "type": "string",
+      "description": "Publico alvo"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Descricao"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observacoes"
+    }
+  },
+  "required": ["nome_campanha"],
+  "rls": {
+    "create": {
+      "$or": [
+        { "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" },
+        { "user_condition": { "role": "super_admin" } }
+      ]
+    },
+    "read": {
+      "$or": [
+        { "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" },
+        { "user_condition": { "role": "super_admin" } }
+      ]
+    },
+    "update": {
+      "$or": [
+        { "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" },
+        { "user_condition": { "role": "super_admin" } }
+      ]
+    },
+    "delete": {
+      "$or": [
+        { "data.empresa_vinculada": "{{user.data.empresa_vinculada}}" },
+        { "user_condition": { "role": "super_admin" } }
+      ]
+    }
+  }
+}

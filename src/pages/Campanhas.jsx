@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Megaphone, Plus, Search, Download, MoreVertical, Pencil, Trash2, PlayCircle, PauseCircle, CheckCircle2, Ban } from 'lucide-react';
+import { MoneyInput } from '@/components/forms/MaskedInputs';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 const STATUS_OPTIONS = ['rascunho', 'ativa', 'pausada', 'encerrada', 'cancelada'];
@@ -237,11 +239,11 @@ function CampanhaDialog({ open, onOpenChange, campanha, onSubmit, loading, produ
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
               <Label>Orçamento previsto</Label>
-              <Input type="number" step="0.01" min="0" value={form.orcamento_previsto || ''} onChange={(event) => set('orcamento_previsto', event.target.value)} />
+              <MoneyInput value={form.orcamento_previsto || ''} onChange={(value) => set('orcamento_previsto', value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Orçamento realizado</Label>
-              <Input type="number" step="0.01" min="0" value={form.orcamento_realizado || ''} onChange={(event) => set('orcamento_realizado', event.target.value)} />
+              <MoneyInput value={form.orcamento_realizado || ''} onChange={(value) => set('orcamento_realizado', value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Meta leads</Label>
@@ -257,7 +259,7 @@ function CampanhaDialog({ open, onOpenChange, campanha, onSubmit, loading, produ
             </div>
             <div className="space-y-1.5">
               <Label>Meta valor cartas</Label>
-              <Input type="number" step="0.01" min="0" value={form.meta_valor_cartas || ''} onChange={(event) => set('meta_valor_cartas', event.target.value)} />
+              <MoneyInput value={form.meta_valor_cartas || ''} onChange={(value) => set('meta_valor_cartas', value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Produto foco</Label>
@@ -303,8 +305,8 @@ function CampanhaDialog({ open, onOpenChange, campanha, onSubmit, loading, produ
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5"><Label>Descrição</Label><Input value={form.descricao || ''} onChange={(event) => set('descricao', event.target.value)} /></div>
-            <div className="space-y-1.5"><Label>Observações</Label><Input value={form.observacoes || ''} onChange={(event) => set('observacoes', event.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Descrição</Label><Textarea value={form.descricao || ''} onChange={(event) => set('descricao', event.target.value)} rows={3} /></div>
+            <div className="space-y-1.5"><Label>Observações</Label><Textarea value={form.observacoes || ''} onChange={(event) => set('observacoes', event.target.value)} rows={3} /></div>
           </div>
 
           <DialogFooter>
@@ -342,14 +344,21 @@ export default function Campanhas() {
   const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => filterEmpresa(await base44.entities.Lead.list('-created_date')), enabled: Boolean(empresa) });
   const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await base44.entities.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
   const { data: vendas = [] } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: comissoes = [] } = useQuery({ queryKey: ['comissoes', empresa], queryFn: async () => filterEmpresa(await base44.entities.Comissoes.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: comissoes = [] } = useQuery({
+    queryKey: ['comissoes', empresa],
+    queryFn: async () => {
+      if (!base44.entities.Comissoes) return [];
+      return filterEmpresa(await base44.entities.Comissoes.list('-created_date'));
+    },
+    enabled: Boolean(empresa),
+  });
   const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
   const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
   const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
   const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
 
   const campanhas = useMemo(
-    () => applyAccessFilter(campanhasQuery.data || [], user, { vendedorField: 'responsavel', liderField: 'lider', teamMembers }),
+    () => applyAccessFilter(campanhasQuery.data || [], user, { vendedorField: 'responsavel', liderField: 'equipe_responsavel', teamMembers }),
     [campanhasQuery.data, teamMembers, user]
   );
 
