@@ -22,7 +22,8 @@ import {
   Percent,
   UserRound,
   Database,
-  CreditCard
+  CreditCard,
+  Megaphone
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -44,6 +45,7 @@ export default function Layout({ children, currentPageName }) {
   const allMenuItems = [
     { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
     { name: 'Prospecção', icon: Target, path: 'Leads' },
+    { name: 'Campanhas', icon: Megaphone, path: 'Campanhas', moduleKey: 'Marketing' },
     { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
     { name: 'Clientes', icon: Users, path: 'Contacts' },
     { name: 'Administradoras', icon: Building2, path: 'Accounts' },
@@ -67,22 +69,21 @@ export default function Layout({ children, currentPageName }) {
   const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
   const isAdmin = isAdminRole(currentUser?.role);
   const isSuperAdmin = currentUser?.role === 'super_admin';
+  const hasItemAccess = (item) => isSuperAdmin || !hasModules || modulosPermitidos.includes(item.moduleKey || item.path);
 
-  const menuItems = allMenuItems.filter((item) =>
-    isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path)
-  );
+  const menuItems = allMenuItems.filter((item) => hasItemAccess(item));
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
     if (item.superAdminOnly) return isSuperAdmin;
     if (item.adminEmpresaAllowed) {
       if (!isAdmin) return false;
-      return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
+      return hasItemAccess(item);
     }
     if (item.path === 'GestaoAcessos' || item.path === 'DadosTeste') {
       if (!isAdmin) return false;
-      return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
+      return hasItemAccess(item);
     }
-    return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
+    return hasItemAccess(item);
   });
 
   const isActive = (itemName) => currentPageName === itemName;
