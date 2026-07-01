@@ -59,7 +59,8 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Configurações', icon: Settings, path: 'Settings' },
     { name: 'Dados de Teste', icon: Database, path: 'DadosTeste' },
     { name: 'Gestão de Acessos', icon: ShieldCheck, path: 'GestaoAcessos' },
-    { name: 'Gestão de Planos', icon: CreditCard, path: 'GestaoPlanos', superAdminOnly: true }
+    { name: 'Gestão de Planos', icon: CreditCard, path: 'GestaoPlanos', superAdminOnly: true },
+    { name: 'Gestão de Empresas', icon: Building2, path: 'GestaoEmpresas', adminEmpresaAllowed: true }
   ];
 
   const modulosPermitidos = currentUser?.modulos_permitidos;
@@ -73,6 +74,10 @@ export default function Layout({ children, currentPageName }) {
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
     if (item.superAdminOnly) return isSuperAdmin;
+    if (item.adminEmpresaAllowed) {
+      if (!isAdmin) return false;
+      return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
+    }
     if (item.path === 'GestaoAcessos' || item.path === 'DadosTeste') {
       if (!isAdmin) return false;
       return isSuperAdmin || !hasModules || modulosPermitidos.includes(item.path);
