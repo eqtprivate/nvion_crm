@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +9,10 @@ import { User, Mail, Shield, Camera, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
 import { assertSupabaseConfigured } from '@/lib/supabaseClient';
+
+const PROFILE_ASSETS_BUCKET = 'company-assets';
+const PROFILE_PHOTO_MAX_SIZE_BYTES = 2 * 1024 * 1024;
+const PROFILE_PHOTO_ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -24,15 +27,42 @@ export default function Profile() {
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (!user?.id) {
+      toast.error('Usuario nao identificado');
+      return;
+    }
+    if (!PROFILE_PHOTO_ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Envie uma imagem PNG, JPG ou WebP');
+      return;
+    }
+    if (file.size > PROFILE_PHOTO_MAX_SIZE_BYTES) {
+      toast.error('A foto deve ter no maximo 2 MB');
+      return;
+    }
+
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFormData(prev => ({ ...prev, profile_picture: file_url }));
+      const supabase = assertSupabaseConfigured();
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const path = `profiles/${user.id}/avatar-${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from(PROFILE_ASSETS_BUCKET)
+        .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from(PROFILE_ASSETS_BUCKET)
+        .getPublicUrl(path);
+      const profilePictureUrl = publicUrlData?.publicUrl;
+      if (!profilePictureUrl) throw new Error('Nao foi possivel gerar a URL publica da foto.');
+
+      setFormData(prev => ({ ...prev, profile_picture: profilePictureUrl }));
       toast.success('Foto enviada com sucesso');
     } catch (error) {
       console.error('Erro ao enviar foto:', error);
-      toast.error('Erro ao enviar foto');
+      toast.error(error?.message || 'Erro ao enviar foto');
     } finally {
       setUploading(false);
     }
@@ -114,11 +144,11 @@ export default function Profile() {
                           }
                         </Avatar>
                         <div className="flex-1 w-full">
-                          <input type="file" id="photo-upload" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                          <input type="file" id="photo-upload" accept="image/png,image/jpeg,image/webp" onChange={handlePhotoUpload} className="hidden" />
                           <Button type="button" variant="outline" onClick={() => document.getElementById('photo-upload').click()} disabled={uploading} className="w-full sm:w-auto">
                             {uploading ? 'Enviando...' : <><Camera className="w-4 h-4 mr-2" />Enviar Foto</>}
                           </Button>
-                          <p className="text-xs text-gray-500 mt-2">JPG, PNG ou GIF. Máximo 5MB.</p>
+                          <p className="text-xs text-gray-500 mt-2">JPG, PNG ou WebP. Máximo 2MB.</p>
                         </div>
                       </div>
                     </div>
