@@ -22,6 +22,7 @@ import {
   KeyRound,
   Copy,
   Check,
+  Loader2,
 } from 'lucide-react';
 import {
   Dialog,
@@ -382,6 +383,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
   const [createdAccess, setCreatedAccess] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [empresaFiltro, setEmpresaFiltro] = useState('all');
+  const [resettingPasswordUserId, setResettingPasswordUserId] = useState(null);
 
   const currentEmpresaNome = currentUser?.empresa_vinculada;
 
@@ -516,7 +518,11 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
       if (result?.error) throw new Error(result.detail || result.error);
       return result;
     },
-    onSuccess: (result) => {
+    onMutate: (target) => {
+      setResettingPasswordUserId(target.id);
+      return { toastId: toast.loading(`Gerando senha temporária para ${target.display_name || target.email}...`) };
+    },
+    onSuccess: (result, _target, context) => {
       setCreatedAccess({
         mode: 'reset',
         display_name: result?.display_name,
@@ -524,9 +530,13 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
         temporary_password: result?.temporary_password,
       });
       setPasswordDialogOpen(true);
-      toast.success('Nova senha temporária gerada.');
+      toast.success('Nova senha temporária gerada.', { id: context?.toastId });
     },
-    onError: (error) => toast.error(`Erro ao gerar senha temporária: ${error?.message || 'sem detalhe'}`),
+    onError: (error, _target, context) => {
+      console.error('Erro ao gerar senha temporária:', error);
+      toast.error(`Erro ao gerar senha temporária: ${error?.message || 'sem detalhe'}`, { id: context?.toastId });
+    },
+    onSettled: () => setResettingPasswordUserId(null),
   });
 
   const toggleStatus = (target) => {
@@ -630,8 +640,11 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                             <DropdownMenuItem onClick={() => resetPasswordMutation.mutate(target)}>
                               <Mail className="w-4 h-4 mr-2" /> Enviar recuperação de senha
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => resetTemporaryPasswordMutation.mutate(target)} disabled={target.id === currentUser?.id}>
-                              <KeyRound className="w-4 h-4 mr-2" /> Gerar senha temporária
+                            <DropdownMenuItem onClick={() => resetTemporaryPasswordMutation.mutate(target)} disabled={target.id === currentUser?.id || resetTemporaryPasswordMutation.isPending}>
+                              {resettingPasswordUserId === target.id
+                                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                : <KeyRound className="w-4 h-4 mr-2" />}
+                              {resettingPasswordUserId === target.id ? 'Gerando...' : 'Gerar senha temporária'}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleStatus(target)} disabled={target.id === currentUser?.id}>
                               {target.status === 'ativo'
