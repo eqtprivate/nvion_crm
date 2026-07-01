@@ -23,7 +23,7 @@ export const AVAILABLE_MODULES = [
 export const MODULE_LABELS = {
   Dashboard: 'Painel Geral',
   Leads: 'Prospecção',
-  Marketing: 'Marketing',
+  Marketing: 'Campanhas',
   Oportunidades: 'Oportunidades',
   Contacts: 'Clientes',
   Accounts: 'Administradoras',
