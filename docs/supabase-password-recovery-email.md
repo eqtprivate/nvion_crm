@@ -19,7 +19,7 @@ O link de recuperacao sera redirecionado para:
 https://seu-dominio-do-nvion.com/Profile
 ```
 
-Se `VITE_PUBLIC_APP_URL` nao estiver definida, o app usa `window.location.origin`.
+Se `VITE_PUBLIC_APP_URL` nao estiver definida, o app usa o dominio atual quando ele nao for local. Em ambiente local, o fallback seguro e `https://nvion.base44.app`.
 
 ## Configuracao no Supabase
 
