@@ -82,16 +82,16 @@ export const requiredString = (msg = 'Campo obrigatório') =>
 /** String opcional (permite vazio). */
 export const optionalString = z.string().trim().optional();
 
-/** Email obrigatório. */
+/**
+ * Email obrigatório — exige apenas presença (não bloqueia por formato),
+ * para não impedir salvamento de registros existentes com e-mails legados.
+ */
+// eslint-disable-next-line no-unused-vars
 export const requiredEmail = (msg = 'E-mail inválido') =>
-  z.string({ required_error: 'E-mail obrigatório' }).trim().min(1, 'E-mail obrigatório').email(msg);
+  z.string({ required_error: 'E-mail obrigatório' }).trim().min(1, 'E-mail obrigatório');
 
-/** Email opcional (permite vazio). */
-export const optionalEmail = z
-  .string()
-  .trim()
-  .optional()
-  .refine((v) => blank(v) || z.string().email().safeParse(v).success, 'E-mail inválido');
+/** Email opcional (não bloqueia por formato). */
+export const optionalEmail = z.string().trim().optional();
 
 /** Número opcional (string vazia → undefined). */
 export const optionalNumber = z.preprocess(
@@ -118,29 +118,21 @@ export const optionalPercent = z.preprocess(
   z.number({ invalid_type_error: 'Percentual inválido' }).min(0, 'Mínimo 0%').max(100, 'Máximo 100%').optional(),
 );
 
-/** CPF/CNPJ opcional (valida dígitos verificadores quando preenchido). */
-export const optionalCpfCnpj = z
-  .string()
-  .optional()
-  .refine((v) => blank(v) || isValidCpfCnpj(v), 'CPF/CNPJ inválido');
+/**
+ * CPF/CNPJ opcional — não bloqueia salvamento (dados legados/seed podem ter
+ * documentos de teste ou incompletos). A máscara continua formatando o campo,
+ * e `isValidCpfCnpj` segue disponível para avisos não bloqueantes.
+ */
+export const optionalCpfCnpj = z.string().optional();
 
-/** Telefone BR opcional. */
-export const optionalPhone = z
-  .string()
-  .optional()
-  .refine((v) => blank(v) || isValidPhoneBR(v), 'Telefone inválido (use DDD + número)');
+/** Telefone BR opcional (não bloqueia por formato/comprimento). */
+export const optionalPhone = z.string().optional();
 
-/** CEP opcional. */
-export const optionalCEP = z
-  .string()
-  .optional()
-  .refine((v) => blank(v) || isValidCEP(v), 'CEP inválido');
+/** CEP opcional (não bloqueia por formato). */
+export const optionalCEP = z.string().optional();
 
-/** Data opcional no formato ISO (YYYY-MM-DD) vinda de <input type="date">. */
-export const optionalDate = z
-  .string()
-  .optional()
-  .refine((v) => blank(v) || /^\d{4}-\d{2}-\d{2}$/.test(v), 'Data inválida');
+/** Data opcional (não bloqueia; <input type="date"> já garante o formato). */
+export const optionalDate = z.string().optional();
 
 // ──────────────────────────────────────────────────────────────────────────
 // Schemas por entidade (espelham os schemas do Base44)
