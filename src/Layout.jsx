@@ -10,6 +10,8 @@ import {
   Building2,
   BarChart3,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Search,
   Bell,
   Settings,
@@ -39,6 +41,7 @@ import {
 
 export default function Layout({ children, currentPageName }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user: currentUser, logout } = useAuth();
   const location = useLocation();
 
@@ -88,29 +91,29 @@ export default function Layout({ children, currentPageName }) {
 
   const isActive = (itemName) => currentPageName === itemName;
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ forMobile = false } = {}) => (
     <>
-      <div className="h-16 flex items-center gap-2.5 px-4 border-b border-sidebar-border">
+      <div className={`h-16 flex items-center gap-2.5 px-4 border-b border-sidebar-border ${sidebarCollapsed && !forMobile ? 'justify-center' : ''}`}>
         <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/52d192aa6_nvion_logo_icon.png" alt="NVION" className="h-9 w-9 object-contain flex-shrink-0" />
-        <span className="text-sm font-semibold text-white truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>
+        {(!sidebarCollapsed || forMobile) && <span className="text-sm font-semibold text-white truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>}
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1 flex flex-col overflow-y-auto">
+      <nav className="flex-1 px-2 py-4 space-y-1 flex flex-col overflow-y-auto">
         <div className="space-y-0.5">
           {menuItems.map((item) => (
-            <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'}`}>
+            <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'}`}>
               <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-primary-foreground' : ''}`} />
-              <span className="text-sm">{item.name}</span>
+              {(!sidebarCollapsed || forMobile) && <span className="text-sm truncate">{item.name}</span>}
             </Link>
           ))}
         </div>
         <div className="mt-auto pt-4 border-t border-sidebar-border space-y-0.5">
           {bottomMenuItems.map((item) => (
-            <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'}`}>
+            <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white'}`}>
               <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-              <span className="text-sm">{item.name}</span>
+              {(!sidebarCollapsed || forMobile) && <span className="text-sm truncate">{item.name}</span>}
             </Link>
           ))}
-          <p className="text-[10px] text-sidebar-foreground/30 text-center pt-3 pb-1 select-none">NVION v{APP_VERSION}</p>
+          {(!sidebarCollapsed || forMobile) && <p className="text-[10px] text-sidebar-foreground/30 text-center pt-3 pb-1 select-none">NVION v{APP_VERSION}</p>}
         </div>
       </nav>
     </>
@@ -118,17 +121,22 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      <div className="hidden md:flex w-64 bg-sidebar flex-col fixed inset-y-0 left-0 z-30"><SidebarContent /></div>
+      <div className="hidden md:flex bg-sidebar flex-col fixed inset-y-0 left-0 z-30 transition-all duration-200" style={{ width: sidebarCollapsed ? '60px' : '256px' }}>
+        <SidebarContent />
+        <button type="button" onClick={() => setSidebarCollapsed((value) => !value)} className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-colors bg-sidebar-accent border border-sidebar-border text-sidebar-foreground/70 hover:text-white" title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}>
+          {sidebarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        </button>
+      </div>
       {mobileSidebarOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-64 bg-sidebar flex-col flex">
             <button className="absolute top-5 right-4 text-sidebar-foreground hover:text-white" onClick={() => setMobileSidebarOpen(false)}><X className="w-5 h-5" /></button>
-            <SidebarContent />
+            <SidebarContent forMobile />
           </div>
         </div>
       )}
-      <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-200 ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-64'}`}>
         <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
           <div className="flex items-center gap-3 flex-1">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileSidebarOpen(true)}><Menu className="w-5 h-5" /></Button>
