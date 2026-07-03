@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -324,18 +324,18 @@ export default function Leads() {
 
   const { data: allLeads = [], isLoading } = useQuery({
     queryKey: ['leads', empresa],
-    queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
+    queryFn: async () => { const all = await db.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
-  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await db.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await db.Account.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await db.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await db.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
   const { data: campanhas = [] } = useQuery({
     queryKey: ['campanhas', empresa],
     queryFn: async () => {
-      if (!base44.entities.Campanhas) return [];
-      return filterEmpresa(await base44.entities.Campanhas.list('-created_date'));
+      if (!db.Campanhas) return [];
+      return filterEmpresa(await db.Campanhas.list('-created_date'));
     },
     enabled: Boolean(empresa),
   });
@@ -346,14 +346,14 @@ export default function Leads() {
   );
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Lead.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.Lead.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setDialogOpen(false); },
   });
 
   const importMutation = useMutation({
     mutationFn: async (rows) => {
       for (const row of rows) {
-        await base44.entities.Lead.create({ ...row, status: row.status || 'novo_contato', temperatura: row.temperatura || 'morno', origem: row.origem || 'outro', empresa_vinculada: empresa });
+        await db.Lead.create({ ...row, status: row.status || 'novo_contato', temperatura: row.temperatura || 'morno', origem: row.origem || 'outro', empresa_vinculada: empresa });
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads', empresa] }),
@@ -364,18 +364,18 @@ export default function Leads() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+    mutationFn: ({ id, data }) => db.Lead.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['leads', empresa] }); setEditDialogOpen(false); setSelectedLead(null); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Lead.delete(id),
+    mutationFn: (id) => db.Lead.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads', empresa] }),
   });
 
   const convertToOpportunityMutation = useMutation({
     mutationFn: async (lead) => {
-      const existing = await base44.entities.Opportunity.list('-created_date');
+      const existing = await db.Opportunity.list('-created_date');
       const existingOpportunity = existing.find((op) =>
         op.empresa_vinculada === empresa &&
         (op.lead_vinculado === lead.id || op.lead_vinculado === lead.name)
@@ -383,7 +383,7 @@ export default function Leads() {
 
       if (existingOpportunity) return existingOpportunity;
 
-      const opportunity = await base44.entities.Opportunity.create({
+      const opportunity = await db.Opportunity.create({
         name: `Oportunidade - ${lead.name}`,
         empresa_vinculada: empresa,
         cliente_vinculado: lead.name,
@@ -401,7 +401,7 @@ export default function Leads() {
           : 'qualificacao',
       });
 
-      await base44.entities.Lead.update(lead.id, {
+      await db.Lead.update(lead.id, {
         status: lead.status === 'venda_concluida' ? lead.status : 'simulacao',
       });
 
