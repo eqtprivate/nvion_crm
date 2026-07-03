@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -122,7 +122,7 @@ export default function Contacts() {
   const { data: allClientes = [], isLoading } = useQuery({
     queryKey: ['contacts', empresa],
     queryFn: async () => {
-      const all = await base44.entities.Contact.list('-created_date');
+      const all = await db.Contact.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: Boolean(empresa),
@@ -136,14 +136,14 @@ export default function Contacts() {
   const { data: vendedores = [] } = useQuery({
     queryKey: ['vendedores', empresa],
     queryFn: async () => {
-      const all = await base44.entities.Vendedores.list('-created_date');
+      const all = await db.Vendedores.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: Boolean(empresa),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Contact.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.Contact.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts', empresa] });
       setDialogOpen(false);
@@ -152,7 +152,7 @@ export default function Contacts() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Contact.update(id, data),
+    mutationFn: ({ id, data }) => db.Contact.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts', empresa] });
       setDialogOpen(false);
@@ -161,7 +161,7 @@ export default function Contacts() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Contact.delete(id),
+    mutationFn: (id) => db.Contact.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contacts', empresa] }),
   });
 

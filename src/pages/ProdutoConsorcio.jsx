@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -140,7 +140,7 @@ export default function ProdutoConsorcio() {
   const { data: produtos = [], isLoading } = useQuery({
     queryKey: ['produtosConsorcio', empresa],
     queryFn: async () => {
-      const all = await base44.entities.ProdutoConsorcio.list('-created_date');
+      const all = await db.ProdutoConsorcio.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: Boolean(empresa),
@@ -149,14 +149,14 @@ export default function ProdutoConsorcio() {
   const { data: administradoras = [] } = useQuery({
     queryKey: ['accounts', empresa],
     queryFn: async () => {
-      const all = await base44.entities.Account.list('-created_date');
+      const all = await db.Account.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: Boolean(empresa),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.ProdutoConsorcio.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.ProdutoConsorcio.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['produtosConsorcio', empresa] });
       setDialogOpen(false);
@@ -165,7 +165,7 @@ export default function ProdutoConsorcio() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.ProdutoConsorcio.update(id, data),
+    mutationFn: ({ id, data }) => db.ProdutoConsorcio.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['produtosConsorcio', empresa] });
       setDialogOpen(false);
@@ -174,7 +174,7 @@ export default function ProdutoConsorcio() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ProdutoConsorcio.delete(id),
+    mutationFn: (id) => db.ProdutoConsorcio.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['produtosConsorcio', empresa] }),
   });
 
