@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -53,7 +53,7 @@ export default function Comissoes() {
   const { data: allComissoes = [], isLoading } = useQuery({
     queryKey: ['comissoes', empresa],
     queryFn: async () => {
-      const all = await base44.entities.Comissoes.list('-created_date');
+      const all = await db.Comissoes.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: Boolean(empresa),
@@ -65,7 +65,7 @@ export default function Comissoes() {
   );
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Comissoes.update(id, { status_comissao: status }),
+    mutationFn: ({ id, status }) => db.Comissoes.update(id, { status_comissao: status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }),
   });
 

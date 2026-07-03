@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -30,11 +30,11 @@ export default function Reports() {
   const empresa = user?.empresa_vinculada;
   const teamMembers = useTeamMembers(user);
 
-  const { data: allLeads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await base44.entities.Lead.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
-  const { data: allOportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
-  const { data: allClientes = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => { const all = await base44.entities.Contact.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
-  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
-  const { data: allVendas = [] } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => { const all = await base44.entities.VendasConsorcio.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allLeads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await db.Lead.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allOportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await db.Opportunity.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allClientes = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => { const all = await db.Contact.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => { const all = await db.Account.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
+  const { data: allVendas = [] } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => { const all = await db.VendasConsorcio.list('-created_date'); return all.filter((item) => item.empresa_vinculada === empresa); }, enabled: Boolean(empresa) });
 
   const leads = useMemo(() => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }), [allLeads, user, teamMembers]);
   const oportunidades = useMemo(() => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }), [allOportunidades, user, teamMembers]);
