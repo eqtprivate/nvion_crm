@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { assertSupabaseConfigured } from '@/lib/supabaseClient';
@@ -149,7 +149,7 @@ export default function VendasConsorcio() {
   const backfillKeyRef = useRef('');
   const filterEmpresa = (items) => items.filter((item) => item.empresa_vinculada === empresa);
 
-  const { data: allVendas = [], isLoading } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: allVendas = [], isLoading } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await db.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
   const vendas = useMemo(() => {
     const filtradas = applyAccessFilter(allVendas, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers });
     if (user?.role !== 'lider_comercial' || !user?.display_name) return filtradas;
@@ -158,12 +158,12 @@ export default function VendasConsorcio() {
     );
     return mergeUniqueById([...filtradas, ...propriasComoResponsavel]);
   }, [allVendas, empresa, user, teamMembers]);
-  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await base44.entities.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: comissoes = [], isLoading: isLoadingComissoes } = useQuery({ queryKey: ['comissoes', empresa], queryFn: async () => filterEmpresa(await base44.entities.Comissoes.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: vendedoresCadastrados = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await db.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await db.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await db.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: regras = [] } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await db.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: comissoes = [], isLoading: isLoadingComissoes } = useQuery({ queryKey: ['comissoes', empresa], queryFn: async () => filterEmpresa(await db.Comissoes.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendedoresCadastrados = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await db.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
   const { data: perfisResponsaveis = [] } = useQuery({
     queryKey: ['profilesResponsaveisVenda', empresa],
     queryFn: async () => {
@@ -196,7 +196,7 @@ export default function VendasConsorcio() {
 
   const getParcelasRegra = async (regraId) => {
     if (!regraId) return [];
-    const all = await base44.entities.ParcelasRegraComissao.list();
+    const all = await db.ParcelasRegraComissao.list();
     return filterEmpresa(all).filter((p) => p.regra_comissao_vinculada === regraId);
   };
 
@@ -206,7 +206,7 @@ export default function VendasConsorcio() {
     await Promise.all(calc.parcelas.map((p) => {
       const d = new Date(dataBase + 'T00:00:00');
       d.setDate(d.getDate() + Number(p.dias_apos_venda || 0));
-      return base44.entities.ParcelasComissao.create({
+      return db.ParcelasComissao.create({
         empresa_vinculada: empresa,
         comissao_vinculada: comissaoId,
         venda_vinculada: vendaId,
@@ -226,15 +226,15 @@ export default function VendasConsorcio() {
   };
 
   const deletarParcelasComissaoDaVenda = async (vendaId) => {
-    const all = await base44.entities.ParcelasComissao.list();
+    const all = await db.ParcelasComissao.list();
     const vinculadas = filterEmpresa(all).filter((p) => p.venda_vinculada === vendaId);
-    await Promise.all(vinculadas.map((p) => base44.entities.ParcelasComissao.delete(p.id)));
+    await Promise.all(vinculadas.map((p) => db.ParcelasComissao.delete(p.id)));
   };
 
   const cancelarParcelasComissaoDaVenda = async (vendaId) => {
-    const all = await base44.entities.ParcelasComissao.list();
+    const all = await db.ParcelasComissao.list();
     const vinculadas = filterEmpresa(all).filter((p) => p.venda_vinculada === vendaId && !['paga', 'cancelada'].includes(p.status_parcela));
-    await Promise.all(vinculadas.map((p) => base44.entities.ParcelasComissao.update(p.id, { status_parcela: 'cancelada' })));
+    await Promise.all(vinculadas.map((p) => db.ParcelasComissao.update(p.id, { status_parcela: 'cancelada' })));
   };
 
   const gerarComissao = async (vendaId, data, { comParcelas = false } = {}) => {
@@ -246,7 +246,7 @@ export default function VendasConsorcio() {
         ? await getParcelasRegra(regra.id)
         : [];
       const calc = calcularComissao(regra, data, parcelasRegra);
-      const comissao = await base44.entities.Comissoes.create({
+      const comissao = await db.Comissoes.create({
         empresa_vinculada: empresa,
         venda_vinculada: vendaId,
         cliente: data.cliente,
@@ -286,7 +286,7 @@ export default function VendasConsorcio() {
     const valorComissaoVendedor = fallbackNumber(data.valor_comissao_vendedor, calcComissao(valorComissaoTotal, percentualVendedor));
     const valorComissaoLider = fallbackNumber(data.valor_comissao_lider, calcComissao(valorComissaoTotal, percentualLider));
 
-    return base44.entities.Comissoes.create({
+    return db.Comissoes.create({
       empresa_vinculada: empresa,
       venda_vinculada: vendaId,
       cliente: data.cliente,
@@ -328,7 +328,7 @@ export default function VendasConsorcio() {
     const valorComissaoVendedor = fallbackNumber(comissao.valor_comissao_vendedor, calcComissao(valorComissaoTotal, percentualVendedor));
     const valorComissaoLider = fallbackNumber(comissao.valor_comissao_lider, calcComissao(valorComissaoTotal, percentualLider));
 
-    await base44.entities.Comissoes.update(comissao.id, {
+    await db.Comissoes.update(comissao.id, {
       percentual_vendedor: percentualVendedor,
       valor_comissao_vendedor: valorComissaoVendedor,
       percentual_lider: percentualLider,
@@ -346,7 +346,7 @@ export default function VendasConsorcio() {
     for (let i = 0; i < numParcelas; i++) {
       const d = new Date(dataBase + 'T00:00:00');
       d.setDate(d.getDate() + prazo + i * 30);
-      await base44.entities.RecebiveisConsorcio.create({
+      await db.RecebiveisConsorcio.create({
         empresa_vinculada: empresa,
         venda_vinculada: vendaId,
         comissao_vinculada: comissaoId || '',
@@ -367,16 +367,16 @@ export default function VendasConsorcio() {
   };
 
   const cancelarRecebiveisDaVenda = async (vendaId) => {
-    const todos = await base44.entities.RecebiveisConsorcio.list('-created_date');
+    const todos = await db.RecebiveisConsorcio.list('-created_date');
     const vinculados = filterEmpresa(todos).filter((r) => r.venda_vinculada === vendaId && r.status_recebivel === 'previsto');
-    await Promise.all(vinculados.map((r) => base44.entities.RecebiveisConsorcio.update(r.id, { status_recebivel: 'cancelado' })));
+    await Promise.all(vinculados.map((r) => db.RecebiveisConsorcio.update(r.id, { status_recebivel: 'cancelado' })));
   };
 
   const cancelarComissoesDaVenda = async (vendaId) => {
-    const todas = await base44.entities.Comissoes.list('-created_date');
+    const todas = await db.Comissoes.list('-created_date');
     const vinculadas = filterEmpresa(todas).filter((comissao) => comissao.venda_vinculada === vendaId);
     await Promise.all(vinculadas.map((comissao) =>
-      base44.entities.Comissoes.update(comissao.id, { status_comissao: 'cancelada' })
+      db.Comissoes.update(comissao.id, { status_comissao: 'cancelada' })
     ));
   };
 
@@ -388,26 +388,26 @@ export default function VendasConsorcio() {
     );
     if (!oportunidade) return;
 
-    await base44.entities.Opportunity.update(oportunidade.id, {
+    await db.Opportunity.update(oportunidade.id, {
       status: 'ganha',
       stage: 'venda_concluida',
     });
 
     if (!oportunidade.lead_vinculado) return;
 
-    const leads = filterEmpresa(await base44.entities.Lead.list('-created_date'));
+    const leads = filterEmpresa(await db.Lead.list('-created_date'));
     const lead = leads.find((item) =>
       item.id === oportunidade.lead_vinculado || item.name === oportunidade.lead_vinculado
     );
 
     if (lead) {
-      await base44.entities.Lead.update(lead.id, { status: 'venda_concluida' });
+      await db.Lead.update(lead.id, { status: 'venda_concluida' });
     }
   };
 
   const atualizarComissao = async (vendaId, data) => {
     const regra = encontrarRegraAtiva(data);
-    const todas = await base44.entities.Comissoes.list('-created_date');
+    const todas = await db.Comissoes.list('-created_date');
     const existente = filterEmpresa(todas).find((c) => c.venda_vinculada === vendaId);
 
     // Caminho novo: recalcula totais e regenera as parcelas materializadas.
@@ -431,8 +431,8 @@ export default function VendasConsorcio() {
       };
       await deletarParcelasComissaoDaVenda(vendaId);
       const comissaoId = existente
-        ? (await base44.entities.Comissoes.update(existente.id, header), existente.id)
-        : (await base44.entities.Comissoes.create({ ...header, empresa_vinculada: empresa, venda_vinculada: vendaId, valor_comissao_confirmada: 0, status_comissao: 'prevista', origem: 'venda' })).id;
+        ? (await db.Comissoes.update(existente.id, header), existente.id)
+        : (await db.Comissoes.create({ ...header, empresa_vinculada: empresa, venda_vinculada: vendaId, valor_comissao_confirmada: 0, status_comissao: 'prevista', origem: 'venda' })).id;
       await gerarParcelasComissao(comissaoId, vendaId, regra, data, calc);
       return;
     }
@@ -447,7 +447,7 @@ export default function VendasConsorcio() {
       data_prevista_pagamento: data.data_prevista_pagamento,
     };
     if (existente) {
-      await base44.entities.Comissoes.update(existente.id, payload);
+      await db.Comissoes.update(existente.id, payload);
     } else {
       await gerarComissao(vendaId, data);
     }
@@ -486,7 +486,7 @@ export default function VendasConsorcio() {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const venda = await base44.entities.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
+      const venda = await db.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
       const comissao = await gerarComissao(venda.id, data, { comParcelas: true });
       await gerarRecebiveis(venda.id, comissao?.id, data);
       await concluirOportunidadeVinculada(data);
@@ -496,7 +496,7 @@ export default function VendasConsorcio() {
   });
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      const venda = await base44.entities.VendasConsorcio.update(id, data);
+      const venda = await db.VendasConsorcio.update(id, data);
       await atualizarComissao(id, data);
       return venda;
     },
@@ -504,7 +504,7 @@ export default function VendasConsorcio() {
   });
   const cancelMutation = useMutation({
     mutationFn: async (venda) => {
-      await base44.entities.VendasConsorcio.update(venda.id, {
+      await db.VendasConsorcio.update(venda.id, {
         status_operacional: 'cancelada',
         status_financeiro: 'comissao_cancelada',
       });
@@ -519,7 +519,7 @@ export default function VendasConsorcio() {
       await cancelarComissoesDaVenda(id);
       await deletarParcelasComissaoDaVenda(id);
       await cancelarRecebiveisDaVenda(id);
-      return base44.entities.VendasConsorcio.delete(id);
+      return db.VendasConsorcio.delete(id);
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vendasConsorcio', empresa] }); queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }); queryClient.invalidateQueries({ queryKey: ['recebiveis', empresa] }); },
   });
