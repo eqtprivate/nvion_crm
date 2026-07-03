@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -165,18 +165,18 @@ export default function Vendedores() {
 
   const { data: vendedores = [], isLoading } = useQuery({
     queryKey: ['vendedores', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.Vendedores.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
   const { data: equipes = [] } = useQuery({
     queryKey: ['equipes', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.EquipeComercial.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Vendedores.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.Vendedores.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendedores', empresa] });
       setDialogOpen(false);
@@ -185,7 +185,7 @@ export default function Vendedores() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Vendedores.update(id, data),
+    mutationFn: ({ id, data }) => db.Vendedores.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendedores', empresa] });
       setDialogOpen(false);
@@ -194,7 +194,7 @@ export default function Vendedores() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Vendedores.delete(id),
+    mutationFn: (id) => db.Vendedores.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendedores', empresa] }),
   });
 

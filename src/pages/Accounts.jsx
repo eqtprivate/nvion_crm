@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,18 +46,18 @@ export default function Accounts() {
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['accounts', empresa],
-    queryFn: async () => { const all = await base44.entities.Account.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
+    queryFn: async () => { const all = await db.Account.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 
   const { data: opportunities = [] } = useQuery({
     queryKey: ['opportunities', empresa],
-    queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
+    queryFn: async () => { const all = await db.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Account.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.Account.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', empresa] });
       setDialogOpen(false);
@@ -65,7 +65,7 @@ export default function Accounts() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Account.update(id, data),
+    mutationFn: ({ id, data }) => db.Account.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', empresa] });
       setEditDialogOpen(false);
@@ -74,7 +74,7 @@ export default function Accounts() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Account.delete(id),
+    mutationFn: (id) => db.Account.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', empresa] });
     },
