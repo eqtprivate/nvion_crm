@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -69,7 +69,7 @@ const FIELD_MAP = {
 const normalize = (value) =>
   String(value || '')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^\w\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
@@ -266,31 +266,31 @@ export default function ConciliacaoAdministradora() {
 
   const { data: importacoes = [] } = useQuery({
     queryKey: ['importacoesRelatorioAdministradora', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.ImportacaoRelatorioAdministradora.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.ImportacaoRelatorioAdministradora.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
   const { data: allConciliacoes = [], isLoading } = useQuery({
     queryKey: ['conciliacoesVenda', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.ConciliacaoVenda.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.ConciliacaoVenda.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
   const { data: vendas = [] } = useQuery({
     queryKey: ['vendasConsorcio', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.VendasConsorcio.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.VendasConsorcio.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
   const { data: comissoes = [] } = useQuery({
     queryKey: ['comissoes', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.Comissoes.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.Comissoes.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['accounts', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.Account.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
@@ -334,7 +334,7 @@ export default function ConciliacaoAdministradora() {
       if (rows.length === 0) throw new Error('O arquivo não possui linhas válidas.');
       const duplicateKeys = findCsvDuplicateKeys(rows, administradora);
 
-      const importacao = await base44.entities.ImportacaoRelatorioAdministradora.create({
+      const importacao = await db.ImportacaoRelatorioAdministradora.create({
         empresa_vinculada: empresa,
         administradora,
         arquivo_nome: file.name,
@@ -382,10 +382,10 @@ export default function ConciliacaoAdministradora() {
           diferenca_valor_carta: Number(venda?.valor_carta || 0) - Number(row.valor_carta || 0),
           diferenca_comissao: Number(comissaoInterna || 0) - Number(row.comissao || 0),
         };
-        created.push(await base44.entities.ConciliacaoVenda.create(payload));
+        created.push(await db.ConciliacaoVenda.create(payload));
       }
 
-      await base44.entities.ImportacaoRelatorioAdministradora.update(importacao.id, {
+      await db.ImportacaoRelatorioAdministradora.update(importacao.id, {
         total_conciliado: created.filter((item) => item.status_conciliacao === 'conciliada').length,
         total_divergente: created.filter((item) => item.status_conciliacao === 'divergente').length,
         total_nao_encontrado: created.filter((item) => item.status_conciliacao === 'nao_encontrada').length,
@@ -404,18 +404,18 @@ export default function ConciliacaoAdministradora() {
   const confirmMutation = useMutation({
     mutationFn: async (conciliacao) => {
       if (!conciliacao.venda_vinculada) return;
-      await base44.entities.ConciliacaoVenda.update(conciliacao.id, {
+      await db.ConciliacaoVenda.update(conciliacao.id, {
         status_conciliacao: 'conciliada',
         divergencia_tipo: 'nenhuma',
       });
-      await base44.entities.VendasConsorcio.update(conciliacao.venda_vinculada, {
+      await db.VendasConsorcio.update(conciliacao.venda_vinculada, {
         status_conciliacao: 'conciliada',
       });
       const comissao = conciliacao.comissao_vinculada
         ? comissoes.find((item) => item.id === conciliacao.comissao_vinculada)
         : comissoes.find((item) => item.venda_vinculada === conciliacao.venda_vinculada);
       if (comissao) {
-        await base44.entities.Comissoes.update(comissao.id, {
+        await db.Comissoes.update(comissao.id, {
           status_comissao: 'confirmada',
           data_confirmacao: new Date().toISOString().slice(0, 10),
         });
@@ -430,7 +430,7 @@ export default function ConciliacaoAdministradora() {
   });
 
   const ignoreMutation = useMutation({
-    mutationFn: (conciliacao) => base44.entities.ConciliacaoVenda.update(conciliacao.id, { status_conciliacao: 'ignorada' }),
+    mutationFn: (conciliacao) => db.ConciliacaoVenda.update(conciliacao.id, { status_conciliacao: 'ignorada' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conciliacoesVenda', empresa] }),
   });
 
