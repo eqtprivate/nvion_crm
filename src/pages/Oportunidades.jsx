@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,15 +52,15 @@ export default function Oportunidades() {
 
   const { data: allOportunidades = [], isLoading } = useQuery({
     queryKey: ['opportunities', empresa],
-    queryFn: async () => { const all = await base44.entities.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
+    queryFn: async () => { const all = await db.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
-  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => filterEmpresa(await base44.entities.Lead.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: contacts = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Contact.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => filterEmpresa(await db.Lead.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: contacts = [] } = useQuery({ queryKey: ['contacts', empresa], queryFn: async () => filterEmpresa(await db.Contact.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await db.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await db.Account.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await db.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await db.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
 
   const oportunidades = useMemo(
     () => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }),
@@ -68,12 +68,12 @@ export default function Oportunidades() {
   );
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Opportunity.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.Opportunity.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); setDialogOpen(false); },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Opportunity.update(id, data),
+    mutationFn: ({ id, data }) => db.Opportunity.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] });
       setEditDialogOpen(false);
@@ -82,7 +82,7 @@ export default function Oportunidades() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Opportunity.delete(id),
+    mutationFn: (id) => db.Opportunity.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['opportunities', empresa] }); },
   });
 

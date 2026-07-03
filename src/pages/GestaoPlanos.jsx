@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useAuth } from '@/lib/AuthContext';
 import { AVAILABLE_MODULES, MODULE_LABELS } from '@/lib/modules';
 import { Button } from '@/components/ui/button';
@@ -65,8 +65,8 @@ function PlanoDialog({ open, onOpenChange, plano, onSuccess }) {
   const mutation = useMutation({
     mutationFn: (data) =>
       isEdit
-        ? base44.entities.Plano.update(plano.id, data)
-        : base44.entities.Plano.create(data),
+        ? db.Plano.update(plano.id, data)
+        : db.Plano.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       toast({ title: isEdit ? 'Plano atualizado.' : 'Plano criado.' });
@@ -177,16 +177,16 @@ export default function GestaoPlanos() {
 
   const { data: planos = [], isLoading } = useQuery({
     queryKey: ['planos'],
-    queryFn: () => base44.entities.Plano.list('-created_date'),
+    queryFn: () => db.Plano.list('-created_date'),
   });
 
   const { data: empresas = [] } = useQuery({
     queryKey: ['empresas'],
-    queryFn: () => base44.entities.Empresa.list(),
+    queryFn: () => db.Empresa.list(),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Plano.delete(id),
+    mutationFn: (id) => db.Plano.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       toast({ title: 'Plano removido.' });
