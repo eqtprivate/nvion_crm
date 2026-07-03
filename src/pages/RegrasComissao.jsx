@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -436,15 +436,15 @@ export default function RegrasComissao() {
   const [selectedRegra, setSelectedRegra] = useState(null);
   const filterEmpresa = (items) => items.filter((item) => item.empresa_vinculada === empresa);
 
-  const { data: regras = [], isLoading } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await base44.entities.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: regras = [], isLoading } = useQuery({ queryKey: ['regrasComissao', empresa], queryFn: async () => filterEmpresa(await db.RegrasComissao.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await db.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await db.Account.list('-created_date')), enabled: Boolean(empresa) });
 
   // parcelas da regra selecionada (para edição)
   const { data: parcelasRegra = [] } = useQuery({
     queryKey: ['parcelasRegra', selectedRegra?.id],
     queryFn: async () => {
-      const all = await base44.entities.ParcelasRegraComissao.list();
+      const all = await db.ParcelasRegraComissao.list();
       return all.filter((p) => p.regra_comissao_vinculada === selectedRegra.id);
     },
     enabled: Boolean(selectedRegra?.id && dialogOpen),
@@ -494,12 +494,12 @@ export default function RegrasComissao() {
 
   // Sincroniza os registros de ParcelasRegraComissao (apenas para customizado).
   const syncParcelas = async (regraId, form) => {
-    const all = await base44.entities.ParcelasRegraComissao.list();
+    const all = await db.ParcelasRegraComissao.list();
     const existentes = all.filter((p) => p.regra_comissao_vinculada === regraId);
-    await Promise.all(existentes.map((p) => base44.entities.ParcelasRegraComissao.delete(p.id)));
+    await Promise.all(existentes.map((p) => db.ParcelasRegraComissao.delete(p.id)));
     if (form.tipo_regra_comissao === 'percentual_parcelado_customizado') {
       await Promise.all(form.parcelas.map((p, idx) =>
-        base44.entities.ParcelasRegraComissao.create({
+        db.ParcelasRegraComissao.create({
           empresa_vinculada: empresa,
           regra_comissao_vinculada: regraId,
           numero_parcela: idx + 1,
@@ -516,8 +516,8 @@ export default function RegrasComissao() {
     mutationFn: async (form) => {
       const payload = buildPayload(form);
       const saved = selectedRegra?.id
-        ? await base44.entities.RegrasComissao.update(selectedRegra.id, payload)
-        : await base44.entities.RegrasComissao.create(payload);
+        ? await db.RegrasComissao.update(selectedRegra.id, payload)
+        : await db.RegrasComissao.create(payload);
       const regraId = selectedRegra?.id || saved?.id;
       if (regraId) await syncParcelas(regraId, form);
       return saved;
@@ -532,9 +532,9 @@ export default function RegrasComissao() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const all = await base44.entities.ParcelasRegraComissao.list();
-      await Promise.all(all.filter((p) => p.regra_comissao_vinculada === id).map((p) => base44.entities.ParcelasRegraComissao.delete(p.id)));
-      return base44.entities.RegrasComissao.delete(id);
+      const all = await db.ParcelasRegraComissao.list();
+      await Promise.all(all.filter((p) => p.regra_comissao_vinculada === id).map((p) => db.ParcelasRegraComissao.delete(p.id)));
+      return db.RegrasComissao.delete(id);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['regrasComissao', empresa] }),
   });
