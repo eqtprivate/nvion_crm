@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Database, CheckCircle2, Loader2, ShieldAlert } from 'lucide-react';
 
 async function createIfMissing(entity, findField, payload) {
-  const list = await base44.entities[entity].list('-created_date');
+  const list = await db[entity].list('-created_date');
   const exists = list.find((item) => item[findField] === payload[findField] && item.empresa_vinculada === payload.empresa_vinculada);
   if (exists) return { created: false, item: exists };
-  const item = await base44.entities[entity].create(payload);
+  const item = await db[entity].create(payload);
   return { created: true, item };
 }
 
