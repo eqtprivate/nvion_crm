@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -337,25 +337,25 @@ export default function Campanhas() {
 
   const campanhasQuery = useQuery({
     queryKey: ['campanhas', empresa],
-    queryFn: async () => filterEmpresa(await base44.entities.Campanhas.list('-created_date')),
+    queryFn: async () => filterEmpresa(await db.Campanhas.list('-created_date')),
     enabled: Boolean(empresa),
   });
 
-  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => filterEmpresa(await base44.entities.Lead.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await base44.entities.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: vendas = [] } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: leads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => filterEmpresa(await db.Lead.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: oportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => filterEmpresa(await db.Opportunity.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendas = [] } = useQuery({ queryKey: ['vendasConsorcio', empresa], queryFn: async () => filterEmpresa(await db.VendasConsorcio.list('-created_date')), enabled: Boolean(empresa) });
   const { data: comissoes = [] } = useQuery({
     queryKey: ['comissoes', empresa],
     queryFn: async () => {
-      if (!base44.entities.Comissoes) return [];
-      return filterEmpresa(await base44.entities.Comissoes.list('-created_date'));
+      if (!db.Comissoes) return [];
+      return filterEmpresa(await db.Comissoes.list('-created_date'));
     },
     enabled: Boolean(empresa),
   });
-  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await base44.entities.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await base44.entities.Account.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await base44.entities.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
-  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await base44.entities.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: produtos = [] } = useQuery({ queryKey: ['produtosConsorcio', empresa], queryFn: async () => filterEmpresa(await db.ProdutoConsorcio.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: administradoras = [] } = useQuery({ queryKey: ['accounts', empresa], queryFn: async () => filterEmpresa(await db.Account.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: equipes = [] } = useQuery({ queryKey: ['equipes', empresa], queryFn: async () => filterEmpresa(await db.EquipeComercial.list('-created_date')), enabled: Boolean(empresa) });
+  const { data: vendedores = [] } = useQuery({ queryKey: ['vendedores', empresa], queryFn: async () => filterEmpresa(await db.Vendedores.list('-created_date')), enabled: Boolean(empresa) });
 
   const campanhas = useMemo(
     () => applyAccessFilter(campanhasQuery.data || [], user, { vendedorField: 'responsavel', liderField: 'equipe_responsavel', teamMembers }),
@@ -398,7 +398,7 @@ export default function Campanhas() {
   }), [enriched]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Campanhas.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.Campanhas.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campanhas', empresa] });
       setDialogOpen(false);
@@ -409,7 +409,7 @@ export default function Campanhas() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Campanhas.update(id, data),
+    mutationFn: ({ id, data }) => db.Campanhas.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campanhas', empresa] });
       setDialogOpen(false);
@@ -420,13 +420,13 @@ export default function Campanhas() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.Campanhas.update(id, { status_campanha: status }),
+    mutationFn: ({ id, status }) => db.Campanhas.update(id, { status_campanha: status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campanhas', empresa] }),
     onError: (error) => toast.error(error?.message || 'Erro ao alterar status.'),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Campanhas.delete(id),
+    mutationFn: (id) => db.Campanhas.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campanhas', empresa] });
       toast.success('Campanha excluída.');
