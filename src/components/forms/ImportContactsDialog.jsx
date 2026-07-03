@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function ImportContactsDialog({ open, onOpenChange, onImportComplete }) {
@@ -64,7 +65,7 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
         const validContacts = contacts.filter(c => c.name && c.email);
         
         if (validContacts.length > 0) {
-          await base44.entities.Contact.bulkCreate(
+          await db.Contact.bulkCreate(
             validContacts.map(c => ({
               name: c.name,
               email: c.email,

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { X, Phone, Mail, MessageCircle, Building2, MapPin, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { formatCurrency, formatPhone } from '@/components/forms/MaskedInputs';
 
 const statusLabels = {
@@ -29,7 +29,7 @@ const statusColors = {
 export default function ContactDetailsPanel({ contact, onClose }) {
   const { data: opportunities = [] } = useQuery({
     queryKey: ['opportunities', contact?.id],
-    queryFn: () => base44.entities.Opportunity.list(),
+    queryFn: () => db.Opportunity.list(),
     enabled: !!contact,
     select: (data) => data.filter(o => o.cliente_vinculado === contact?.id),
   });

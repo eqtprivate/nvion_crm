@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-
+import { db } from '@/api/db';
 export function usePlanos() {
   return useQuery({
     queryKey: ['planos'],
-    queryFn: () => base44.entities.Plano.list('-created_date'),
+    queryFn: () => db.Plano.list('-created_date'),
     staleTime: 1000 * 60 * 5,
   });
 }

@@ -11,8 +11,7 @@
  */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-
+import { db } from '@/api/db';
 /**
  * Filter records based on the logged-in user's role.
  *
@@ -63,7 +62,7 @@ export function useTeamMembers(user) {
   const { data: equipes = [] } = useQuery({
     queryKey: ['equipes', empresa],
     queryFn: async () => {
-      const all = await base44.entities.EquipeComercial.list('-created_date');
+      const all = await db.EquipeComercial.list('-created_date');
       return all.filter(e => e.empresa_vinculada === empresa);
     },
     enabled: isLider && !!empresa,
