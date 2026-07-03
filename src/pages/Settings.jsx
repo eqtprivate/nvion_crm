@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { assertSupabaseConfigured } from '@/lib/supabaseClient';
@@ -167,7 +167,7 @@ function MinhaEmpresaTab({ user }) {
         if (data) return mapSupabaseEmpresaToForm(data);
       }
 
-      const all = await base44.entities.Empresa.list();
+      const all = await db.Empresa.list();
       const linkedName = normalizeCompanyName(empresa_vinculada);
       const legacyRecord = all.find((e) =>
         normalizeCompanyName(e.razao_social) === linkedName ||
@@ -192,7 +192,7 @@ function MinhaEmpresaTab({ user }) {
         return data || [];
       }
 
-      const all = await base44.entities.UsuarioAcesso.list();
+      const all = await db.UsuarioAcesso.list();
       return all.filter((u) => u.empresa_vinculada === empresa_vinculada);
     },
     enabled: Boolean(empresa_id || empresa_vinculada),
@@ -218,7 +218,7 @@ function MinhaEmpresaTab({ user }) {
         return;
       }
 
-      return base44.entities.Empresa.update(id, data);
+      return db.Empresa.update(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['minhaEmpresa', empresa_id, empresa_vinculada] });
@@ -407,7 +407,7 @@ export default function Settings() {
   const { data: defaultSettings } = useQuery({
     queryKey: ['defaultSettings', empresa],
     queryFn: async () => {
-      const settings = await base44.entities.DefaultSettings.list();
+      const settings = await db.DefaultSettings.list();
       const filtered = settings.filter(s => s.empresa_vinculada === empresa);
       return filtered[0] || null;
     },
@@ -415,12 +415,12 @@ export default function Settings() {
   });
 
   const createSettingsMutation = useMutation({
-    mutationFn: (data) => base44.entities.DefaultSettings.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.DefaultSettings.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['defaultSettings', empresa] }),
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.DefaultSettings.update(id, data),
+    mutationFn: ({ id, data }) => db.DefaultSettings.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['defaultSettings', empresa] }),
   });
 
@@ -443,10 +443,10 @@ export default function Settings() {
     try {
       const filterEmpresa = (items) => items.filter(i => isSuperAdmin || i.empresa_vinculada === empresa);
       await Promise.all([
-        base44.entities.Contact.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Contact.delete(i.id)))),
-        base44.entities.Account.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Account.delete(i.id)))),
-        base44.entities.Lead.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Lead.delete(i.id)))),
-        base44.entities.Opportunity.list().then(items => Promise.all(filterEmpresa(items).map(i => base44.entities.Opportunity.delete(i.id)))),
+        db.Contact.list().then(items => Promise.all(filterEmpresa(items).map(i => db.Contact.delete(i.id)))),
+        db.Account.list().then(items => Promise.all(filterEmpresa(items).map(i => db.Account.delete(i.id)))),
+        db.Lead.list().then(items => Promise.all(filterEmpresa(items).map(i => db.Lead.delete(i.id)))),
+        db.Opportunity.list().then(items => Promise.all(filterEmpresa(items).map(i => db.Opportunity.delete(i.id)))),
       ]);
       queryClient.invalidateQueries();
       setResetConfirmation('');
@@ -457,7 +457,7 @@ export default function Settings() {
   };
 
   const exportData = async (entityName, fileName) => {
-    const all = await base44.entities[entityName].list();
+    const all = await db[entityName].list();
     const data = isSuperAdmin ? all : all.filter(i => i.empresa_vinculada === empresa);
     if (!data.length) return;
     const csv = [
