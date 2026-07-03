@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,7 @@ export default function EquipeComercial() {
 
   const { data: allEquipes = [], isLoading } = useQuery({
     queryKey: ['equipes', empresa],
-    queryFn: async () => { const all = await base44.entities.EquipeComercial.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
+    queryFn: async () => { const all = await db.EquipeComercial.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); },
     enabled: !!empresa,
   });
 
@@ -65,7 +65,7 @@ export default function EquipeComercial() {
   const { data: vendedores = [] } = useQuery({
     queryKey: ['vendedores', empresa],
     queryFn: async () => {
-      const all = await base44.entities.Vendedores.list('-created_date');
+      const all = await db.Vendedores.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: !!empresa,
@@ -104,7 +104,7 @@ export default function EquipeComercial() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.EquipeComercial.create({ ...data, empresa_vinculada: empresa }),
+    mutationFn: (data) => db.EquipeComercial.create({ ...data, empresa_vinculada: empresa }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
       setDialogOpen(false);
@@ -115,14 +115,14 @@ export default function EquipeComercial() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data, previousName }) => {
-      const equipe = await base44.entities.EquipeComercial.update(id, data);
+      const equipe = await db.EquipeComercial.update(id, data);
       if (previousName && data.nome_equipe && data.nome_equipe !== previousName) {
-        const allVendedores = await base44.entities.Vendedores.list('-created_date');
+        const allVendedores = await db.Vendedores.list('-created_date');
         const vinculados = allVendedores.filter((vendedor) =>
           vendedor.empresa_vinculada === empresa && vendedor.equipe === previousName
         );
         await Promise.all(vinculados.map((vendedor) =>
-          base44.entities.Vendedores.update(vendedor.id, { equipe: data.nome_equipe })
+          db.Vendedores.update(vendedor.id, { equipe: data.nome_equipe })
         ));
       }
       return equipe;
@@ -137,7 +137,7 @@ export default function EquipeComercial() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.EquipeComercial.delete(id),
+    mutationFn: (id) => db.EquipeComercial.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipes', empresa] });
     },

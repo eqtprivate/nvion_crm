@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
@@ -95,7 +95,7 @@ export default function Recebiveis() {
   const { data: allRecebiveis = [], isLoading } = useQuery({
     queryKey: ['recebiveis', empresa],
     queryFn: async () => {
-      const all = await base44.entities.RecebiveisConsorcio.list('-created_date');
+      const all = await db.RecebiveisConsorcio.list('-created_date');
       return all.filter((item) => item.empresa_vinculada === empresa);
     },
     enabled: Boolean(empresa),
@@ -107,7 +107,7 @@ export default function Recebiveis() {
   );
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.RecebiveisConsorcio.update(id, {
+    mutationFn: ({ id, data }) => db.RecebiveisConsorcio.update(id, {
       ...data,
       valor_recebivel: Number(data.valor_recebivel || 0),
     }),
@@ -115,7 +115,7 @@ export default function Recebiveis() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.RecebiveisConsorcio.update(id, { status_recebivel: status }),
+    mutationFn: ({ id, status }) => db.RecebiveisConsorcio.update(id, { status_recebivel: status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recebiveis', empresa] }),
   });
 
