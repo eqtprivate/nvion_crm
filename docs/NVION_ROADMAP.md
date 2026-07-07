@@ -308,9 +308,44 @@ Objetivo: transformar comissões confirmadas em recebíveis futuros.
 4. KPIs de carteira futura.
 5. Exportação CSV.
 
+## Sprint 4.5 — Inteligência de Recebíveis (KPIs, dados e dashboards)
+
+Objetivo: consolidar e derivar indicadores da carteira de recebíveis, criando a camada de dados que alimenta o cálculo de margem/limite de antecipação (Sprint 5). Não implementa antecipação; apenas prepara e concatena as informações que a antecipação vai consumir.
+
+### Camada de dados (reutilizável)
+
+- `src/lib/recebiveisMetrics.js`: funções puras que agregam `recebiveis_consorcio` (+ `comissoes` / `vendas_consorcio`) em métricas, reutilizáveis tanto pelo dashboard quanto pelo futuro motor de limite.
+
+### Indicadores / KPIs
+
+1. Carteira futura por competência (fluxo previsto mês a mês) — projeção de caixa.
+2. Aging buckets: a vencer (0–30, 31–60, 61–90, +90 dias) e vencidos.
+3. Elegível vs inelegível para antecipação (valor e %), com quebra por motivo de inelegibilidade.
+4. Concentração de risco: por administradora, por vendedor/equipe e por produto.
+5. Prazo médio de recebimento (previsto) e realizado.
+6. Realizado x Previsto (histórico): taxa de conversão de recebível previsto → recebido.
+7. Índice de atraso/inadimplência (valor vencido / carteira ativa).
+8. Base de histórico da empresa: meses de operação e volume recebido acumulado — insumo direto das faixas de histórico do Sprint 5.
+
+### Entregas
+
+1. Dashboard de Recebíveis (página dedicada ou aba) com os KPIs acima.
+2. Gráficos: curva de vencimentos futuros, aging, concentração por administradora/vendedor.
+3. Filtros por período, administradora, vendedor, status e elegibilidade.
+4. Exportação dos agregados.
+5. Documentar os indicadores que serão consumidos pelo motor de limite.
+
+### Critério de aceite
+
+- É possível visualizar quanto da carteira é elegível para antecipação, com seu vencimento e concentração.
+- Existe uma base histórica (meses de operação + volume recebido) pronta para parametrizar a política de antecipação.
+- As métricas ficam em uma camada reutilizável (`recebiveisMetrics.js`), não presas à tela.
+
 ## Sprint 5 — Limite de Antecipação Parcial
 
 Objetivo: calcular limite inteligente baseado no histórico da empresa.
+
+Depende diretamente da camada de dados e da base histórica produzidas no Sprint 4.5.
 
 ### Regras MVP sugeridas
 
