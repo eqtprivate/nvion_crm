@@ -229,3 +229,29 @@
 ## Definição de "pronto para MVP"
 
 O sistema está pronto para soltar quando **todos os P0 estiverem concluídos e validados no ambiente publicado**: usuários entram e recuperam senha por e-mail; cada papel vê só o que deve; ações sensíveis são auditadas; advisors de segurança sem ERROR; nenhum salvamento falha silenciosamente; e o fluxo comercial→financeiro roda ponta a ponta por papel.
+
+---
+
+## Progresso da Onda 1 (P0) — execução em código
+
+Concluído no código (v1.3.0):
+
+- [x] **A — Auth:** limpeza de `resetDbProfileCache` no login/logout; página dedicada `RedefinirSenha`; link de recuperação aponta para ela.
+- [x] **B — RBAC:** `admin_empresa` enxerga todos os módulos no menu; matriz por usuário já existente; RLS confirmada nas 18 tabelas (18 enables / 72 policies).
+- [x] **D — Auditoria:** migração de políticas + `empresa_id` em `audit_logs`; helper `logAudit` fire-and-forget; registro de login/logout/CRUD.
+- [x] **E — Segurança:** `service_role` ausente do frontend (só chave publishable); `search_path` fixo + `SECURITY DEFINER` nas funções auxiliares.
+- [x] **H — Erros:** `ErrorBoundary` global; Sonner Toaster montado (4 telas não exibiam toasts); `onError` global de mutação com mensagens traduzidas.
+
+### Ações manuais no Supabase (necessárias para fechar a Onda 1)
+
+Estas etapas exigem acesso ao painel do Supabase e **não podem ser feitas pelo código**:
+
+1. **Aplicar as migrações novas** (SQL Editor ou CLI):
+   - `20260707000000_audit_logs_policies.sql`
+   - `20260707010000_harden_functions.sql`
+2. **C — SMTP customizado** (Authentication → Emails/SMTP): configurar provedor (SendGrid, Resend, SES, etc.) com host, porta, usuário, senha e remetente. Sem isso, convites e recuperação de senha usam o serviço padrão do Supabase (limitado, não recomendado para produção).
+3. **E — Auth hardening** (Authentication → Policies/Settings):
+   - Ativar "Leaked password protection".
+   - Revisar expiração de OTP (recomendado ≤ 1h).
+4. **E — Advisors:** rodar Database → Advisors (Security) e confirmar zero ERROR após aplicar as migrações.
+5. **K — QA fim a fim:** executar o roteiro de aceitação (cadastro → convite → venda → recebível) no ambiente publicado, por papel.
