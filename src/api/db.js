@@ -9,6 +9,7 @@
 // garante o isolamento por empresa.
 // ──────────────────────────────────────────────────────────────────────────
 import { assertSupabaseConfigured } from '@/lib/supabaseClient';
+import { logAudit } from '@/lib/audit';
 
 // Entidade (base44) → tabela (Supabase)
 const TABLES = {
@@ -161,6 +162,7 @@ function makeTable(entityName) {
       const row = pickColumns(await injectTenant(sanitizeWrite(payload)));
       const { data, error } = await client.from(table).insert(row).select().single();
       if (error) throw error;
+      void logAudit('create', { entity: entityName, entityId: data?.id, empresaId: data?.empresa_id ?? null });
       return withCreatedDate(data);
     },
 
@@ -170,6 +172,7 @@ function makeTable(entityName) {
       for (const item of items || []) rows.push(pickColumns(await injectTenant(sanitizeWrite(item))));
       const { data, error } = await client.from(table).insert(rows).select();
       if (error) throw error;
+      void logAudit('bulk_create', { entity: entityName, metadata: { count: (data || []).length } });
       return (data || []).map(withCreatedDate);
     },
 
@@ -181,6 +184,7 @@ function makeTable(entityName) {
       }
       const { data, error } = await client.from(table).update(pickColumns(row)).eq('id', id).select().single();
       if (error) throw error;
+      void logAudit('update', { entity: entityName, entityId: id, empresaId: data?.empresa_id ?? null });
       return withCreatedDate(data);
     },
 
@@ -188,6 +192,7 @@ function makeTable(entityName) {
       const client = assertSupabaseConfigured();
       const { error } = await client.from(table).delete().eq('id', id);
       if (error) throw error;
+      void logAudit('delete', { entity: entityName, entityId: id });
       return { id };
     },
   };

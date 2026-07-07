@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { assertSupabaseConfigured, isSupabaseConfigured, supabase } from '@/lib/supabaseClient';
 import { resetDbProfileCache } from '@/api/db';
+import { logAudit } from '@/lib/audit';
 
 const AuthContext = createContext();
 
@@ -154,10 +155,12 @@ export const AuthProvider = ({ children }) => {
       throw new Error('Login autenticado, mas perfil operacional não encontrado ou não ativo.');
     }
 
+    void logAudit('login', { empresaId: profile.empresa_id ?? null });
     return profile;
   };
 
   const logout = async () => {
+    await logAudit('logout', { empresaId: user?.empresa_id ?? null });
     if (supabase) await supabase.auth.signOut();
     clearAuthState();
   };
