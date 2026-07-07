@@ -29,7 +29,8 @@ import {
   DollarSign,
   FileCheck,
   Wallet,
-  LineChart
+  LineChart,
+  Rocket
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -50,6 +51,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
 
   const allMenuItems = [
+    { name: 'Boas-vindas', icon: Rocket, path: 'BoasVindas', adminOnly: true },
     { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
     { name: 'Prospecção', icon: Target, path: 'Leads' },
     { name: 'Campanhas', icon: Megaphone, path: 'Campanhas' },
@@ -82,7 +84,7 @@ export default function Layout({ children, currentPageName }) {
   const isSuperAdmin = currentUser?.role === 'super_admin';
   const hasItemAccess = (item) => isSuperAdmin || !hasModules || modulosPermitidos.includes(item.moduleKey || item.path);
 
-  const menuItems = allMenuItems.filter((item) => hasItemAccess(item));
+  const menuItems = allMenuItems.filter((item) => (item.adminOnly ? isAdmin : hasItemAccess(item)));
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
     if (item.superAdminOnly) return isSuperAdmin;

@@ -13,6 +13,7 @@ import Comissoes from './pages/Comissoes';
 import ConciliacaoAdministradora from './pages/ConciliacaoAdministradora';
 import Recebiveis from './pages/Recebiveis';
 import PainelRecebiveis from './pages/PainelRecebiveis';
+import BoasVindas from './pages/BoasVindas';
 import Vendedores from './pages/Vendedores';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
@@ -38,6 +39,7 @@ export const PAGES = {
   ConciliacaoAdministradora,
   Recebiveis,
   PainelRecebiveis,
+  BoasVindas,
   Vendedores,
   Profile,
   Reports,

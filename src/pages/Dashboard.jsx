@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Target, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
-import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
 
 function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -57,7 +57,7 @@ export default function Dashboard() {
         <p className="text-gray-500 mt-1">Visão geral da operação comercial de consórcios</p>
       </div>
 
-      <OnboardingChecklist />
+      <OnboardingBanner />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
         <KPI title="Total de Leads" value={kpis.totalLeads} Icon={Target} />
