@@ -50,24 +50,34 @@ export default function Layout({ children, currentPageName }) {
   const { user: currentUser, logout } = useAuth();
   const location = useLocation();
 
-  const allMenuItems = [
-    { name: 'Boas-vindas', icon: Rocket, path: 'BoasVindas', adminOnly: true },
-    { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
-    { name: 'Prospecção', icon: Target, path: 'Leads' },
-    { name: 'Campanhas', icon: Megaphone, path: 'Campanhas' },
-    { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
-    { name: 'Clientes', icon: Users, path: 'Contacts' },
-    { name: 'Administradoras', icon: Building2, path: 'Accounts' },
-    { name: 'Produtos de Consórcio', icon: Package, path: 'ProdutoConsorcio' },
-    { name: 'Equipes Comerciais', icon: UserCircle, path: 'EquipeComercial' },
-    { name: 'Vendedores', icon: UserRound, path: 'Vendedores' },
-    { name: 'Vendas de Consórcio', icon: ReceiptText, path: 'VendasConsorcio' },
-    { name: 'Regras de Comissão', icon: Percent, path: 'RegrasComissao' },
-    { name: 'Comissões', icon: DollarSign, path: 'Comissoes' },
-    { name: 'Conciliação Administradora', icon: FileCheck, path: 'ConciliacaoAdministradora' },
-    { name: 'Recebíveis', icon: Wallet, path: 'Recebiveis' },
-    { name: 'Painel de Recebíveis', icon: LineChart, path: 'PainelRecebiveis' },
-    { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
+  // Menu agrupado por finalidade: operação diária no topo; cadastros de
+  // configuração inicial (editados no começo) mais abaixo.
+  const menuSections = [
+    { label: 'Início', items: [
+      { name: 'Boas-vindas', icon: Rocket, path: 'BoasVindas', adminOnly: true },
+      { name: 'Painel Geral', icon: LayoutDashboard, path: 'Dashboard' },
+      { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' },
+    ] },
+    { label: 'Comercial', items: [
+      { name: 'Prospecção', icon: Target, path: 'Leads' },
+      { name: 'Campanhas', icon: Megaphone, path: 'Campanhas' },
+      { name: 'Oportunidades', icon: TrendingUp, path: 'Oportunidades' },
+      { name: 'Clientes', icon: Users, path: 'Contacts' },
+      { name: 'Vendas de Consórcio', icon: ReceiptText, path: 'VendasConsorcio' },
+    ] },
+    { label: 'Financeiro', items: [
+      { name: 'Comissões', icon: DollarSign, path: 'Comissoes' },
+      { name: 'Conciliação Administradora', icon: FileCheck, path: 'ConciliacaoAdministradora' },
+      { name: 'Recebíveis', icon: Wallet, path: 'Recebiveis' },
+      { name: 'Painel de Recebíveis', icon: LineChart, path: 'PainelRecebiveis' },
+    ] },
+    { label: 'Cadastros', items: [
+      { name: 'Administradoras', icon: Building2, path: 'Accounts' },
+      { name: 'Produtos de Consórcio', icon: Package, path: 'ProdutoConsorcio' },
+      { name: 'Equipes Comerciais', icon: UserCircle, path: 'EquipeComercial' },
+      { name: 'Vendedores', icon: UserRound, path: 'Vendedores' },
+      { name: 'Regras de Comissão', icon: Percent, path: 'RegrasComissao' },
+    ] },
   ];
 
   const allBottomMenuItems = [
@@ -84,7 +94,10 @@ export default function Layout({ children, currentPageName }) {
   const isSuperAdmin = currentUser?.role === 'super_admin';
   const hasItemAccess = (item) => isSuperAdmin || !hasModules || modulosPermitidos.includes(item.moduleKey || item.path);
 
-  const menuItems = allMenuItems.filter((item) => (item.adminOnly ? isAdmin : hasItemAccess(item)));
+  const itemVisible = (item) => (item.adminOnly ? isAdmin : hasItemAccess(item));
+  const visibleSections = menuSections
+    .map((sec) => ({ ...sec, items: sec.items.filter(itemVisible) }))
+    .filter((sec) => sec.items.length > 0);
 
   const bottomMenuItems = allBottomMenuItems.filter((item) => {
     if (item.superAdminOnly) return isSuperAdmin;
@@ -107,16 +120,26 @@ export default function Layout({ children, currentPageName }) {
         <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/52d192aa6_nvion_logo_icon.png" alt="NVION" className="h-9 w-9 object-contain flex-shrink-0" />
         {(!sidebarCollapsed || forMobile) && <span className="text-sm font-semibold text-sidebar-accent-foreground truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>}
       </div>
-      <nav className="flex-1 px-2 py-4 space-y-1 flex flex-col overflow-y-auto">
-        <div className="space-y-0.5">
-          {menuItems.map((item) => (
-            <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
-              <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-primary-foreground' : ''}`} />
-              {(!sidebarCollapsed || forMobile) && <span className="text-sm truncate">{item.name}</span>}
-            </Link>
+      <nav className="flex-1 px-2 py-4 flex flex-col overflow-y-auto">
+        <div className="space-y-4">
+          {visibleSections.map((sec) => (
+            <div key={sec.label} className="space-y-0.5">
+              {(!sidebarCollapsed || forMobile) && (
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 select-none">{sec.label}</p>
+              )}
+              {sec.items.map((item) => (
+                <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
+                  <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-primary-foreground' : ''}`} />
+                  {(!sidebarCollapsed || forMobile) && <span className="text-sm truncate">{item.name}</span>}
+                </Link>
+              ))}
+            </div>
           ))}
         </div>
         <div className="mt-auto pt-4 border-t border-sidebar-border space-y-0.5">
+          {(!sidebarCollapsed || forMobile) && bottomMenuItems.length > 0 && (
+            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 select-none">Administração</p>
+          )}
           {bottomMenuItems.map((item) => (
             <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
               <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
