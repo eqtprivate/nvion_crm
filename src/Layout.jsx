@@ -25,7 +25,11 @@ import {
   UserRound,
   Database,
   CreditCard,
-  Megaphone
+  Megaphone,
+  DollarSign,
+  FileCheck,
+  Wallet,
+  LineChart
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -57,6 +61,10 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Vendedores', icon: UserRound, path: 'Vendedores' },
     { name: 'Vendas de Consórcio', icon: ReceiptText, path: 'VendasConsorcio' },
     { name: 'Regras de Comissão', icon: Percent, path: 'RegrasComissao' },
+    { name: 'Comissões', icon: DollarSign, path: 'Comissoes' },
+    { name: 'Conciliação Administradora', icon: FileCheck, path: 'ConciliacaoAdministradora' },
+    { name: 'Recebíveis', icon: Wallet, path: 'Recebiveis' },
+    { name: 'Painel de Recebíveis', icon: LineChart, path: 'PainelRecebiveis' },
     { name: 'Relatórios Gerenciais', icon: BarChart3, path: 'Reports' }
   ];
 

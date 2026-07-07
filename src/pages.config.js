@@ -9,6 +9,10 @@ import Oportunidades from './pages/Oportunidades';
 import ProdutoConsorcio from './pages/ProdutoConsorcio';
 import RegrasComissao from './pages/RegrasComissao';
 import VendasConsorcio from './pages/VendasConsorcio';
+import Comissoes from './pages/Comissoes';
+import ConciliacaoAdministradora from './pages/ConciliacaoAdministradora';
+import Recebiveis from './pages/Recebiveis';
+import PainelRecebiveis from './pages/PainelRecebiveis';
 import Vendedores from './pages/Vendedores';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
@@ -30,6 +34,10 @@ export const PAGES = {
   ProdutoConsorcio,
   RegrasComissao,
   VendasConsorcio,
+  Comissoes,
+  ConciliacaoAdministradora,
+  Recebiveis,
+  PainelRecebiveis,
   Vendedores,
   Profile,
   Reports,
