@@ -14,6 +14,7 @@ import ConciliacaoAdministradora from './pages/ConciliacaoAdministradora';
 import Recebiveis from './pages/Recebiveis';
 import PainelRecebiveis from './pages/PainelRecebiveis';
 import BoasVindas from './pages/BoasVindas';
+import RedefinirSenha from './pages/RedefinirSenha';
 import Vendedores from './pages/Vendedores';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
@@ -40,6 +41,7 @@ export const PAGES = {
   Recebiveis,
   PainelRecebiveis,
   BoasVindas,
+  RedefinirSenha,
   Vendedores,
   Profile,
   Reports,

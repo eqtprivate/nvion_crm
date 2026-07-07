@@ -16,5 +16,5 @@ export function getPasswordRecoveryRedirectUrl() {
   const configuredUrl = normalizeOrigin(import.meta.env.VITE_PUBLIC_APP_URL);
   const currentOrigin = normalizeOrigin(window.location.origin);
   const origin = configuredUrl || (isLocalhostOrigin(currentOrigin) ? DEFAULT_PUBLIC_APP_URL : currentOrigin) || DEFAULT_PUBLIC_APP_URL;
-  return `${origin}/Profile`;
+  return `${origin}/RedefinirSenha`;
 }

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { assertSupabaseConfigured, isSupabaseConfigured, supabase } from '@/lib/supabaseClient';
+import { resetDbProfileCache } from '@/api/db';
 
 const AuthContext = createContext();
 
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   const clearAuthState = useCallback(() => {
+    resetDbProfileCache();
     setUser(null);
     setIsAuthenticated(false);
   }, []);
@@ -136,6 +138,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const client = assertSupabaseConfigured();
     setAuthError(null);
+    resetDbProfileCache();
 
     const { data, error } = await client.auth.signInWithPassword({
       email: String(email || '').trim().toLowerCase(),
