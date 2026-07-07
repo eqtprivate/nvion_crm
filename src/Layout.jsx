@@ -92,7 +92,9 @@ export default function Layout({ children, currentPageName }) {
   const hasModules = modulosPermitidos && modulosPermitidos.length > 0;
   const isAdmin = isAdminRole(currentUser?.role);
   const isSuperAdmin = currentUser?.role === 'super_admin';
-  const hasItemAccess = (item) => isSuperAdmin || !hasModules || modulosPermitidos.includes(item.moduleKey || item.path);
+  // Admins (super_admin e admin_empresa) enxergam todos os módulos por definição,
+  // independentemente do que estiver salvo em user_modules.
+  const hasItemAccess = (item) => isAdmin || !hasModules || modulosPermitidos.includes(item.moduleKey || item.path);
 
   const itemVisible = (item) => (item.adminOnly ? isAdmin : hasItemAccess(item));
   const visibleSections = menuSections
