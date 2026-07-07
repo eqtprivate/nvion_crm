@@ -65,16 +65,14 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
         const validContacts = contacts.filter(c => c.name && c.email);
         
         if (validContacts.length > 0) {
+          const ORIGENS_VALIDAS = ['indicacao', 'instagram', 'google', 'site', 'whatsapp', 'campanha_paga', 'base_propria', 'parceiro', 'evento', 'outro'];
           await db.Contact.bulkCreate(
             validContacts.map(c => ({
               name: c.name,
               email: c.email,
               phone: c.phone || '',
-              company: c.company || '',
-              position: c.position || '',
-              source: c.source || 'email',
-              priority: 'Standard',
-              status: 'active'
+              origem: ORIGENS_VALIDAS.includes(String(c.source || '').toLowerCase()) ? c.source.toLowerCase() : 'outro',
+              status: 'lead'
             }))
           );
 
@@ -167,7 +165,7 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
                 </ul>
                 <p className="font-semibold mt-2">Colunas opcionais:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
-                  <li>phone, company, position, source</li>
+                  <li>phone, source (origem)</li>
                 </ul>
               </div>
             </>
