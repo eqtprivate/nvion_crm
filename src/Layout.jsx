@@ -30,7 +30,8 @@ import {
   FileCheck,
   Wallet,
   LineChart,
-  Rocket
+  Rocket,
+  Mail
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -85,6 +86,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Dados de Teste', icon: Database, path: 'DadosTeste' },
     { name: 'Gestão de Acessos', icon: ShieldCheck, path: 'GestaoAcessos' },
     { name: 'Gestão de Planos', icon: CreditCard, path: 'GestaoPlanos', superAdminOnly: true },
+    { name: 'Templates de E-mail', icon: Mail, path: 'GestaoEmailTemplates', superAdminOnly: true },
     { name: 'Gestão de Empresas', icon: Building2, path: 'GestaoEmpresas', adminEmpresaAllowed: true }
   ];
 

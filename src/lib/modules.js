@@ -19,6 +19,7 @@ export const AVAILABLE_MODULES = [
   'ConciliacaoAdministradora',
   'GestaoEmpresas',
   'GestaoPlanos',
+  'GestaoEmailTemplates',
 ];
 
 export const MODULE_LABELS = {
@@ -42,6 +43,7 @@ export const MODULE_LABELS = {
   ConciliacaoAdministradora: 'Conciliação Administradora',
   GestaoEmpresas: 'Gestão de Empresas',
   GestaoPlanos: 'Gestão de Planos',
+  GestaoEmailTemplates: 'Templates de E-mail',
 };
 
 export const ROLE_LABELS = {

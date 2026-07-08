@@ -33,3 +33,6 @@ jobs:
 
       - name: Deploy admin-reset-temp-password function
         run: supabase functions deploy admin-reset-temp-password --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Deploy auth-email-hook function
+        run: supabase functions deploy auth-email-hook --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"

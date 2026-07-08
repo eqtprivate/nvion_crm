@@ -1,0 +1,6 @@
+# Configuração das Edge Functions.
+# O Send Email Hook é chamado pelo Supabase Auth SEM um JWT de usuário — a
+# autenticidade é garantida pela assinatura do webhook (SEND_EMAIL_HOOK_SECRET).
+# Por isso a verificação de JWT precisa ficar desabilitada nesta função.
+[functions.auth-email-hook]
+verify_jwt = false

@@ -22,6 +22,7 @@ import Settings from './pages/Settings';
 import GestaoAcessos from './pages/GestaoAcessos';
 import GestaoPlanos from './pages/GestaoPlanos';
 import GestaoEmpresas from './pages/GestaoEmpresas';
+import GestaoEmailTemplates from './pages/GestaoEmailTemplates';
 import __Layout from './Layout.jsx';
 
 export const PAGES = {
@@ -49,6 +50,7 @@ export const PAGES = {
   GestaoAcessos,
   GestaoPlanos,
   GestaoEmpresas,
+  GestaoEmailTemplates,
 };
 
 export const pagesConfig = {
