@@ -3,7 +3,7 @@ import { db } from '@/api/db';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, CheckCircle, Percent, Receipt, Gauge } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
@@ -72,10 +72,25 @@ export default function Dashboard() {
     const leadsAtivos = leads.filter((lead) => !['venda_concluida', 'perdida'].includes(lead.status)).length;
     const abertas = oportunidades.filter((item) => item.status === 'aberta');
     const ganhas = oportunidades.filter((item) => item.status === 'ganha');
+    const perdidas = oportunidades.filter((item) => item.status === 'perdida');
     const pipelineAberto = abertas.reduce((sum, item) => sum + (item.valor_carta || 0), 0);
     const valorGanho = ganhas.reduce((sum, item) => sum + (item.valor_carta || 0), 0);
     const conversao = totalLeads > 0 ? ((leads.filter((lead) => lead.status === 'venda_concluida').length / totalLeads) * 100).toFixed(1) : '0.0';
-    return { totalLeads, leadsAtivos, abertas: abertas.length, ganhas: ganhas.length, pipelineAberto, valorGanho, conversao };
+
+    // Novos indicadores.
+    const ticketMedio = ganhas.length > 0 ? valorGanho / ganhas.length : 0;
+    const decididas = ganhas.length + perdidas.length;
+    const winRate = decididas > 0 ? ((ganhas.length / decididas) * 100).toFixed(1) : '0.0';
+    const pipelinePonderado = abertas.reduce((sum, item) => sum + (item.valor_carta || 0) * ((item.probabilidade || 0) / 100), 0);
+    const now = new Date();
+    const vendasMes = ganhas.filter((item) => {
+      const ref = item.previsao_fechamento || item.created_date;
+      if (!ref) return false;
+      const d = new Date(ref);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+
+    return { totalLeads, leadsAtivos, abertas: abertas.length, ganhas: ganhas.length, pipelineAberto, valorGanho, conversao, ticketMedio, winRate, pipelinePonderado, vendasMes };
   }, [leads, oportunidades]);
 
   const palette = useChartPalette();
@@ -126,15 +141,18 @@ export default function Dashboard() {
 
       <OnboardingBanner />
 
-      {isLoading ? <div className="mb-6"><CardsSkeleton count={7} /></div> : (
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+      {isLoading ? <div className="mb-6"><CardsSkeleton count={10} /></div> : (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         <KPI title="Total de Leads" value={kpis.totalLeads} Icon={Target} />
         <KPI title="Leads Ativos" value={kpis.leadsAtivos} Icon={Target} />
         <KPI title="Taxa de Conversão" value={kpis.conversao + '%'} Icon={TrendingUp} />
+        <KPI title="Win Rate" value={kpis.winRate + '%'} Icon={Percent} />
+        <KPI title="Vendas no Mês" value={kpis.vendasMes} Icon={CheckCircle} />
         <KPI title="Oportunidades Abertas" value={kpis.abertas} Icon={DollarSign} />
         <KPI title="Oportunidades Ganhas" value={kpis.ganhas} Icon={CheckCircle} />
+        <KPI title="Ticket Médio" value={money(kpis.ticketMedio)} Icon={Receipt} />
         <KPI title="Pipeline Aberto" value={money(kpis.pipelineAberto)} Icon={DollarSign} />
-        <KPI title="Valor Ganho" value={money(kpis.valorGanho)} Icon={CheckCircle} />
+        <KPI title="Pipeline Ponderado" value={money(kpis.pipelinePonderado)} Icon={Gauge} />
       </div>
       )}
 
