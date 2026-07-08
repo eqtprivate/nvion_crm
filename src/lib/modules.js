@@ -20,6 +20,7 @@ export const AVAILABLE_MODULES = [
   'GestaoEmpresas',
   'GestaoPlanos',
   'GestaoEmailTemplates',
+  'GestaoLogs',
 ];
 
 export const MODULE_LABELS = {
@@ -44,6 +45,7 @@ export const MODULE_LABELS = {
   GestaoEmpresas: 'Gestão de Empresas',
   GestaoPlanos: 'Gestão de Planos',
   GestaoEmailTemplates: 'Templates de E-mail',
+  GestaoLogs: 'Logs de Auditoria',
 };
 
 export const ROLE_LABELS = {

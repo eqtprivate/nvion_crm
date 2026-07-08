@@ -31,7 +31,8 @@ import {
   Wallet,
   LineChart,
   Rocket,
-  Mail
+  Mail,
+  ScrollText
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
@@ -85,6 +86,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Configurações', icon: Settings, path: 'Settings' },
     { name: 'Dados de Teste', icon: Database, path: 'DadosTeste' },
     { name: 'Gestão de Acessos', icon: ShieldCheck, path: 'GestaoAcessos' },
+    { name: 'Logs de Auditoria', icon: ScrollText, path: 'GestaoLogs' },
     { name: 'Gestão de Planos', icon: CreditCard, path: 'GestaoPlanos', superAdminOnly: true },
     { name: 'Templates de E-mail', icon: Mail, path: 'GestaoEmailTemplates', superAdminOnly: true },
     { name: 'Gestão de Empresas', icon: Building2, path: 'GestaoEmpresas', adminEmpresaAllowed: true }
@@ -109,7 +111,7 @@ export default function Layout({ children, currentPageName }) {
       if (!isAdmin) return false;
       return hasItemAccess(item);
     }
-    if (item.path === 'GestaoAcessos' || item.path === 'DadosTeste') {
+    if (item.path === 'GestaoAcessos' || item.path === 'DadosTeste' || item.path === 'GestaoLogs') {
       if (!isAdmin) return false;
       return hasItemAccess(item);
     }
