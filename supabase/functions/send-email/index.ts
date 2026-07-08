@@ -70,16 +70,16 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const secretKey = getSupabaseSecretKey();
 
-  if (!resendApiKey || !emailFrom || !supabaseUrl || !secretKey) {
+  // Fail-closed: o segredo do webhook é obrigatório. Sem ele, a função recusa
+  // (evita open relay se a env não estiver configurada).
+  if (!resendApiKey || !emailFrom || !supabaseUrl || !secretKey || !fnSecret) {
     return new Response(JSON.stringify({ error: 'missing_server_configuration' }), { status: 500 });
   }
 
-  // Autenticação do webhook por segredo compartilhado.
-  if (fnSecret) {
-    const provided = req.headers.get('x-webhook-secret') || '';
-    if (provided !== fnSecret) {
-      return new Response(JSON.stringify({ error: 'invalid_secret' }), { status: 401 });
-    }
+  // Autenticação do webhook por segredo compartilhado (sempre exigida).
+  const provided = req.headers.get('x-webhook-secret') || '';
+  if (provided !== fnSecret) {
+    return new Response(JSON.stringify({ error: 'invalid_secret' }), { status: 401 });
   }
 
   let payload: any;

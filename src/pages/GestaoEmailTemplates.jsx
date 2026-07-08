@@ -274,7 +274,7 @@ function TemplatesTab() {
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4" /> Preview (com dados de exemplo)</CardTitle></CardHeader>
               <CardContent>
                 <p className="text-xs text-gray-500 mb-2"><strong>Assunto:</strong> {renderPreview(draft.subject)}</p>
-                <iframe title="preview" className="w-full h-80 border border-gray-200 rounded-lg bg-white" srcDoc={renderPreview(draft.html)} />
+                <iframe title="preview" sandbox="" className="w-full h-80 border border-gray-200 rounded-lg bg-white" srcDoc={renderPreview(draft.html)} />
               </CardContent>
             </Card>
           </>

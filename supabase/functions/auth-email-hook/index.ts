@@ -84,17 +84,16 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const secretKey = getSupabaseSecretKey();
 
-  if (!resendApiKey || !emailFrom || !supabaseUrl || !secretKey) {
+  // Fail-closed: o segredo do hook é obrigatório (sem ele a função recusa tudo).
+  if (!resendApiKey || !emailFrom || !supabaseUrl || !secretKey || !hookSecret) {
     return new Response(JSON.stringify({ error: 'missing_server_configuration' }), { status: 500 });
   }
 
   const rawBody = await req.text();
 
-  // Verificação de assinatura (obrigatória se o segredo estiver configurado).
-  if (hookSecret) {
-    const ok = await verifySignature(hookSecret, req.headers, rawBody).catch(() => false);
-    if (!ok) return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401 });
-  }
+  // Verificação de assinatura Standard Webhooks (sempre exigida).
+  const ok = await verifySignature(hookSecret, req.headers, rawBody).catch(() => false);
+  if (!ok) return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401 });
 
   let payload: any;
   try {
