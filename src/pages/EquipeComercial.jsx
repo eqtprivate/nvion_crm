@@ -176,10 +176,10 @@ export default function EquipeComercial() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Equipe e Vendedores</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Equipe e Vendedores</h1>
           <p className="text-gray-500 mt-1">Gestão de líderes, vendedores, equipes comerciais e metas</p>
         </div>
         {canManageTeams && (
@@ -191,7 +191,7 @@ export default function EquipeComercial() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Equipes</p><p className="text-2xl font-bold text-gray-900">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Equipes</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{kpis.total}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Equipes Ativas</p><p className="text-2xl font-bold text-green-600">{kpis.ativas}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendedores</p><p className="text-2xl font-bold text-blue-600">{kpis.totalVendedores}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Meta Total</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.metaTotal)}</p></CardContent></Card>

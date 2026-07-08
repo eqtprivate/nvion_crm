@@ -614,7 +614,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                   <TableRow key={target.id} className="hover:bg-gray-50 border-b border-gray-100">
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{target.display_name}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{target.display_name}</span>
                         <span className="text-sm text-gray-500">{target.email}</span>
                         <span className="text-[11px] text-gray-300 font-mono">{target.id}</span>
                       </div>
@@ -770,7 +770,7 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
                     {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
                     <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center"><Building2 className="w-5 h-5 text-blue-600" /></div>
                     <div>
-                      <p className="font-medium text-gray-900">{getEmpresaNome(empresa)}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{getEmpresaNome(empresa)}</p>
                       <p className="text-xs text-gray-500">{empresa.cnpj || empresa.plano || ''}</p>
                     </div>
                   </div>
@@ -849,9 +849,9 @@ export default function GestaoAcessos() {
   }, [empresas, currentUser?.empresa_id, currentUser?.empresa_vinculada]);
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Acessos</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Gestão de Acessos</h1>
         <p className="text-gray-500 mt-1">Crie acessos, gerencie perfis, módulos e empresas usando Supabase</p>
       </div>
 

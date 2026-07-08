@@ -25,7 +25,7 @@ export default function ReportKPICard({ title, value, subtitle, icon: Icon, colo
             </div>
             <div>
               <div className="text-xs text-gray-500 mb-1">{title}</div>
-              <div className="text-2xl font-bold text-gray-900">{value}</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</div>
             </div>
           </div>
         </div>

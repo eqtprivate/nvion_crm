@@ -491,10 +491,10 @@ export default function Leads() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Prospecção</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Prospecção</h1>
           <p className="text-gray-500 mt-1">Cockpit de leads, ações comerciais e conversão para oportunidades</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -513,7 +513,7 @@ export default function Leads() {
       <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-gray-900">Funil de Prospecção</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Funil de Prospecção</p>
             <p className="text-xs text-gray-500">Cada etapa possui cor própria para facilitar leitura do pipeline</p>
           </div>
           <Button size="sm" variant="ghost" onClick={() => setActiveStage('all')}>Limpar etapa</Button>
@@ -537,7 +537,7 @@ export default function Leads() {
                     {activeStage === stage.value && <span className="text-[10px] font-semibold text-gray-500 uppercase">ativo</span>}
                   </div>
                   <div className="flex items-end justify-between gap-3 mt-2">
-                    <p className="text-2xl font-bold text-gray-900">{stage.count}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stage.count}</p>
                     <p className="text-xs font-medium text-gray-600">{formatCurrency(stage.valueTotal)}</p>
                   </div>
                   <div className="mt-3 h-1.5 rounded-full bg-white/80 border border-white overflow-hidden">

@@ -59,7 +59,7 @@ export default function RedefinirSenha() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
           <div className="flex items-center gap-2 mb-1">
             <KeyRound className="w-5 h-5 text-primary" />
-            <h1 className="text-xl font-bold text-gray-900">Redefinir Senha</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Redefinir Senha</h1>
           </div>
           <p className="text-sm text-gray-500 mb-6">
             {isRecovery
@@ -70,7 +70,7 @@ export default function RedefinirSenha() {
           {done ? (
             <div className="py-4 space-y-4 text-center">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-              <p className="font-semibold text-gray-900">Senha redefinida com sucesso</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">Senha redefinida com sucesso</p>
               <p className="text-sm text-gray-500">Use a nova senha para acessar o sistema.</p>
             </div>
           ) : (

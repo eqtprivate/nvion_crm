@@ -473,10 +473,10 @@ export default function Campanhas() {
   const openEdit = (campanha) => { setSelectedCampanha(campanha); setDialogOpen(true); };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Campanhas</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Campanhas</h1>
           <p className="text-gray-500 mt-1">Crie, acompanhe e mensure campanhas comerciais do funil NVION.</p>
         </div>
         <div className="flex gap-2">
@@ -500,9 +500,9 @@ export default function Campanhas() {
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Ativas</p><p className="text-xl font-bold text-green-700">{kpis.ativas}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Leads</p><p className="text-xl font-bold text-blue-700">{kpis.leads}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Vendas</p><p className="text-xl font-bold text-primary">{kpis.vendas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Valor cartas</p><p className="text-xl font-bold text-gray-900">{money(kpis.valorCartas)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Orç. previsto</p><p className="text-xl font-bold text-gray-900">{money(kpis.orcamentoPrevisto)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Orç. realizado</p><p className="text-xl font-bold text-gray-900">{money(kpis.orcamentoRealizado)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Valor cartas</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.valorCartas)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Orç. previsto</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.orcamentoPrevisto)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Orç. realizado</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.orcamentoRealizado)}</p></CardContent></Card>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -555,7 +555,7 @@ export default function Campanhas() {
               ) : filtered.map((campanha) => (
                 <TableRow key={campanha.id}>
                   <TableCell>
-                    <div className="font-medium text-gray-900">{campanha.nome_campanha}</div>
+                    <div className="font-medium text-gray-900 dark:text-gray-100">{campanha.nome_campanha}</div>
                     <div className="text-xs text-gray-400 font-mono">{campanha.codigo_campanha || '-'}</div>
                   </TableCell>
                   <TableCell>{TIPO_LABEL[campanha.tipo_campanha] || campanha.tipo_campanha || '-'}</TableCell>

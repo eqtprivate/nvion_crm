@@ -448,10 +448,10 @@ export default function ConciliacaoAdministradora() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Conciliação com Administradoras</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Conciliação com Administradoras</h1>
           <p className="text-gray-500 mt-1">Importe relatórios das administradoras e concilie com vendas e comissões internas</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>

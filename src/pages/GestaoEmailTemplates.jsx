@@ -303,7 +303,7 @@ export default function GestaoEmailTemplates() {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <Mail className="w-6 h-6 text-primary" /> E-mails
         </h1>
         <p className="text-gray-500 mt-1">Templates de autenticação e transacionais, e histórico de envios.</p>

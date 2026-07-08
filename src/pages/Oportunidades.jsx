@@ -150,10 +150,10 @@ export default function Oportunidades() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Oportunidades</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Oportunidades</h1>
           <p className="text-gray-500 mt-1">Gestão do pipeline de vendas</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -167,7 +167,7 @@ export default function Oportunidades() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total</p><p className="text-2xl font-bold text-gray-900">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{kpis.total}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Em Aberto</p><p className="text-2xl font-bold text-blue-600">{kpis.abertas}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Ganhas</p><p className="text-2xl font-bold text-green-600">{kpis.ganhas}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pipeline</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.pipeline)}</p></CardContent></Card>

@@ -19,7 +19,7 @@ function Indicador({ title, value, Icon }) {
           <span className="text-sm text-gray-500">{title}</span>
           <Icon className="w-4 h-4 text-primary" />
         </div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
       </CardContent>
     </Card>
   );
@@ -118,10 +118,10 @@ export default function Reports() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Relatórios Gerenciais</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Relatórios Gerenciais</h1>
           <p className="text-gray-500 text-sm mt-1">Análises comerciais, operacionais e indicadores do sistema</p>
         </div>
         <Button variant="outline" onClick={exportarOportunidades} disabled={oportunidades.length === 0}>

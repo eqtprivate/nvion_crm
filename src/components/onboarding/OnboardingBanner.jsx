@@ -29,7 +29,7 @@ export default function OnboardingBanner() {
         <Rocket className="w-5 h-5 text-primary" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-gray-900">Complete a configuração da sua empresa</p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">Complete a configuração da sua empresa</p>
         <p className="text-sm text-gray-500 truncate">
           {doneCount} de {total} concluídos{proximo ? ` · próximo: ${proximo.title}` : ''}
         </p>

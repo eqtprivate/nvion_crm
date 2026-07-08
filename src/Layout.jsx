@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
+import ThemeToggle from '@/components/ThemeToggle';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -159,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
   );
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-slate-50 dark:bg-background">
       <div className="hidden md:flex bg-sidebar flex-col fixed inset-y-0 left-0 z-30 transition-all duration-200" style={{ width: sidebarCollapsed ? '60px' : '256px' }}>
         <SidebarContent />
         <button type="button" onClick={() => setSidebarCollapsed((value) => !value)} className="absolute -right-3 top-16 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-colors bg-sidebar-accent border border-sidebar-border text-sidebar-foreground/70 hover:text-sidebar-accent-foreground" title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}>
@@ -176,20 +177,21 @@ export default function Layout({ children, currentPageName }) {
         </div>
       )}
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-200 ${sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-64'}`}>
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
+        <header className="bg-white dark:bg-card border-b border-gray-200 dark:border-border px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
           <div className="flex items-center gap-3 flex-1">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileSidebarOpen(true)}><Menu className="w-5 h-5" /></Button>
-            <div className="hidden sm:flex flex-1 max-w-md"><div className="relative w-full"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar no sistema..." className="pl-9 bg-gray-50 border-gray-200 h-9 text-sm" /></div></div>
+            <div className="hidden sm:flex flex-1 max-w-md"><div className="relative w-full"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar no sistema..." className="pl-9 bg-gray-50 dark:bg-background border-gray-200 dark:border-border h-9 text-sm" /></div></div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="icon" className="text-gray-600 relative"><Bell className="w-[18px] h-[18px]" /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span></Button>
+            <ThemeToggle />
+            <Button variant="ghost" size="icon" className="text-gray-600 dark:text-gray-300 relative"><Bell className="w-[18px] h-[18px]" /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span></Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 px-2"><Avatar className="w-8 h-8">{currentUser?.profile_picture ? <img src={currentUser.profile_picture} alt="Perfil" className="w-full h-full object-cover rounded-full" /> : <div className="w-full h-full bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">{currentUser?.display_name ? currentUser.display_name.charAt(0).toUpperCase() : currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase() || 'N'}</div>}</Avatar><span className="text-sm font-medium text-gray-700 hidden lg:inline">{currentUser?.display_name || currentUser?.full_name || 'Usuário'}</span><ChevronDown className="w-4 h-4 text-gray-400" /></Button></DropdownMenuTrigger>
               <DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={createPageUrl('Profile')}>Meu Perfil</Link></DropdownMenuItem><DropdownMenuItem onClick={logout}>Sair</DropdownMenuItem></DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 overflow-auto bg-slate-50">{children}</main>
+        <main className="flex-1 overflow-auto bg-slate-50 dark:bg-background">{children}</main>
       </div>
     </div>
   );

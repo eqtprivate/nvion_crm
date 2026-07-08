@@ -24,7 +24,7 @@ export default function KPICard({ title, value, subValue, trend, Icon, color = '
           )}
         </div>
         <div className="flex flex-col">
-          <span className="text-xl sm:text-2xl font-bold text-gray-900">{value}</span>
+          <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</span>
           {subValue && (
             <span className="text-xs sm:text-sm text-gray-500 mt-1">{subValue}</span>
           )}

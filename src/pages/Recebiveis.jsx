@@ -177,10 +177,10 @@ export default function Recebiveis() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Recebíveis</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Recebíveis</h1>
           <p className="text-gray-500 mt-1">Parcelas de comissão a receber por venda de consórcio</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
@@ -189,7 +189,7 @@ export default function Recebiveis() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Carteira Total</p><p className="text-xl font-bold text-gray-900">{money(kpis.carteira)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Carteira Total</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.carteira)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">A Receber</p><p className="text-xl font-bold text-blue-700">{money(kpis.aReceber)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Recebido</p><p className="text-xl font-bold text-green-700">{money(kpis.recebido)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Atrasado</p><p className="text-xl font-bold text-red-700">{money(kpis.atrasado)}</p></CardContent></Card>

@@ -123,7 +123,7 @@ export default function DadosTeste() {
 
   if (!canAccess) {
     return (
-      <div className="p-4 sm:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
           <ShieldAlert className="w-12 h-12 text-gray-300 mx-auto" />
           <p className="text-gray-500 font-medium">Acesso restrito</p>
@@ -135,7 +135,7 @@ export default function DadosTeste() {
 
   if (!empresa) {
     return (
-      <div className="p-4 sm:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
           <ShieldAlert className="w-12 h-12 text-yellow-400 mx-auto" />
           <p className="text-gray-700 font-medium">Empresa não vinculada</p>
@@ -146,10 +146,10 @@ export default function DadosTeste() {
   }
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dados de Teste</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Dados de Teste</h1>
           <p className="text-gray-500 mt-1">Carga controlada de dados fictícios para demonstração do NVION CRM.</p>
         </div>
         <Card>

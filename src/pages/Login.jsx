@@ -115,7 +115,7 @@ function EsqueciSenhaDialog({ open, onOpenChange }) {
           <div className="py-4 space-y-4 text-center">
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
             <div>
-              <p className="font-semibold text-gray-900">Solicitação enviada</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">Solicitação enviada</p>
               <p className="text-sm text-gray-500 mt-1">
                 Verifique sua caixa de entrada em <strong>{emailInput}</strong> e siga as instruções do Supabase Auth.
               </p>
@@ -159,7 +159,7 @@ export default function Login() {
             <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/b0d5da66e_nvion_logo_white.png" alt="NVION" className="h-12 w-auto" />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Bem-vindo</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center mb-1">Bem-vindo</h1>
           <p className="text-sm text-gray-500 text-center mb-8">Acesse sua conta para continuar</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">

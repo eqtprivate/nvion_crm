@@ -137,7 +137,7 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-500">
               Average Accuracy: {' '}
-              <span className="font-bold text-lg text-gray-900">
+              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
                 {forecastingAccuracy.length > 0
                   ? (forecastingAccuracy.reduce((sum, item) => sum + parseFloat(item.accuracy), 0) / forecastingAccuracy.length).toFixed(1)
                   : 0}%

@@ -13,7 +13,7 @@ export default function BoasVindas() {
 
   if (!isAdmin) {
     return (
-      <div className="p-4 sm:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
           <ShieldAlert className="w-12 h-12 text-gray-300 mx-auto" />
           <p className="text-gray-500 font-medium">Página restrita</p>
@@ -26,7 +26,7 @@ export default function BoasVindas() {
   const pct = Math.round((doneCount / total) * 100);
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Hero */}
         <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-8">
@@ -35,7 +35,7 @@ export default function BoasVindas() {
               <Rocket className="w-6 h-6 text-primary" />
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Bem-vindo(a){user?.display_name ? `, ${user.display_name.split(' ')[0]}` : ''}!
               </h1>
               <p className="text-gray-600 mt-1">
@@ -95,7 +95,7 @@ export default function BoasVindas() {
                     <Icon className={`w-5 h-5 ${step.done ? 'text-green-700' : 'text-gray-600'}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
                       <span className="text-gray-400 mr-1.5">{index + 1}.</span>{step.title}
                       {step.done && <span className="ml-2 text-xs font-medium text-green-700">Concluído</span>}
                     </p>

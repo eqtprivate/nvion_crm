@@ -112,7 +112,7 @@ export default function GestaoLogs() {
     <div className="p-4 sm:p-8 max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <ScrollText className="w-6 h-6 text-primary" /> Logs de Auditoria
           </h1>
           <p className="text-gray-500 mt-1">Registro de acessos e alterações de dados.</p>

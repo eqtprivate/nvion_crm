@@ -193,7 +193,7 @@ function UsersDialog({ open, onOpenChange, empresa, users }) {
 
         <div className="space-y-3">
           <div className="text-sm text-gray-600">
-            Empresa: <span className="font-medium text-gray-900">{empresa?.nome || '-'}</span>
+            Empresa: <span className="font-medium text-gray-900 dark:text-gray-100">{empresa?.nome || '-'}</span>
           </div>
 
           <div className="border rounded-lg overflow-hidden">
@@ -382,10 +382,10 @@ export default function GestaoEmpresas() {
   }
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestão de Empresas</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Gestão de Empresas</h1>
           <p className="text-gray-500 mt-1">Administre empresas, planos e vínculos operacionais do NVION.</p>
         </div>
         {canCreate && (
@@ -441,7 +441,7 @@ export default function GestaoEmpresas() {
               return (
                 <TableRow key={empresa.id}>
                   <TableCell>
-                    <div className="font-medium text-gray-900">{empresa.nome}</div>
+                    <div className="font-medium text-gray-900 dark:text-gray-100">{empresa.nome}</div>
                     <div className="text-xs text-gray-400 font-mono">{empresa.id}</div>
                   </TableCell>
                   <TableCell className="font-mono text-sm">{empresa.cnpj || '-'}</TableCell>

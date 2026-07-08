@@ -220,7 +220,7 @@ export default function GestaoPlanos() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestão de Planos</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Gestão de Planos</h1>
           <p className="text-sm text-gray-500 mt-0.5">Gerencie os planos disponíveis e seus módulos</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
@@ -232,7 +232,7 @@ export default function GestaoPlanos() {
         {planos.map((p) => (
           <div key={p.id} className="bg-white rounded-xl border p-4 space-y-2 shadow-sm">
             <div className="flex items-start justify-between gap-2">
-              <span className="font-semibold text-gray-900">{p.label}</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{p.label}</span>
               {p.ativo ? (
                 <Badge className="bg-green-100 text-green-700 border-0 text-xs">Ativo</Badge>
               ) : (

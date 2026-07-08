@@ -38,14 +38,14 @@ function ChartTooltip({ active, payload, label, labelKey }) {
   return (
     <div className="rounded-md border bg-white px-3 py-2 shadow-sm text-xs">
       <p className="font-medium text-gray-700">{labelKey ? payload[0]?.payload?.[labelKey] : label}</p>
-      <p className="text-gray-900 font-semibold">{money(payload[0].value)}</p>
+      <p className="text-gray-900 dark:text-gray-100 font-semibold">{money(payload[0].value)}</p>
     </div>
   );
 }
 
 function KPI({ title, value, Icon, tone = 'default', sub }) {
   const tones = {
-    default: 'text-gray-900', blue: 'text-blue-700', green: 'text-green-700',
+    default: 'text-gray-900 dark:text-gray-100', blue: 'text-blue-700', green: 'text-green-700',
     red: 'text-red-700', primary: 'text-primary',
   };
   return (
@@ -138,10 +138,10 @@ export default function PainelRecebiveis() {
   const elegTotal = m.elegibilidade.elegivelValor + m.elegibilidade.inelegivelValor;
 
   return (
-    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Recebíveis</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Painel de Recebíveis</h1>
           <p className="text-gray-500 mt-1">Indicadores da carteira, elegibilidade e base para antecipação</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtrados.length === 0}>
@@ -297,7 +297,7 @@ export default function PainelRecebiveis() {
               <Card>
                 <CardHeader><CardTitle className="text-base">Base histórica (para o motor de limite)</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-3 gap-3 text-center">
-                  <div><p className="text-xs text-gray-500">Meses de operação</p><p className="text-xl font-bold text-gray-900">{m.historico.mesesOperacao}</p></div>
+                  <div><p className="text-xs text-gray-500">Meses de operação</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{m.historico.mesesOperacao}</p></div>
                   <div><p className="text-xs text-gray-500">Volume recebido</p><p className="text-xl font-bold text-green-700">{moneyShort(m.historico.volumeRecebido)}</p></div>
                   <div><p className="text-xs text-gray-500">Conversão</p><p className="text-xl font-bold text-primary">{pct(m.realizadoVsPrevisto.taxaConversao)}</p></div>
                 </CardContent>
