@@ -37,6 +37,7 @@ import {
 import { isAdminRole } from '@/lib/modules';
 import { APP_VERSION } from '@/lib/version';
 import ThemeToggle from '@/components/ThemeToggle';
+import CommandPalette from '@/components/CommandPalette';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ import {
 
 export default function Layout({ children, currentPageName }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   // Estado da sidebar com memória (localStorage). Se nunca escolhido, começa
   // recolhida em telas médias.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -155,6 +157,12 @@ export default function Layout({ children, currentPageName }) {
     return hasItemAccess(item);
   });
 
+  // Seções para o command palette (menu principal + administração).
+  const paletteSections = [
+    ...visibleSections,
+    ...(bottomMenuItems.length > 0 ? [{ label: 'Administração', items: bottomMenuItems }] : []),
+  ];
+
   const isActive = (itemName) => currentPageName === itemName;
 
   const SidebarContent = ({ forMobile = false } = {}) => (
@@ -227,7 +235,13 @@ export default function Layout({ children, currentPageName }) {
         <header className="bg-white dark:bg-card border-b border-gray-200 dark:border-border px-4 sm:px-8 py-3 flex items-center justify-between gap-4 z-20">
           <div className="flex items-center gap-3 flex-1">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileSidebarOpen(true)}><Menu className="w-5 h-5" /></Button>
-            <div className="hidden sm:flex flex-1 max-w-md"><div className="relative w-full"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar no sistema..." className="pl-9 bg-gray-50 dark:bg-background border-gray-200 dark:border-border h-9 text-sm" /></div></div>
+            <div className="hidden sm:flex flex-1 max-w-md">
+              <button type="button" onClick={() => setCommandOpen(true)} className="relative w-full flex items-center gap-2 h-9 pl-9 pr-3 rounded-md bg-gray-50 dark:bg-background border border-gray-200 dark:border-border text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
+                <span className="flex-1 text-left">Buscar no sistema...</span>
+                <kbd className="hidden lg:inline text-[10px] font-medium bg-gray-200 dark:bg-muted text-gray-500 rounded px-1.5 py-0.5">⌘K</kbd>
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
@@ -240,6 +254,7 @@ export default function Layout({ children, currentPageName }) {
         </header>
         <main className="flex-1 overflow-auto bg-slate-50 dark:bg-background">{children}</main>
       </div>
+      <CommandPalette open={commandOpen} setOpen={setCommandOpen} sections={paletteSections} />
     </div>
   );
 }
