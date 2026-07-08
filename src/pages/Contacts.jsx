@@ -28,6 +28,8 @@ import {
 import { CpfCnpjInput, PhoneInput, formatCpfCnpj, formatPhone } from '@/components/forms/MaskedInputs';
 import { FieldError } from '@/components/forms/FieldError';
 import { validate, contactSchema } from '@/lib/validation';
+import EmptyState from '@/components/EmptyState';
+import { TableSkeleton } from '@/components/Skeletons';
 
 const origemOptions = ['indicacao', 'instagram', 'google', 'site', 'whatsapp', 'campanha_paga', 'base_propria', 'parceiro', 'evento', 'outro'];
 const statusOptions = ['lead', 'em_negociacao', 'cliente_ativo', 'venda_concluida', 'perdido', 'inativo'];
@@ -246,9 +248,9 @@ export default function Contacts() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500">Carregando clientes...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="p-0"><TableSkeleton rows={6} cols={7} /></TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500"><Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum cliente encontrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="p-0"><EmptyState icon={Users} title="Nenhum cliente encontrado" description="Ajuste os filtros ou cadastre um novo cliente." /></TableCell></TableRow>
               ) : filtered.map((cliente) => (
                 <TableRow key={cliente.id}>
                   <TableCell><p className="font-medium">{cliente.name}</p><p className="text-xs text-gray-500">{cliente.email || formatPhone(cliente.phone) || '-'}</p></TableCell>

@@ -27,6 +27,8 @@ import LeadsAnalytics from '../components/leads/LeadsAnalytics';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import { formatCurrency, formatPercent, formatPhone } from '@/components/forms/MaskedInputs';
+import EmptyState from '@/components/EmptyState';
+import { TableSkeleton } from '@/components/Skeletons';
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
@@ -606,9 +608,9 @@ export default function Leads() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="p-0"><TableSkeleton rows={6} cols={9} /></TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Target className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhum lead encontrado</span></div></TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="p-0"><EmptyState icon={Target} title="Nenhum lead encontrado" description="Ajuste os filtros ou cadastre um novo lead." /></TableCell></TableRow>
               ) : (
                 filtered.map(lead => {
                   const stageVisual = getStageVisual(lead.status);

@@ -7,6 +7,8 @@ import { Target, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
+import EmptyState from '@/components/EmptyState';
+import { CardsSkeleton } from '@/components/Skeletons';
 
 function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -31,8 +33,9 @@ export default function Dashboard() {
   const empresa = user?.empresa_vinculada;
   const teamMembers = useTeamMembers(user);
 
-  const { data: allLeads = [] } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await db.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
-  const { data: allOportunidades = [] } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await db.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+  const { data: allLeads = [], isLoading: loadingLeads } = useQuery({ queryKey: ['leads', empresa], queryFn: async () => { const all = await db.Lead.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+  const { data: allOportunidades = [], isLoading: loadingOps } = useQuery({ queryKey: ['opportunities', empresa], queryFn: async () => { const all = await db.Opportunity.list('-created_date'); return all.filter(r => r.empresa_vinculada === empresa); }, enabled: !!empresa });
+  const isLoading = loadingLeads || loadingOps;
 
   const leads = useMemo(() => applyAccessFilter(allLeads, user, { liderField: 'lider_vinculado', vendedorField: 'vendedor_responsavel', teamMembers }), [allLeads, user, teamMembers]);
   const oportunidades = useMemo(() => applyAccessFilter(allOportunidades, user, { liderField: 'lider', vendedorField: 'vendedor', teamMembers }), [allOportunidades, user, teamMembers]);
@@ -59,6 +62,7 @@ export default function Dashboard() {
 
       <OnboardingBanner />
 
+      {isLoading ? <div className="mb-6"><CardsSkeleton count={7} /></div> : (
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
         <KPI title="Total de Leads" value={kpis.totalLeads} Icon={Target} />
         <KPI title="Leads Ativos" value={kpis.leadsAtivos} Icon={Target} />
@@ -68,16 +72,19 @@ export default function Dashboard() {
         <KPI title="Pipeline Aberto" value={money(kpis.pipelineAberto)} Icon={DollarSign} />
         <KPI title="Valor Ganho" value={money(kpis.valorGanho)} Icon={CheckCircle} />
       </div>
+      )}
 
       <Card>
         <CardHeader><CardTitle>Oportunidades Recentes</CardTitle></CardHeader>
         <CardContent>
-          {recentes.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-4">Nenhuma oportunidade encontrada</p>
+          {isLoading ? (
+            <div className="space-y-2">{[0,1,2].map((i) => <div key={i} className="h-14 bg-primary/5 rounded-lg animate-pulse" />)}</div>
+          ) : recentes.length === 0 ? (
+            <EmptyState icon={TrendingUp} title="Nenhuma oportunidade ainda" description="As oportunidades mais recentes aparecerão aqui." />
           ) : (
             <div className="space-y-3">
               {recentes.map((op) => (
-                <div key={op.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={op.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-muted rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900 dark:text-gray-100">{op.name}</p>
                     <p className="text-sm text-gray-500">{op.cliente_vinculado || '-'}</p>
