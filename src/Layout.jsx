@@ -176,7 +176,7 @@ export default function Layout({ children, currentPageName }) {
         <img
           src="https://media.base44.com/images/public/6a408d646f21968247407e53/7a24d7989_nvion_logo_black_transp.png"
           alt="NVION"
-          className="h-9 w-9 object-contain flex-shrink-0 hidden dark:block"
+          className="h-9 w-9 object-contain flex-shrink-0 hidden dark:block invert"
         />
         {(!sidebarCollapsed || forMobile) && <span className="text-sm font-semibold text-sidebar-accent-foreground truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>}
       </div>
