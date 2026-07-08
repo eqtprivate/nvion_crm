@@ -36,3 +36,6 @@ jobs:
 
       - name: Deploy auth-email-hook function
         run: supabase functions deploy auth-email-hook --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Deploy send-email function
+        run: supabase functions deploy send-email --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"

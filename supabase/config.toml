@@ -4,3 +4,8 @@
 # Por isso a verificação de JWT precisa ficar desabilitada nesta função.
 [functions.auth-email-hook]
 verify_jwt = false
+
+# send-email é chamada por um Database Webhook (trigger), sem JWT de usuário —
+# a autenticidade vem do segredo compartilhado (SEND_EMAIL_FN_SECRET).
+[functions.send-email]
+verify_jwt = false
