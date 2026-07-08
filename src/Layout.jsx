@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -49,9 +49,45 @@ import {
 
 export default function Layout({ children, currentPageName }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Estado da sidebar com memória (localStorage). Se nunca escolhido, começa
+  // recolhida em telas médias.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = window.localStorage.getItem('nvion_sidebar_collapsed');
+    if (saved != null) return saved === '1';
+    return window.innerWidth < 1280;
+  });
+  // Grupos de menu recolhidos (por rótulo), persistidos.
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      return JSON.parse(window.localStorage.getItem('nvion_menu_groups') || '{}') || {};
+    } catch {
+      return {};
+    }
+  });
   const { user: currentUser, logout } = useAuth();
   const location = useLocation();
+
+  // Persiste a escolha do usuário.
+  useEffect(() => {
+    window.localStorage.setItem('nvion_sidebar_collapsed', sidebarCollapsed ? '1' : '0');
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    window.localStorage.setItem('nvion_menu_groups', JSON.stringify(collapsedGroups));
+  }, [collapsedGroups]);
+
+  // Auto-recolhe ao entrar em telas estreitas (não força a expandir em telas largas).
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth < 1024) setSidebarCollapsed(true);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const toggleGroup = (label) => setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
 
   // Menu agrupado por finalidade: operação diária no topo; cadastros de
   // configuração inicial (editados no começo) mais abaixo.
@@ -129,19 +165,30 @@ export default function Layout({ children, currentPageName }) {
       </div>
       <nav className="flex-1 px-2 py-4 flex flex-col overflow-y-auto">
         <div className="space-y-4">
-          {visibleSections.map((sec) => (
-            <div key={sec.label} className="space-y-0.5">
-              {(!sidebarCollapsed || forMobile) && (
-                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 select-none">{sec.label}</p>
-              )}
-              {sec.items.map((item) => (
-                <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
-                  <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-primary-foreground' : ''}`} />
-                  {(!sidebarCollapsed || forMobile) && <span className="text-sm truncate">{item.name}</span>}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {visibleSections.map((sec) => {
+            const expanded = sidebarCollapsed && !forMobile ? true : !collapsedGroups[sec.label];
+            const showHeader = !sidebarCollapsed || forMobile;
+            return (
+              <div key={sec.label} className="space-y-0.5">
+                {showHeader && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(sec.label)}
+                    className="w-full flex items-center justify-between px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-colors select-none"
+                  >
+                    <span>{sec.label}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? '' : '-rotate-90'}`} />
+                  </button>
+                )}
+                {expanded && sec.items.map((item) => (
+                  <Link key={item.name} to={createPageUrl(item.path)} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed && !forMobile ? item.name : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${sidebarCollapsed && !forMobile ? 'justify-center' : ''} ${isActive(item.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
+                    <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-primary-foreground' : ''}`} />
+                    {(!sidebarCollapsed || forMobile) && <span className="text-sm truncate">{item.name}</span>}
+                  </Link>
+                ))}
+              </div>
+            );
+          })}
         </div>
         <div className="mt-auto pt-4 border-t border-sidebar-border space-y-0.5">
           {(!sidebarCollapsed || forMobile) && bottomMenuItems.length > 0 && (
