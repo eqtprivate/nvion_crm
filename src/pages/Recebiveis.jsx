@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Download, Search, Wallet, MoreVertical, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { validate, recebivelSchema } from '@/lib/validation';
 
 function money(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -51,7 +53,19 @@ function EditDialog({ open, onOpenChange, recebivel, onSubmit, loading }) {
   React.useEffect(() => {
     if (recebivel) setForm({ valor_recebivel: recebivel.valor_recebivel, data_prevista_recebimento: recebivel.data_prevista_recebimento, data_recebimento_real: recebivel.data_recebimento_real || '', elegivel_antecipacao: recebivel.elegivel_antecipacao || false, motivo_inelegibilidade: recebivel.motivo_inelegibilidade || '', observacoes: recebivel.observacoes || '' });
   }, [recebivel, open]);
-  const handleSubmit = (e) => { e.preventDefault(); onSubmit(form); };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const { ok, errors } = validate(recebivelSchema, form);
+    if (!ok) {
+      toast.error(Object.values(errors)[0] || 'Verifique os campos do recebível.');
+      return;
+    }
+    if (!form.elegivel_antecipacao && !String(form.motivo_inelegibilidade || '').trim()) {
+      toast.error('Informe o motivo da inelegibilidade quando o recebível não for elegível para antecipação.');
+      return;
+    }
+    onSubmit(form);
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">

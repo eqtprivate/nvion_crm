@@ -327,6 +327,44 @@ export const planoSchema = z.object({
   descricao: optionalString,
 }).passthrough();
 
+export const campanhaSchema = z.object({
+  nome_campanha: requiredString('Nome da campanha é obrigatório'),
+  codigo_campanha: optionalString,
+  tipo_campanha: z.enum(['digital', 'indicacao', 'parceria', 'evento', 'mailing', 'inbound', 'outbound', 'corban', 'institucional', 'outro']).optional(),
+  status_campanha: z.enum(['rascunho', 'ativa', 'pausada', 'encerrada', 'cancelada']).optional(),
+  canal: z.enum(['whatsapp', 'email', 'landing_page', 'trafego_pago', 'organic_social', 'parceiro', 'evento', 'telefone', 'outro']).optional(),
+  data_inicio: optionalDate,
+  data_fim: optionalDate,
+  orcamento_previsto: optionalNonNegativeNumber,
+  orcamento_realizado: optionalNonNegativeNumber,
+  meta_leads: optionalNonNegativeNumber,
+  meta_oportunidades: optionalNonNegativeNumber,
+  meta_vendas: optionalNonNegativeNumber,
+  meta_valor_cartas: optionalNonNegativeNumber,
+}).passthrough().refine(
+  (data) => !data.data_inicio || !data.data_fim || data.data_fim >= data.data_inicio,
+  { message: 'A data fim deve ser igual ou posterior à data início', path: ['data_fim'] },
+);
+
+export const recebivelSchema = z.object({
+  administradora: optionalString,
+  cliente: optionalString,
+  produto: optionalString,
+  numero_parcela: optionalNonNegativeNumber,
+  total_parcelas: optionalNonNegativeNumber,
+  valor_recebivel: optionalNonNegativeNumber,
+  valor_carta: optionalNonNegativeNumber,
+  data_prevista_recebimento: optionalDate,
+  data_recebimento_real: optionalDate,
+  status_recebivel: z.enum(['previsto', 'confirmado', 'atrasado', 'recebido', 'cancelado']).optional(),
+  elegivel_antecipacao: z.boolean().optional(),
+  motivo_inelegibilidade: optionalString,
+  observacoes: optionalString,
+}).passthrough().refine(
+  (data) => !data.numero_parcela || !data.total_parcelas || data.numero_parcela <= data.total_parcelas,
+  { message: 'A parcela não pode ser maior que o total de parcelas', path: ['numero_parcela'] },
+);
+
 // ──────────────────────────────────────────────────────────────────────────
 // Helper de validação para formulários controlados por useState
 // ──────────────────────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ import { Megaphone, Plus, Search, Download, MoreVertical, Pencil, Trash2, PlayCi
 import { MoneyInput } from '@/components/forms/MaskedInputs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { validate, campanhaSchema } from '@/lib/validation';
 
 const STATUS_OPTIONS = ['rascunho', 'ativa', 'pausada', 'encerrada', 'cancelada'];
 const TIPO_OPTIONS = ['digital', 'indicacao', 'parceria', 'evento', 'mailing', 'inbound', 'outbound', 'corban', 'institucional', 'outro'];
@@ -177,11 +178,13 @@ function CampanhaDialog({ open, onOpenChange, campanha, onSubmit, loading, produ
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!form.nome_campanha.trim()) {
-      toast.error('Informe o nome da campanha.');
+    const payload = normalizePayload(form);
+    const { ok, errors } = validate(campanhaSchema, payload);
+    if (!ok) {
+      toast.error(Object.values(errors)[0] || 'Verifique os campos da campanha.');
       return;
     }
-    onSubmit(normalizePayload(form));
+    onSubmit(payload);
   };
 
   return (
