@@ -168,7 +168,7 @@ export default function Layout({ children, currentPageName }) {
   const SidebarContent = ({ forMobile = false } = {}) => (
     <>
       <div className={`h-16 flex items-center gap-2.5 px-4 border-b border-sidebar-border ${sidebarCollapsed && !forMobile ? 'justify-center' : ''}`}>
-        <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/52d192aa6_nvion_logo_icon.png" alt="NVION" className="h-9 w-9 object-contain flex-shrink-0" />
+        <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/52d192aa6_nvion_logo_icon.png" alt="NVION" className="h-9 w-9 object-contain flex-shrink-0 dark:brightness-0 dark:invert" />
         {(!sidebarCollapsed || forMobile) && <span className="text-sm font-semibold text-sidebar-accent-foreground truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>}
       </div>
       <nav className="flex-1 px-2 py-4 flex flex-col overflow-y-auto">

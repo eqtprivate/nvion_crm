@@ -9,6 +9,33 @@ import { applyAccessFilter, useTeamMembers } from '@/lib/accessControl';
 import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
 import EmptyState from '@/components/EmptyState';
 import { CardsSkeleton } from '@/components/Skeletons';
+import { useChartPalette } from '@/lib/chartPalette';
+import {
+  ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, YAxis,
+  CartesianGrid, Tooltip, Cell,
+} from 'recharts';
+
+const STAGE_LABEL = {
+  novo_contato: 'Novo contato', qualificacao: 'Qualificação', simulacao: 'Simulação',
+  proposta_enviada: 'Proposta', documentacao: 'Documentação', em_aprovacao: 'Em aprovação',
+  venda_concluida: 'Concluída', perdida: 'Perdida',
+};
+const LEAD_STATUS_LABEL = {
+  novo_contato: 'Novo', qualificacao: 'Qualificação', simulacao: 'Simulação',
+  proposta_enviada: 'Proposta', documentacao: 'Documentação', em_aprovacao: 'Aprovação',
+  venda_concluida: 'Concluída', perdida: 'Perdida',
+};
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+function ChartTooltip({ active, payload, label, formatter }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-card px-3 py-2 shadow-md text-xs">
+      <p className="font-medium text-gray-900 dark:text-gray-100 mb-0.5">{label}</p>
+      <p className="text-gray-600 dark:text-gray-300">{formatter ? formatter(payload[0].value) : payload[0].value}</p>
+    </div>
+  );
+}
 
 function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -51,6 +78,43 @@ export default function Dashboard() {
     return { totalLeads, leadsAtivos, abertas: abertas.length, ganhas: ganhas.length, pipelineAberto, valorGanho, conversao };
   }, [leads, oportunidades]);
 
+  const palette = useChartPalette();
+
+  const charts = useMemo(() => {
+    // Pipeline por estágio (oportunidades abertas).
+    const abertas = oportunidades.filter((o) => o.status === 'aberta');
+    const stageCount = {};
+    abertas.forEach((o) => { const k = o.stage || 'novo_contato'; stageCount[k] = (stageCount[k] || 0) + 1; });
+    const pipeline = Object.keys(STAGE_LABEL)
+      .filter((k) => k !== 'perdida' && stageCount[k])
+      .map((k) => ({ name: STAGE_LABEL[k], value: stageCount[k] }));
+
+    // Leads por status.
+    const leadCount = {};
+    leads.forEach((l) => { const k = l.status || 'novo_contato'; leadCount[k] = (leadCount[k] || 0) + 1; });
+    const leadsStatus = Object.keys(LEAD_STATUS_LABEL)
+      .filter((k) => leadCount[k])
+      .map((k) => ({ name: LEAD_STATUS_LABEL[k], value: leadCount[k] }));
+
+    // Evolução de valor ganho nos últimos 6 meses.
+    const now = new Date();
+    const buckets = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, name: MESES[d.getMonth()], value: 0 });
+    }
+    const idx = Object.fromEntries(buckets.map((b, i) => [b.key, i]));
+    oportunidades.filter((o) => o.status === 'ganha').forEach((o) => {
+      const ref = o.previsao_fechamento || o.created_date;
+      if (!ref) return;
+      const d = new Date(ref);
+      const k = `${d.getFullYear()}-${d.getMonth()}`;
+      if (k in idx) buckets[idx[k]].value += o.valor_carta || 0;
+    });
+
+    return { pipeline, leadsStatus, evolucao: buckets };
+  }, [oportunidades, leads]);
+
   const recentes = [...oportunidades].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5);
 
   return (
@@ -72,6 +136,76 @@ export default function Dashboard() {
         <KPI title="Pipeline Aberto" value={money(kpis.pipelineAberto)} Icon={DollarSign} />
         <KPI title="Valor Ganho" value={money(kpis.valorGanho)} Icon={CheckCircle} />
       </div>
+      )}
+
+      {!isLoading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <Card className="lg:col-span-2">
+            <CardHeader><CardTitle className="text-base">Valor ganho por mês (últimos 6 meses)</CardTitle></CardHeader>
+            <CardContent>
+              {charts.evolucao.every((b) => b.value === 0) ? (
+                <EmptyState icon={TrendingUp} title="Sem vendas ganhas no período" description="O valor ganho por mês aparecerá aqui." />
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={charts.evolucao} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gradGanho" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={palette.blue} stopOpacity={0.35} />
+                        <stop offset="100%" stopColor={palette.blue} stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={palette.grid} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: palette.text, fontSize: 12 }} axisLine={{ stroke: palette.grid }} tickLine={false} />
+                    <YAxis tick={{ fill: palette.text, fontSize: 12 }} axisLine={false} tickLine={false} width={72}
+                      tickFormatter={(v) => `R$ ${(v / 1000).toLocaleString('pt-BR')}k`} />
+                    <Tooltip content={<ChartTooltip formatter={money} />} cursor={{ stroke: palette.axis, strokeWidth: 1 }} />
+                    <Area type="monotone" dataKey="value" stroke={palette.blue} strokeWidth={2} fill="url(#gradGanho)" dot={{ r: 3, fill: palette.blue }} activeDot={{ r: 5 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Pipeline por estágio</CardTitle></CardHeader>
+            <CardContent>
+              {charts.pipeline.length === 0 ? (
+                <EmptyState icon={DollarSign} title="Sem oportunidades abertas" />
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={charts.pipeline} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={palette.grid} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: palette.text, fontSize: 11 }} axisLine={{ stroke: palette.grid }} tickLine={false} interval={0} angle={-20} textAnchor="end" height={54} />
+                    <YAxis allowDecimals={false} tick={{ fill: palette.text, fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: palette.grid, fillOpacity: 0.3 }} />
+                    <Bar dataKey="value" fill={palette.blue} radius={[4, 4, 0, 0]} maxBarSize={44}>
+                      {charts.pipeline.map((_, i) => <Cell key={i} fill={palette.blue} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Leads por status</CardTitle></CardHeader>
+            <CardContent>
+              {charts.leadsStatus.length === 0 ? (
+                <EmptyState icon={Target} title="Sem leads cadastrados" />
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={charts.leadsStatus} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={palette.grid} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: palette.text, fontSize: 11 }} axisLine={{ stroke: palette.grid }} tickLine={false} interval={0} angle={-20} textAnchor="end" height={54} />
+                    <YAxis allowDecimals={false} tick={{ fill: palette.text, fontSize: 12 }} axisLine={false} tickLine={false} width={28} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: palette.grid, fillOpacity: 0.3 }} />
+                    <Bar dataKey="value" fill={palette.aqua} radius={[4, 4, 0, 0]} maxBarSize={44} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <Card>
