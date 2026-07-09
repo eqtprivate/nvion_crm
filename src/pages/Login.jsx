@@ -156,7 +156,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-card rounded-2xl shadow-2xl p-8">
           <div className="flex justify-center mb-8">
-            <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/b0d5da66e_nvion_logo_white.png" alt="NVION" className="h-12 w-auto" />
+            <img src="/nvion-icon-dark.png" alt="NVION" className="h-12 w-auto" />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center mb-1">Bem-vindo</h1>

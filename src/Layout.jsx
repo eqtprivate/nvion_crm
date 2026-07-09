@@ -171,14 +171,14 @@ export default function Layout({ children, currentPageName }) {
     <>
       <div className={`h-16 flex items-center gap-2.5 px-4 border-b border-sidebar-border ${sidebarCollapsed && !forMobile ? 'justify-center' : ''}`}>
         <img
-          src="https://media.base44.com/images/public/6a408d646f21968247407e53/52d192aa6_nvion_logo_icon.png"
+          src="/nvion-icon.png"
           alt="NVION"
           className="h-9 w-9 object-contain flex-shrink-0 block dark:hidden"
         />
         <img
-          src="https://media.base44.com/images/public/6a408d646f21968247407e53/7a24d7989_nvion_logo_black_transp.png"
+          src="/nvion-icon-dark.png"
           alt="NVION"
-          className="h-9 w-9 object-contain flex-shrink-0 hidden dark:block invert"
+          className="h-9 w-9 object-contain flex-shrink-0 hidden dark:block"
         />
         {(!sidebarCollapsed || forMobile) && <span className="text-sm font-semibold text-sidebar-accent-foreground truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>}
       </div>
