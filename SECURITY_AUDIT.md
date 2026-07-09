@@ -39,7 +39,8 @@ Verificação ao vivo do banco (via SQL colado pelo usuário) + correções de c
 | **A-03** E-mail fail-open | **CORRIGIDO (código).** `send-email` e `auth-email-hook` agora *fail-closed* (segredo obrigatório). Requer re-deploy das functions. |
 | **B-01** iframe preview | **CORRIGIDO.** `sandbox=""` adicionado. |
 | **M-07** *(novo)* Grants amplos ao `anon` | **CONFIRMADO.** O role `anon` tem ALL (incl. TRUNCATE) em todas as tabelas. Não explorável hoje (RLS `to authenticated` barra o anon; PostgREST não expõe TRUNCATE), mas viola menor-privilégio. **Correção:** `revoke all on all tables in schema public from anon;` (o app exige login; anon não precisa de acesso). |
-| **A-04 / M-05** Auth hardening / DNS | **PENDENTE (painel):** confirmar leaked-password protection, confirmação de e-mail, OTP, Advisors sem ERROR; e SPF/DKIM/DMARC no Resend. |
+| **A-04** Auth hardening | **PENDENTE (painel):** confirmar leaked-password protection, confirmação de e-mail, OTP, Advisors sem ERROR. |
+| **M-05** DNS/e-mail (nvion.com.br) | **DIAGNOSTICADO.** DNS atual bloqueia envio: SPF `v=spf1 -all` (nega tudo), **sem DKIM**, DMARC `p=reject`. Envio pela **raiz**: trocar SPF para `v=spf1 include:amazonses.com -all`, adicionar DKIM `resend._domainkey` (valor do Resend) e MX/SPF de return-path em `send.nvion.com.br`. DMARC `p=reject` mantém-se (passa por alinhamento DKIM). `EMAIL_FROM=nao-responda@nvion.com.br`. |
 | **2b / 2c** RLS e search_path | **A confirmar:** consultas de "tabelas sem RLS" e "funções SECURITY DEFINER sem search_path" ainda não retornadas (esperado: nenhuma linha). |
 
 ---
