@@ -150,6 +150,7 @@ Deno.serve(async (req) => {
     empresa_vinculada: empresaVinculada,
     role,
     status,
+    must_change_password: true,
   });
 
   if (profileError) {

@@ -109,6 +109,9 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'auth_password_update_error', detail: updateUserError.message }, 400);
   }
 
+  // Força a troca no próximo login (senha temporária).
+  await admin.from('profiles').update({ must_change_password: true }).eq('id', targetUserId);
+
   await admin.from('audit_logs').insert({
     user_id: requesterId,
     action: 'admin_reset_temporary_password',

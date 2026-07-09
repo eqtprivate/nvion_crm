@@ -9,6 +9,7 @@ import { User, Mail, Shield, Camera, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
 import { assertSupabaseConfigured } from '@/lib/supabaseClient';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 const PROFILE_ASSETS_BUCKET = 'company-assets';
 const PROFILE_PHOTO_MAX_SIZE_BYTES = 2 * 1024 * 1024;
@@ -89,8 +90,9 @@ export default function Profile() {
 
   const handleSenhaSubmit = async (e) => {
     e.preventDefault();
-    if (!senhaForm.nova || senhaForm.nova.length < 6) {
-      toast.error('A nova senha deve ter pelo menos 6 caracteres');
+    const check = validatePassword(senhaForm.nova);
+    if (!check.ok) {
+      toast.error(check.firstMessage || 'Senha fora do padrão exigido');
       return;
     }
     if (senhaForm.nova !== senhaForm.confirmar) {

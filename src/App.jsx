@@ -10,6 +10,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import ErrorBoundary from '@/lib/ErrorBoundary';
 import Login from './pages/Login';
+import ForcePasswordChange from '@/components/ForcePasswordChange';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -20,7 +21,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isAuthenticated } = useAuth();
+  const { isLoadingAuth, isAuthenticated, user } = useAuth();
 
   if (isLoadingAuth) {
     return (
@@ -32,6 +33,11 @@ const AuthenticatedApp = () => {
 
   if (!isAuthenticated) {
     return <Login />;
+  }
+
+  // Troca de senha obrigatória (senha fora do novo padrão) bloqueia o acesso.
+  if (user?.must_change_password) {
+    return <ForcePasswordChange />;
   }
 
   return (

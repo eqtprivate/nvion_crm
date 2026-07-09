@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { KeyRound, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { validatePassword } from '@/lib/passwordPolicy';
 
 export default function RedefinirSenha() {
   const [isRecovery, setIsRecovery] = useState(false);
@@ -30,8 +31,9 @@ export default function RedefinirSenha() {
     e.preventDefault();
     setError('');
 
-    if (!form.nova || form.nova.length < 6) {
-      setError('A nova senha deve ter pelo menos 6 caracteres.');
+    const check = validatePassword(form.nova);
+    if (!check.ok) {
+      setError(check.firstMessage || 'Senha fora do padrão exigido.');
       return;
     }
     if (form.nova !== form.confirmar) {
@@ -83,7 +85,7 @@ export default function RedefinirSenha() {
                     type={show ? 'text' : 'password'}
                     value={form.nova}
                     onChange={(e) => setForm((prev) => ({ ...prev, nova: e.target.value }))}
-                    placeholder="Mínimo de 6 caracteres"
+                    placeholder="Mín. 8: maiúscula, minúscula, número e especial"
                     className="pr-10"
                   />
                   <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">

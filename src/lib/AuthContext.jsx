@@ -19,6 +19,7 @@ function normalizeProfile(profile, modules = []) {
     modulos_permitidos: modules,
     status: profile.status,
     profile_picture: profile.profile_picture,
+    must_change_password: profile.must_change_password === true,
   };
 }
 
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
 
     const { data: profile, error: profileError } = await client
       .from('profiles')
-      .select('id, display_name, email, empresa_id, empresa_vinculada, role, status, profile_picture')
+      .select('id, display_name, email, empresa_id, empresa_vinculada, role, status, profile_picture, must_change_password')
       .eq('id', authUser.id)
       .maybeSingle();
 
@@ -165,6 +166,14 @@ export const AuthProvider = ({ children }) => {
     clearAuthState();
   };
 
+  // Recarrega o perfil a partir da sessão atual (ex.: após troca obrigatória de senha).
+  const refreshProfile = async () => {
+    if (!supabase) return null;
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) return loadProfile(data.session);
+    return null;
+  };
+
   const updateUser = async (changes) => {
     if (!user?.id) return;
     const allowed = {};
@@ -190,6 +199,7 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       updateUser,
+      refreshProfile,
     }}>
       {children}
     </AuthContext.Provider>
