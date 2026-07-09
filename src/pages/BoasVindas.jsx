@@ -67,7 +67,7 @@ export default function BoasVindas() {
         </div>
 
         {allDone && (
-          <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">
+          <div className="flex items-center gap-3 rounded-xl border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 p-4 text-green-800 dark:text-green-300">
             <Sparkles className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm font-medium">
               Configuração concluída! Sua empresa está pronta para registrar leads, oportunidades e vendas.
@@ -83,7 +83,7 @@ export default function BoasVindas() {
             return (
               <Card
                 key={step.key}
-                className={`transition-all ${step.done ? 'border-green-200 bg-green-50/50' : isNext ? 'border-primary/40 ring-1 ring-primary/20' : ''}`}
+                className={`transition-all ${step.done ? 'border-green-200 dark:border-green-900/60 bg-green-50/50 dark:bg-green-950/20' : isNext ? 'border-primary/40 ring-1 ring-primary/20' : ''}`}
               >
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="flex items-center justify-center flex-shrink-0">
@@ -91,13 +91,13 @@ export default function BoasVindas() {
                       ? <CheckCircle2 className="w-6 h-6 text-green-600" />
                       : <Circle className="w-6 h-6 text-gray-300" />}
                   </div>
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-green-100' : 'bg-gray-100 dark:bg-muted'}`}>
-                    <Icon className={`w-5 h-5 ${step.done ? 'text-green-700' : 'text-gray-600 dark:text-gray-300'}`} />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-green-100 dark:bg-green-900/40' : 'bg-gray-100 dark:bg-muted'}`}>
+                    <Icon className={`w-5 h-5 ${step.done ? 'text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300'}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
                       <span className="text-gray-400 mr-1.5">{index + 1}.</span>{step.title}
-                      {step.done && <span className="ml-2 text-xs font-medium text-green-700">Concluído</span>}
+                      {step.done && <span className="ml-2 text-xs font-medium text-green-700 dark:text-green-400">Concluído</span>}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{step.desc}</p>
                   </div>
