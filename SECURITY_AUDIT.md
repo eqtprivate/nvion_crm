@@ -28,6 +28,35 @@
 
 ---
 
+## 1.0 Encerramento (2026-07-09)
+
+Estado final após correções e validação ao vivo. Resumo por achado:
+
+| ID | Severidade orig. | Estado final |
+|----|------------------|--------------|
+| A-01 Escalonamento de privilégio | CRÍTICO | ✅ Resolvido (RLS + trigger) — não explorável |
+| A-02 Dependências vulneráveis | ALTO | ✅ Corrigido — 0 vulnerabilidades |
+| A-03 E-mail fail-open | ALTO | ✅ Corrigido no código — requer re-deploy |
+| A-05 Senha em texto (Base44 legado) | ALTO | ✅ Mitigado — redigido via MCP |
+| M-01 Isolamento por vendedor | MÉDIO | ✅ Migração RLS pronta — aplicar + testar |
+| M-02 Connectors OAuth | MÉDIO | ✅ N/A (0 conectados) |
+| M-03 PII legada no Base44 | MÉDIO | ✅ PII redigida — restam cascas p/ excluir no painel |
+| M-07 Grants amplos ao anon | MÉDIO | ✅ Corrigido (revoke) |
+| B-01 iframe preview | BAIXO | ✅ Corrigido (sandbox) |
+| Senha fraca / sem rotação | (hardening) | ✅ Política forte (mín. 8 + tipos) + troca obrigatória no login (v1.12.0) |
+| A-04 Auth hardening (painel) | ALTO | ⏳ Pendente — leaked-password, confirmação de e-mail, Advisors |
+| M-05 DNS/e-mail | MÉDIO | ✅ DNS aplicado (Resend verificado); falta re-deploy + secrets |
+| 2b / 2c RLS/search_path | INFO | ⏳ Confirmar (esperado: nenhuma linha) |
+
+**Pendências do usuário (não-código):**
+1. Aplicar SQLs pendentes: trigger A-01, `revoke anon` + `profiles update self` (M-07), isolamento M-01, `must_change_password`.
+2. Re-deploy das Edge Functions (fail-closed + must_change_password) com os secrets setados.
+3. A-04: ligar leaked-password protection, confirmação de e-mail e Password Requirements (mín. 8 + tipos) no painel; rodar Advisors (zero ERROR).
+4. Base44: excluir pelo painel as linhas/entities remanescentes (PII já redigida).
+5. Rodar 2b/2c e confirmar vazio.
+
+---
+
 ## 1.1 Atualização pós-validação (2026-07-08)
 
 Verificação ao vivo do banco (via SQL colado pelo usuário) + correções de código aplicadas (v1.11.0).
