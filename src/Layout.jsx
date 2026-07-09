@@ -171,14 +171,9 @@ export default function Layout({ children, currentPageName }) {
     <>
       <div className={`h-16 flex items-center gap-2.5 px-4 border-b border-sidebar-border ${sidebarCollapsed && !forMobile ? 'justify-center' : ''}`}>
         <img
-          src="/nvion-icon.png"
+          src="/nvion_logo_icon.png"
           alt="NVION"
-          className="h-9 w-9 object-contain flex-shrink-0 block dark:hidden"
-        />
-        <img
-          src="/nvion-icon-dark.png"
-          alt="NVION"
-          className="h-9 w-9 object-contain flex-shrink-0 hidden dark:block"
+          className="h-9 w-9 object-contain flex-shrink-0"
         />
         {(!sidebarCollapsed || forMobile) && <span className="text-sm font-semibold text-sidebar-accent-foreground truncate">{currentUser?.empresa_vinculada || 'NVION'}</span>}
       </div>

@@ -1,18 +1,17 @@
 # Assets públicos (logos/ícones)
 
-Coloque **os dois arquivos** de logo aqui, com **estes nomes exatos** — o app
-referencia por caminho fixo (`/nvion-icon.png` e `/nvion-icon-dark.png`), então
-basta substituir os arquivos para atualizar a marca em todo o sistema.
+Arquivos da marca NVION usados pelo app (referência por caminho fixo `/arquivo`).
 
-| Arquivo | Uso | Recomendação |
-|---------|-----|--------------|
-| `nvion-icon.png` | Fundo **claro** (tema claro, favicon) | Logo/ícone colorido ou escuro, PNG com fundo transparente |
-| `nvion-icon-dark.png` | Fundo **escuro** (tema escuro, tela de login) | Versão branca/clara, PNG com fundo transparente |
+| Arquivo | Conteúdo | Usado em |
+|---------|----------|----------|
+| `nvion_logo_icon.png` | Ícone verde (lâmina do "N") — legível em fundo claro **e** escuro | Sidebar (ambos os temas), favicon, tela de login |
+| `nvion_logo_black_transp.png` | "N" completo (verde + cinza) — para fundo claro | (reserva) |
+| `nvion_logo_black.png` | Logo por extenso (wordmark), texto cinza — fundo claro | (reserva) |
+| `nvion_logo_white.png` | Logo por extenso (wordmark) — fundo claro | (reserva) |
 
-Onde aparecem:
-- Sidebar (troca automática conforme o tema)
-- Favicon da aba (`nvion-icon.png`)
-- Tela de login (`nvion-icon-dark.png`, pois o fundo é escuro)
+O app usa o **`nvion_logo_icon.png`** como ícone principal porque o verde tem bom
+contraste nos dois temas. Para trocar a marca, substitua esse arquivo (mesmo nome).
 
-Dica: use PNG quadrado (ex.: 512×512) com fundo transparente. O app ajusta o
-tamanho por CSS.
+> Observação: não há um wordmark com texto branco para fundo escuro. Se quiser a
+> logo por extenso também no tema escuro, gere uma versão com texto branco e
+> avise que ajusto o código para usá-la no dark.
