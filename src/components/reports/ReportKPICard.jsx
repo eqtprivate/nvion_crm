@@ -16,7 +16,7 @@ export default function ReportKPICard({ title, value, subtitle, icon: Icon, colo
   const colorClass = colorClasses[color];
 
   return (
-    <Card className="border border-gray-200 hover:shadow-md transition-shadow">
+    <Card className="border border-gray-200 dark:border-border hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -24,7 +24,7 @@ export default function ReportKPICard({ title, value, subtitle, icon: Icon, colo
               <Icon className={`w-5 h-5 ${colorClass.text}`} />
             </div>
             <div>
-              <div className="text-xs text-gray-500 mb-1">{title}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{title}</div>
               <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</div>
             </div>
           </div>
@@ -54,7 +54,7 @@ export default function ReportKPICard({ title, value, subtitle, icon: Icon, colo
                 <span>{trendValue}</span>
               </div>
             )}
-            {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
+            {subtitle && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</div>}
           </div>
         </div>
       </CardContent>

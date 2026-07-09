@@ -16,7 +16,7 @@ function Indicador({ title, value, Icon }) {
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-500">{title}</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{title}</span>
           <Icon className="w-4 h-4 text-primary" />
         </div>
         <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
@@ -122,7 +122,7 @@ export default function Reports() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Relatórios Gerenciais</h1>
-          <p className="text-gray-500 text-sm mt-1">Análises comerciais, operacionais e indicadores do sistema</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Análises comerciais, operacionais e indicadores do sistema</p>
         </div>
         <Button variant="outline" onClick={exportarOportunidades} disabled={oportunidades.length === 0}>
           <Download className="w-4 h-4 mr-2" />
@@ -141,25 +141,25 @@ export default function Reports() {
         <Card>
           <CardHeader><CardTitle className="text-base">Resumo do Pipeline</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between"><span className="text-gray-600">Oportunidades abertas</span><strong>{resumo.abertas.length}</strong></div>
-            <div className="flex justify-between"><span className="text-gray-600">Oportunidades ganhas</span><strong>{resumo.ganhas.length}</strong></div>
-            <div className="flex justify-between"><span className="text-gray-600">Oportunidades perdidas</span><strong>{resumo.perdidas.length}</strong></div>
-            <div className="flex justify-between"><span className="text-gray-600">Taxa de conversão</span><strong>{resumo.conversao}%</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Oportunidades abertas</span><strong>{resumo.abertas.length}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Oportunidades ganhas</span><strong>{resumo.ganhas.length}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Oportunidades perdidas</span><strong>{resumo.perdidas.length}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Taxa de conversão</span><strong>{resumo.conversao}%</strong></div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader><CardTitle className="text-base">Valores Comerciais</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between"><span className="text-gray-600">Pipeline aberto</span><strong>{money(resumo.valorAberto)}</strong></div>
-            <div className="flex justify-between"><span className="text-gray-600">Valor ganho</span><strong>{money(resumo.valorGanho)}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Pipeline aberto</span><strong>{money(resumo.valorAberto)}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Valor ganho</span><strong>{money(resumo.valorGanho)}</strong></div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader><CardTitle className="text-base">Próximos Relatórios</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">Os relatórios de vendas, comissões, conciliação, recebíveis e antecipação serão adicionados após os próximos módulos financeiros.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Os relatórios de vendas, comissões, conciliação, recebíveis e antecipação serão adicionados após os próximos módulos financeiros.</p>
           </CardContent>
         </Card>
       </div>
@@ -168,7 +168,7 @@ export default function Reports() {
         <Card>
           <CardHeader><CardTitle className="text-base">Ranking de Vendedores</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {rankingVendedores.length === 0 ? <p className="text-sm text-gray-500">Sem dados.</p> : rankingVendedores.map((item, index) => (
+            {rankingVendedores.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">Sem dados.</p> : rankingVendedores.map((item, index) => (
               <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0"><span>#{index + 1} {item.nome}</span><strong>{money(item.valor)}</strong></div>
             ))}
           </CardContent>
@@ -177,7 +177,7 @@ export default function Reports() {
         <Card>
           <CardHeader><CardTitle className="text-base">Ranking de Administradoras</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {rankingAdministradoras.length === 0 ? <p className="text-sm text-gray-500">Sem dados.</p> : rankingAdministradoras.map((item, index) => (
+            {rankingAdministradoras.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">Sem dados.</p> : rankingAdministradoras.map((item, index) => (
               <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0"><span>#{index + 1} {item.nome}</span><strong>{money(item.valor)}</strong></div>
             ))}
           </CardContent>
@@ -188,16 +188,16 @@ export default function Reports() {
         <Card>
           <CardHeader><CardTitle className="text-base">Funil de Conversão</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between"><span className="text-gray-600">Leads</span><strong>{funil.leads}</strong></div>
-            <div className="flex justify-between"><span className="text-gray-600">Oportunidades</span><strong>{funil.oportunidades} <span className="text-xs text-gray-400">({funil.taxaLeadOp}% dos leads)</span></strong></div>
-            <div className="flex justify-between"><span className="text-gray-600">Vendas fechadas</span><strong>{funil.vendas} <span className="text-xs text-gray-400">({funil.taxaOpVenda}% das oport.)</span></strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Leads</span><strong>{funil.leads}</strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Oportunidades</span><strong>{funil.oportunidades} <span className="text-xs text-gray-400">({funil.taxaLeadOp}% dos leads)</span></strong></div>
+            <div className="flex justify-between"><span className="text-gray-600 dark:text-gray-300">Vendas fechadas</span><strong>{funil.vendas} <span className="text-xs text-gray-400">({funil.taxaOpVenda}% das oport.)</span></strong></div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader><CardTitle className="text-base">Comissão por Vendedor</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {comissaoPorVendedor.length === 0 ? <p className="text-sm text-gray-500">Sem dados de vendas.</p> : comissaoPorVendedor.map((item, index) => (
+            {comissaoPorVendedor.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">Sem dados de vendas.</p> : comissaoPorVendedor.map((item, index) => (
               <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0">
                 <span className="text-sm">#{index + 1} {item.nome} <span className="text-xs text-gray-400">({item.vendas} venda{item.vendas !== 1 ? 's' : ''})</span></span>
                 <strong className="text-green-700">{money(item.comissaoVendedor)}</strong>
@@ -209,7 +209,7 @@ export default function Reports() {
         <Card>
           <CardHeader><CardTitle className="text-base">Top Produtos Vendidos</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {topProdutos.length === 0 ? <p className="text-sm text-gray-500">Sem dados de vendas.</p> : topProdutos.map((item, index) => (
+            {topProdutos.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">Sem dados de vendas.</p> : topProdutos.map((item, index) => (
               <div key={item.nome} className="flex justify-between border-b pb-2 last:border-0">
                 <span className="text-sm">#{index + 1} {item.nome}</span>
                 <strong>{money(item.valorTotal)}</strong>

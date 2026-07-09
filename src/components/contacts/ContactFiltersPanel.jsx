@@ -14,8 +14,8 @@ export default function ContactFiltersPanel({ filters, onFilterChange, onClose }
   };
 
   return (
-    <div className="w-full lg:w-80 bg-white border-l h-full overflow-y-auto">
-      <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
+    <div className="w-full lg:w-80 bg-white dark:bg-card border-l h-full overflow-y-auto">
+      <div className="sticky top-0 bg-white dark:bg-card border-b p-4 flex items-center justify-between z-10">
         <h3 className="font-semibold">Filters</h3>
         <Button variant="ghost" size="sm" onClick={() => onFilterChange('reset')}>
           Clear All

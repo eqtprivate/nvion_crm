@@ -23,7 +23,7 @@ const statusColors = {
   cliente_ativo: 'bg-green-100 text-green-800',
   venda_concluida: 'bg-purple-100 text-purple-800',
   perdido: 'bg-red-100 text-red-800',
-  inativo: 'bg-gray-100 text-gray-800',
+  inativo: 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200',
 };
 
 export default function ContactDetailsPanel({ contact, onClose }) {
@@ -37,8 +37,8 @@ export default function ContactDetailsPanel({ contact, onClose }) {
   if (!contact) return null;
 
   return (
-    <div className="fixed top-0 right-0 h-full w-full md:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto border-l">
-      <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
+    <div className="fixed top-0 right-0 h-full w-full md:w-[480px] bg-white dark:bg-card shadow-2xl z-50 overflow-y-auto border-l">
+      <div className="sticky top-0 bg-white dark:bg-card border-b p-4 flex items-center justify-between z-10">
         <h2 className="text-xl font-bold">Detalhes do Cliente</h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="w-5 h-5" />
@@ -55,9 +55,9 @@ export default function ContactDetailsPanel({ contact, onClose }) {
           </div>
           <h3 className="text-2xl font-bold mb-1">{contact.name}</h3>
           {contact.cpf_cnpj && (
-            <p className="text-gray-500 text-sm mb-2">{contact.cpf_cnpj}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{contact.cpf_cnpj}</p>
           )}
-          <Badge className={statusColors[contact.status] || 'bg-gray-100 text-gray-800'}>
+          <Badge className={statusColors[contact.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>
             {statusLabels[contact.status] || contact.status}
           </Badge>
         </div>
@@ -88,7 +88,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
               <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-gray-400 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                   <p className="font-medium">{contact.email}</p>
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-gray-400 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Telefone</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Telefone</p>
                   <p className="font-medium">{formatPhone(contact.phone)}</p>
                 </div>
               </div>
@@ -106,7 +106,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
               <div className="flex items-start gap-3">
                 <Building2 className="w-4 h-4 text-gray-400 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Empresa</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Empresa</p>
                   <p className="font-medium">{contact.empresa_vinculada}</p>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-gray-400 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Localização</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Localização</p>
                   <p className="font-medium">{[contact.cidade, contact.estado].filter(Boolean).join(' — ')}</p>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
               <div className="flex items-start gap-3">
                 <FileText className="w-4 h-4 text-gray-400 mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Origem</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Origem</p>
                   <p className="font-medium">{contact.origem}</p>
                 </div>
               </div>
@@ -141,7 +141,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
 
           <TabsContent value="oportunidades" className="mt-4 space-y-3">
             {opportunities.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">Nenhuma oportunidade vinculada</p>
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nenhuma oportunidade vinculada</p>
             ) : (
               opportunities.map((opp) => (
                 <Card key={opp.id}>
@@ -150,7 +150,7 @@ export default function ContactDetailsPanel({ contact, onClose }) {
                       <div>
                         <p className="font-medium">{opp.name}</p>
                         {opp.valor_carta && (
-                          <p className="text-sm text-gray-600">{formatCurrency(opp.valor_carta)}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">{formatCurrency(opp.valor_carta)}</p>
                         )}
                       </div>
                       <Badge>{opp.status}</Badge>
@@ -163,9 +163,9 @@ export default function ContactDetailsPanel({ contact, onClose }) {
 
           <TabsContent value="observacoes" className="mt-4">
             {contact.observacoes ? (
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{contact.observacoes}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{contact.observacoes}</p>
             ) : (
-              <p className="text-center text-gray-500 py-8">Sem observações registradas</p>
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Sem observações registradas</p>
             )}
           </TabsContent>
         </Tabs>

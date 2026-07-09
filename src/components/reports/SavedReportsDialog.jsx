@@ -101,13 +101,13 @@ export default function SavedReportsDialog({ open, onOpenChange, currentFilters,
                 {savedReports.map((report) => (
                   <div
                     key={report.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-muted/40 rounded-lg hover:bg-gray-100 dark:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Bookmark className="w-4 h-4 text-blue-600" />
                       <div>
                         <p className="font-medium text-sm">{report.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(report.createdAt).toLocaleDateString()}
                         </p>
                       </div>

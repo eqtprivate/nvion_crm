@@ -37,7 +37,7 @@ export default function ConfigListManager({ title, items, onAdd, onUpdate, onDel
       <CardContent>
         <div className="space-y-2 mb-4">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50">
+            <div key={item.id} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-muted/40">
               {editingId === item.id ? (
                 <>
                   <Input
@@ -72,7 +72,7 @@ export default function ConfigListManager({ title, items, onAdd, onUpdate, onDel
             </div>
           ))}
           {items.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">No items yet</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No items yet</p>
           )}
         </div>
         <div className="flex gap-2">

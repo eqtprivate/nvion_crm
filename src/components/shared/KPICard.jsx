@@ -7,7 +7,7 @@ export default function KPICard({ title, value, icon: Icon, iconColor = 'bg-prim
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{value}</p>
           </div>
           {Icon && (

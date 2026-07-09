@@ -239,7 +239,7 @@ export default function Vendedores() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Vendedores</h1>
-          <p className="text-gray-500 mt-1">Gestão individual de vendedores, líderes, metas e vínculos comerciais</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gestão individual de vendedores, líderes, metas e vínculos comerciais</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}><Download className="w-4 h-4 mr-2" />Exportar CSV</Button>
@@ -248,21 +248,21 @@ export default function Vendedores() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendedores</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Vendedores Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Líderes</p><p className="text-2xl font-bold text-blue-700">{kpis.lideres}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Meta Total</p><p className="text-2xl font-bold text-primary">{money(kpis.metaTotal)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total de Vendedores</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Vendedores Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Líderes</p><p className="text-2xl font-bold text-blue-700">{kpis.lideres}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Meta Total</p><p className="text-2xl font-bold text-primary">{money(kpis.metaTotal)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b"><div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar vendedores..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" /></div></div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader><TableRow><TableHead>Vendedor</TableHead><TableHead>CPF/CNPJ</TableHead><TableHead>Equipe</TableHead><TableHead>Líder</TableHead><TableHead>Tipo</TableHead><TableHead>Meta</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
             <TableBody>
-              {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando vendedores...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-12 text-gray-500"><UserRound className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum vendedor encontrado</TableCell></TableRow> : filtered.map((vendedor) => (
+              {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8">Carregando vendedores...</TableCell></TableRow> : filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-12 text-gray-500 dark:text-gray-400"><UserRound className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum vendedor encontrado</TableCell></TableRow> : filtered.map((vendedor) => (
                 <TableRow key={vendedor.id}>
-                  <TableCell><p className="font-medium">{vendedor.nome}</p><p className="text-xs text-gray-500">{vendedor.email || formatPhone(vendedor.telefone) || '-'}</p></TableCell>
+                  <TableCell><p className="font-medium">{vendedor.nome}</p><p className="text-xs text-gray-500 dark:text-gray-400">{vendedor.email || formatPhone(vendedor.telefone) || '-'}</p></TableCell>
                   <TableCell>{formatCpfCnpj(vendedor.cpf_cnpj) || '-'}</TableCell>
                   <TableCell>{vendedor.equipe || '-'}</TableCell>
                   <TableCell>{vendedor.lider || '-'}</TableCell>

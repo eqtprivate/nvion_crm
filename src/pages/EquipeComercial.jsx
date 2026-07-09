@@ -180,7 +180,7 @@ export default function EquipeComercial() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Equipe e Vendedores</h1>
-          <p className="text-gray-500 mt-1">Gestão de líderes, vendedores, equipes comerciais e metas</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gestão de líderes, vendedores, equipes comerciais e metas</p>
         </div>
         {canManageTeams && (
           <Button size="sm" className="bg-primary hover:bg-primary-dark w-full sm:w-auto" onClick={openCreateDialog}>
@@ -191,13 +191,13 @@ export default function EquipeComercial() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Equipes</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Equipes Ativas</p><p className="text-2xl font-bold text-green-600">{kpis.ativas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Vendedores</p><p className="text-2xl font-bold text-blue-600">{kpis.totalVendedores}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Meta Total</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.metaTotal)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total de Equipes</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Equipes Ativas</p><p className="text-2xl font-bold text-green-600">{kpis.ativas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total de Vendedores</p><p className="text-2xl font-bold text-blue-600">{kpis.totalVendedores}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Meta Total</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.metaTotal)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -207,7 +207,7 @@ export default function EquipeComercial() {
 
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0 bg-white dark:bg-card z-10">
               <TableRow>
                 <TableHead>Nome da Equipe</TableHead>
                 <TableHead>Líder Responsável</TableHead>
@@ -219,19 +219,19 @@ export default function EquipeComercial() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">Carregando...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Users className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma equipe encontrada</span><span className="text-sm">Crie uma equipe comercial para organizar líderes e vendedores</span></div></TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-12 text-gray-500 dark:text-gray-400"><div className="flex flex-col items-center gap-2"><Users className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma equipe encontrada</span><span className="text-sm">Crie uma equipe comercial para organizar líderes e vendedores</span></div></TableCell></TableRow>
               ) : (
                 filtered.map((equipe) => {
                   const vendedoresEquipe = getVendedoresEquipe(equipe.nome_equipe);
                   return (
-                    <TableRow key={equipe.id} className="hover:bg-gray-50">
+                    <TableRow key={equipe.id} className="hover:bg-gray-50 dark:hover:bg-muted/40">
                       <TableCell><div className="flex items-center gap-3"><div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-primary" /></div><p className="font-medium">{equipe.nome_equipe}</p></div></TableCell>
                       <TableCell><div className="flex items-center gap-2"><UserCircle className="w-4 h-4 text-gray-400" /><span className="text-sm">{equipe.lider_responsavel || '-'}</span></div></TableCell>
                       <TableCell><div className="flex flex-wrap gap-1">{vendedoresEquipe.length ? vendedoresEquipe.map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>) : <Badge variant="outline">0 vendedor(es)</Badge>}</div></TableCell>
                       <TableCell><span className="font-medium">{equipe.meta_mensal ? formatCurrency(equipe.meta_mensal) : '-'}</span></TableCell>
-                      <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
+                      <TableCell><Badge className={equipe.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>{equipe.status === 'ativo' ? 'Ativa' : 'Inativa'}</Badge></TableCell>
                       {canManageTeams && (
                       <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => openEditDialog(equipe)}>Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => deleteMutation.mutate(equipe.id)}>Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
                       )}
@@ -262,12 +262,12 @@ export default function EquipeComercial() {
             </div>
             <div>
               <Label>Vendedores Vinculados</Label>
-              <div className="min-h-10 rounded-md border border-input bg-gray-50 px-3 py-2">
+              <div className="min-h-10 rounded-md border border-input bg-gray-50 dark:bg-muted/40 px-3 py-2">
                 <div className="flex flex-wrap gap-1">
                   {getVendedoresEquipe(selectedEquipe?.nome_equipe || form.nome_equipe).length ? (
                     getVendedoresEquipe(selectedEquipe?.nome_equipe || form.nome_equipe).map((vendedor) => <Badge key={vendedor} variant="outline">{vendedor}</Badge>)
                   ) : (
-                    <span className="text-sm text-gray-500">Nenhum vendedor vinculado</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Nenhum vendedor vinculado</span>
                   )}
                 </div>
               </div>

@@ -28,7 +28,7 @@ export default function SalesFunnelChart({ opportunities = [] }) {
     <Card className="col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">Sales Funnel</CardTitle>
-        <Button variant="ghost" size="sm" className="text-gray-500">
+        <Button variant="ghost" size="sm" className="text-gray-500 dark:text-gray-400">
           <SlidersHorizontal className="mr-2 w-4 h-4" />
           Filters
         </Button>
@@ -37,15 +37,15 @@ export default function SalesFunnelChart({ opportunities = [] }) {
         <div className="mb-4 flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-            <span className="text-sm text-gray-600">Prospecting</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Prospecting</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-            <span className="text-sm text-gray-600">Qualification</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Qualification</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span className="text-sm text-gray-600">Negotiation</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Negotiation</span>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={280}>

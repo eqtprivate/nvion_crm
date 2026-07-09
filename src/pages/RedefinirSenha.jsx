@@ -58,12 +58,12 @@ export default function RedefinirSenha() {
   return (
     <div className="p-4 sm:p-8 flex justify-center">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+        <div className="bg-white dark:bg-card rounded-2xl shadow-lg border border-gray-100 dark:border-border p-8">
           <div className="flex items-center gap-2 mb-1">
             <KeyRound className="w-5 h-5 text-primary" />
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Redefinir Senha</h1>
           </div>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             {isRecovery
               ? 'Link de recuperação válido. Defina sua nova senha de acesso.'
               : 'Defina uma nova senha para sua conta.'}
@@ -73,7 +73,7 @@ export default function RedefinirSenha() {
             <div className="py-4 space-y-4 text-center">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
               <p className="font-semibold text-gray-900 dark:text-gray-100">Senha redefinida com sucesso</p>
-              <p className="text-sm text-gray-500">Use a nova senha para acessar o sistema.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Use a nova senha para acessar o sistema.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,7 +88,7 @@ export default function RedefinirSenha() {
                     placeholder="Mín. 8: maiúscula, minúscula, número e especial"
                     className="pr-10"
                   />
-                  <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-300">
                     {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>

@@ -30,14 +30,14 @@ export default function OnboardingBanner() {
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-gray-900 dark:text-gray-100">Complete a configuração da sua empresa</p>
-        <p className="text-sm text-gray-500 truncate">
+        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
           {doneCount} de {total} concluídos{proximo ? ` · próximo: ${proximo.title}` : ''}
         </p>
       </div>
       <Button asChild size="sm" className="flex-shrink-0">
         <Link to={createPageUrl('BoasVindas')}>Continuar <ArrowRight className="w-4 h-4 ml-1.5" /></Link>
       </Button>
-      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600 flex-shrink-0" onClick={dismiss} title="Ocultar">
+      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600 dark:text-gray-300 flex-shrink-0" onClick={dismiss} title="Ocultar">
         <X className="w-4 h-4" />
       </Button>
     </div>

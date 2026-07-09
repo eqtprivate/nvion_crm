@@ -10,7 +10,7 @@ export default function EmptyState({ icon: Icon = Inbox, title = 'Nada por aqui'
         <Icon className="w-7 h-7 text-gray-400" />
       </div>
       <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
-      {description && <p className="text-sm text-gray-500 mt-1 max-w-sm">{description}</p>}
+      {description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm">{description}</p>}
       {actionLabel && onAction && (
         <Button className="mt-4" size="sm" onClick={onAction}>{actionLabel}</Button>
       )}

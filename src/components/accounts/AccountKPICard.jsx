@@ -7,7 +7,7 @@ export default function AccountKPICard({ title, value, trend, trendValue, Icon, 
     <Card>
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
-          <span className="text-xs text-gray-600">{title}</span>
+          <span className="text-xs text-gray-600 dark:text-gray-300">{title}</span>
           {trend && (
             <div className={`flex items-center gap-1 text-xs ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
               {trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}

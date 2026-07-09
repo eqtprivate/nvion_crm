@@ -102,7 +102,7 @@ function HistoricoTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-border">
                 <th className="px-4 py-3 font-medium">Data/Hora</th>
                 <th className="px-4 py-3 font-medium">Evento</th>
                 <th className="px-4 py-3 font-medium">Destinatário</th>
@@ -117,13 +117,13 @@ function HistoricoTab() {
                 <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">Nenhum e-mail enviado ainda.</td></tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">{formatDateTime(log.created_at)}</td>
-                    <td className="px-4 py-2.5 text-gray-600">{log.template_key || log.event || '—'}</td>
-                    <td className="px-4 py-2.5 text-gray-800">{log.to_email || <span className="text-gray-400">—</span>}</td>
-                    <td className="px-4 py-2.5 text-gray-500 max-w-xs truncate">{log.subject || '—'}</td>
+                  <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                    <td className="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">{formatDateTime(log.created_at)}</td>
+                    <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{log.template_key || log.event || '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-800 dark:text-gray-200">{log.to_email || <span className="text-gray-400">—</span>}</td>
+                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 max-w-xs truncate">{log.subject || '—'}</td>
                     <td className="px-4 py-2.5">
-                      <Badge className={STATUS_BADGE[log.status] || 'bg-gray-100 text-gray-700'}>
+                      <Badge className={STATUS_BADGE[log.status] || 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300'}>
                         {STATUS_LABEL[log.status] || log.status}
                       </Badge>
                       {log.status !== 'sent' && log.error && (
@@ -217,7 +217,7 @@ function TemplatesTab() {
                 type="button"
                 onClick={() => setSelectedKey(t.key)}
                 className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  t.key === selectedKey ? 'bg-primary text-white font-medium' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-100'
+                  t.key === selectedKey ? 'bg-primary text-white font-medium' : 'bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-muted/40 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-border'
                 }`}
               >
                 {t.label}
@@ -264,7 +264,7 @@ function TemplatesTab() {
                     value={draft.html}
                     onChange={(e) => setDraft((p) => ({ ...p, html: e.target.value }))}
                     rows={12}
-                    className="w-full font-mono text-xs border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full font-mono text-xs border border-gray-200 dark:border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               </CardContent>
@@ -273,8 +273,8 @@ function TemplatesTab() {
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4" /> Preview (com dados de exemplo)</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-xs text-gray-500 mb-2"><strong>Assunto:</strong> {renderPreview(draft.subject)}</p>
-                <iframe title="preview" sandbox="" className="w-full h-80 border border-gray-200 rounded-lg bg-white" srcDoc={renderPreview(draft.html)} />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2"><strong>Assunto:</strong> {renderPreview(draft.subject)}</p>
+                <iframe title="preview" sandbox="" className="w-full h-80 border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-card" srcDoc={renderPreview(draft.html)} />
               </CardContent>
             </Card>
           </>
@@ -292,7 +292,7 @@ export default function GestaoEmailTemplates() {
   if (!isSuperAdmin) {
     return (
       <div className="p-8">
-        <Card><CardContent className="py-12 text-center text-gray-500">
+        <Card><CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
           <Mail className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           Área restrita ao Super Admin.
         </CardContent></Card>
@@ -306,21 +306,21 @@ export default function GestaoEmailTemplates() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <Mail className="w-6 h-6 text-primary" /> E-mails
         </h1>
-        <p className="text-gray-500 mt-1">Templates de autenticação e transacionais, e histórico de envios.</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Templates de autenticação e transacionais, e histórico de envios.</p>
       </div>
 
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-border">
         <button
           type="button"
           onClick={() => setTab('templates')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === 'templates' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === 'templates' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
         >
           <Mail className="w-4 h-4 inline mr-1.5" /> Templates
         </button>
         <button
           type="button"
           onClick={() => setTab('historico')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === 'historico' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === 'historico' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
         >
           <History className="w-4 h-4 inline mr-1.5" /> Histórico de envios
         </button>

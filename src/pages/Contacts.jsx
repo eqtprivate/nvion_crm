@@ -210,7 +210,7 @@ export default function Contacts() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Clientes</h1>
-          <p className="text-gray-500 mt-1">Base de clientes finais e histórico comercial</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Base de clientes finais e histórico comercial</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportToCSV} disabled={filtered.length === 0}><Download className="w-4 h-4 mr-2" />Exportar CSV</Button>
@@ -219,13 +219,13 @@ export default function Contacts() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Clientes</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Clientes Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Em Negociação</p><p className="text-2xl font-bold text-blue-700">{kpis.negociacao}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Vendas Concluídas</p><p className="text-2xl font-bold text-primary">{kpis.concluidas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total de Clientes</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Clientes Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Em Negociação</p><p className="text-2xl font-bold text-blue-700">{kpis.negociacao}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Vendas Concluídas</p><p className="text-2xl font-bold text-primary">{kpis.concluidas}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -253,7 +253,7 @@ export default function Contacts() {
                 <TableRow><TableCell colSpan={7} className="p-0"><EmptyState icon={Users} title="Nenhum cliente encontrado" description="Ajuste os filtros ou cadastre um novo cliente." /></TableCell></TableRow>
               ) : filtered.map((cliente) => (
                 <TableRow key={cliente.id}>
-                  <TableCell><p className="font-medium">{cliente.name}</p><p className="text-xs text-gray-500">{cliente.email || formatPhone(cliente.phone) || '-'}</p></TableCell>
+                  <TableCell><p className="font-medium">{cliente.name}</p><p className="text-xs text-gray-500 dark:text-gray-400">{cliente.email || formatPhone(cliente.phone) || '-'}</p></TableCell>
                   <TableCell>{formatCpfCnpj(cliente.cpf_cnpj) || '-'}</TableCell>
                   <TableCell>{cliente.cidade || '-'}{cliente.estado ? `/${cliente.estado}` : ''}</TableCell>
                   <TableCell>{cliente.origem?.replaceAll('_', ' ') || '-'}</TableCell>

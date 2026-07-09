@@ -25,7 +25,7 @@ const STATUS_COLORS = {
   paga: 'bg-green-100 text-green-800',
   bloqueada: 'bg-red-100 text-red-800',
   estornada: 'bg-orange-100 text-orange-800',
-  cancelada: 'bg-gray-100 text-gray-600',
+  cancelada: 'bg-gray-100 dark:bg-muted text-gray-600 dark:text-gray-300',
 };
 
 const STATUS_LABEL = {
@@ -116,7 +116,7 @@ export default function Comissoes() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Comissões</h1>
-          <p className="text-gray-500 mt-1">Comissões geradas pelas vendas de consórcio</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Comissões geradas pelas vendas de consórcio</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
           <Download className="w-4 h-4 mr-2" />Exportar CSV
@@ -124,14 +124,14 @@ export default function Comissoes() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Prevista</p><p className="text-xl font-bold text-yellow-700">{money(kpis.prevista)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Confirmada</p><p className="text-xl font-bold text-blue-700">{money(kpis.confirmada)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Paga</p><p className="text-xl font-bold text-green-700">{money(kpis.paga)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Bloqueada</p><p className="text-xl font-bold text-red-700">{money(kpis.bloqueada)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Repasse Vendedores</p><p className="text-xl font-bold text-primary">{money(kpis.totalVendedor)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Prevista</p><p className="text-xl font-bold text-yellow-700">{money(kpis.prevista)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Confirmada</p><p className="text-xl font-bold text-blue-700">{money(kpis.confirmada)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Paga</p><p className="text-xl font-bold text-green-700">{money(kpis.paga)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Bloqueada</p><p className="text-xl font-bold text-red-700">{money(kpis.bloqueada)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Repasse Vendedores</p><p className="text-xl font-bold text-primary">{money(kpis.totalVendedor)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -182,7 +182,7 @@ export default function Comissoes() {
                 <TableRow><TableCell colSpan={10} className="text-center py-8">Carregando comissões...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-12 text-gray-500">
+                  <TableCell colSpan={10} className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <DollarSign className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                     Nenhuma comissão encontrada
                   </TableCell>

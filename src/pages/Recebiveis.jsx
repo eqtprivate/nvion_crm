@@ -35,7 +35,7 @@ function agingLabel(dateStr) {
   if (diff === 0) return { label: 'Vence hoje', color: 'text-orange-600' };
   if (diff <= 7) return { label: `${diff}d`, color: 'text-orange-500' };
   if (diff <= 30) return { label: `${diff}d`, color: 'text-yellow-600' };
-  return { label: `${diff}d`, color: 'text-gray-500' };
+  return { label: `${diff}d`, color: 'text-gray-500 dark:text-gray-400' };
 }
 
 const STATUS_LIST = ['previsto', 'confirmado', 'recebido', 'atrasado', 'cancelado'];
@@ -45,7 +45,7 @@ const STATUS_COLORS = {
   confirmado: 'bg-blue-100 text-blue-800',
   recebido: 'bg-green-100 text-green-800',
   atrasado: 'bg-red-100 text-red-800',
-  cancelado: 'bg-gray-100 text-gray-500',
+  cancelado: 'bg-gray-100 dark:bg-muted text-gray-500 dark:text-gray-400',
 };
 
 function EditDialog({ open, onOpenChange, recebivel, onSubmit, loading }) {
@@ -181,7 +181,7 @@ export default function Recebiveis() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Recebíveis</h1>
-          <p className="text-gray-500 mt-1">Parcelas de comissão a receber por venda de consórcio</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Parcelas de comissão a receber por venda de consórcio</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
           <Download className="w-4 h-4 mr-2" />Exportar CSV
@@ -189,14 +189,14 @@ export default function Recebiveis() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Carteira Total</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.carteira)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">A Receber</p><p className="text-xl font-bold text-blue-700">{money(kpis.aReceber)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Recebido</p><p className="text-xl font-bold text-green-700">{money(kpis.recebido)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Atrasado</p><p className="text-xl font-bold text-red-700">{money(kpis.atrasado)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Elegível Antecipação</p><p className="text-xl font-bold text-primary">{money(kpis.elegivel)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Carteira Total</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.carteira)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">A Receber</p><p className="text-xl font-bold text-blue-700">{money(kpis.aReceber)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Recebido</p><p className="text-xl font-bold text-green-700">{money(kpis.recebido)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Atrasado</p><p className="text-xl font-bold text-red-700">{money(kpis.atrasado)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Elegível Antecipação</p><p className="text-xl font-bold text-primary">{money(kpis.elegivel)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -247,7 +247,7 @@ export default function Recebiveis() {
                 <TableRow><TableCell colSpan={10} className="text-center py-8">Carregando recebíveis...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-12 text-gray-500">
+                  <TableCell colSpan={10} className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <Wallet className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                     Nenhum recebível encontrado
                   </TableCell>

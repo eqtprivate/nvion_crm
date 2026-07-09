@@ -32,7 +32,7 @@ const stageLabels = {
 
 const statusColors = {
   aberta: 'bg-blue-100 text-blue-800', ganha: 'bg-green-100 text-green-800',
-  perdida: 'bg-red-100 text-red-800', suspensa: 'bg-gray-100 text-gray-800',
+  perdida: 'bg-red-100 text-red-800', suspensa: 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200',
 };
 
 export default function Oportunidades() {
@@ -154,7 +154,7 @@ export default function Oportunidades() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Oportunidades</h1>
-          <p className="text-gray-500 mt-1">Gestão do pipeline de vendas</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gestão do pipeline de vendas</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" onClick={exportToCSV} disabled={oportunidades.length === 0}>
@@ -167,13 +167,13 @@ export default function Oportunidades() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Em Aberto</p><p className="text-2xl font-bold text-blue-600">{kpis.abertas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Ganhas</p><p className="text-2xl font-bold text-green-600">{kpis.ganhas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Pipeline</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.pipeline)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Em Aberto</p><p className="text-2xl font-bold text-blue-600">{kpis.abertas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Ganhas</p><p className="text-2xl font-bold text-green-600">{kpis.ganhas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Pipeline</p><p className="text-2xl font-bold text-primary">{formatCurrency(kpis.pipeline)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -213,10 +213,10 @@ export default function Oportunidades() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">Carregando...</TableCell></TableRow>
               ) : filteredAndSorted.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <div className="flex flex-col items-center gap-2">
                       <TrendingUp className="w-12 h-12 text-gray-300" />
                       <span className="font-medium">Nenhuma oportunidade encontrada</span>
@@ -225,7 +225,7 @@ export default function Oportunidades() {
                 </TableRow>
               ) : (
                 filteredAndSorted.map(op => (
-                  <TableRow key={op.id} className="hover:bg-gray-50">
+                  <TableRow key={op.id} className="hover:bg-gray-50 dark:hover:bg-muted/40">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -233,7 +233,7 @@ export default function Oportunidades() {
                         </div>
                         <div>
                           <p className="font-medium">{op.name}</p>
-                          <p className="text-xs text-gray-500">{op.vendedor || op.cliente_vinculado || ''}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{op.vendedor || op.cliente_vinculado || ''}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -252,7 +252,7 @@ export default function Oportunidades() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusColors[op.status] || 'bg-gray-100 text-gray-800'}>{op.status || '-'}</Badge>
+                      <Badge className={statusColors[op.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>{op.status || '-'}</Badge>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">
                       {op.previsao_fechamento ? new Date(op.previsao_fechamento).toLocaleDateString('pt-BR') : '-'}

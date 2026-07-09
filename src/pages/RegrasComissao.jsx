@@ -175,7 +175,7 @@ function RegraDialog({ open, onOpenChange, regra, parcelasRegra, produtos, admin
             <Label className="text-xs font-semibold text-blue-800 uppercase tracking-wide">Template rápido</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {TEMPLATES_REGRA.map((t) => (
-                <Button key={t.id} type="button" size="sm" variant="outline" className="bg-white" onClick={() => applyTemplate(t.id)}>
+                <Button key={t.id} type="button" size="sm" variant="outline" className="bg-white dark:bg-card" onClick={() => applyTemplate(t.id)}>
                   {t.label}
                 </Button>
               ))}
@@ -351,7 +351,7 @@ function RegraDialog({ open, onOpenChange, regra, parcelasRegra, produtos, admin
 
           {/* Preview de parcelas iguais / valor fixo */}
           {(isIgual || isFixoValor || isHibrido) && preview && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Prévia do cronograma</p>
               <div className="flex flex-wrap gap-2">
                 {preview.parcelas.map((p) => (
@@ -386,26 +386,26 @@ function RegraDialog({ open, onOpenChange, regra, parcelasRegra, produtos, admin
           </div>
 
           {/* Preview financeiro */}
-          <div className="bg-gray-50 border rounded-lg p-4">
+          <div className="bg-gray-50 dark:bg-muted/40 border rounded-lg p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-              <p className="text-sm font-semibold text-gray-700">Simulação financeira</p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Simulação financeira</p>
               <div className="flex items-center gap-2">
-                <Label className="text-xs text-gray-500">Carta exemplo</Label>
+                <Label className="text-xs text-gray-500 dark:text-gray-400">Carta exemplo</Label>
                 <div className="w-44"><MoneyInput value={previewBase} onChange={setPreviewBase} /></div>
               </div>
             </div>
             {preview && (
               <div className="space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Comissão total</span><strong>{formatCurrency(preview.valorComissaoTotal)}</strong></div>
-                <div className="flex justify-between"><span className="text-gray-500">Vendedor</span><span>{formatCurrency(preview.totalVendedor)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Líder</span><span>{formatCurrency(preview.totalLider)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Empresa</span><span>{formatCurrency(preview.totalEmpresa)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Comissão total</span><strong>{formatCurrency(preview.valorComissaoTotal)}</strong></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Vendedor</span><span>{formatCurrency(preview.totalVendedor)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Líder</span><span>{formatCurrency(preview.totalLider)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Empresa</span><span>{formatCurrency(preview.totalEmpresa)}</span></div>
                 {form.possui_estorno && !form.sem_estorno && (
                   <div className="flex justify-between text-orange-600"><span>Estorno aplicável ({formatPercent(form.percentual_estorno)})</span><span>{formatCurrency(Number(previewBase || 0) * Number(form.percentual_estorno || 0) / 100)}</span></div>
                 )}
                 <div className="pt-2 mt-2 border-t">
                   {preview.parcelas.map((p) => (
-                    <div key={p.numero_parcela} className="flex justify-between text-gray-600">
+                    <div key={p.numero_parcela} className="flex justify-between text-gray-600 dark:text-gray-300">
                       <span>Parcela {p.numero_parcela}{p.percentual_parcela ? ` (${formatPercent(p.percentual_parcela)})` : ''}</span>
                       <span>{formatCurrency(p.valor_parcela_total)}</span>
                     </div>
@@ -559,25 +559,25 @@ export default function RegrasComissao() {
   return (
     <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div><h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Regras de Comissão</h1><p className="text-gray-500 mt-1">Políticas de comissão por produto, administradora e tabela comercial</p></div>
+        <div><h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Regras de Comissão</h1><p className="text-gray-500 dark:text-gray-400 mt-1">Políticas de comissão por produto, administradora e tabela comercial</p></div>
         <Button onClick={() => { setSelectedRegra(null); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Nova Regra</Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Regras</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Regras Ativas</p><p className="text-2xl font-bold text-green-700">{kpis.ativas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Média</p><p className="text-2xl font-bold text-primary">{formatPercent(kpis.comissaoMedia)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Produtos com Regra</p><p className="text-2xl font-bold text-blue-700">{kpis.produtos}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total de Regras</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Regras Ativas</p><p className="text-2xl font-bold text-green-700">{kpis.ativas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Comissão Média</p><p className="text-2xl font-bold text-primary">{formatPercent(kpis.comissaoMedia)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Produtos com Regra</p><p className="text-2xl font-bold text-blue-700">{kpis.produtos}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b"><div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><Input placeholder="Buscar regras..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" /></div></div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader><TableRow><TableHead>Regra</TableHead><TableHead>Produto</TableHead><TableHead>Tabela</TableHead><TableHead>Modelo</TableHead><TableHead>Total</TableHead><TableHead>Parcelas</TableHead><TableHead>Estorno</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
             <TableBody>
               {isLoading ? <TableRow><TableCell colSpan={9} className="text-center py-8">Carregando regras...</TableCell></TableRow>
-                : filtered.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500"><Percent className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma regra encontrada</TableCell></TableRow>
+                : filtered.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-12 text-gray-500 dark:text-gray-400"><Percent className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma regra encontrada</TableCell></TableRow>
                 : filtered.map((regra) => (
                   <TableRow key={regra.id}>
                     <TableCell className="font-medium">{regra.nome_regra}</TableCell>

@@ -112,8 +112,8 @@ function ImportCSVDialog({ open, onOpenChange, onImport, isLoading }) {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Importar Leads via CSV</DialogTitle></DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">O arquivo deve ter cabeçalhos em português ou inglês. Colunas reconhecidas: <strong>nome, email, telefone, origem, campanha, produto, valor estimado, administradora, vendedor, lider, temperatura, status, tipo próxima ação, data próxima ação, próxima ação, observações</strong>.</p>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
+          <p className="text-sm text-gray-600 dark:text-gray-300">O arquivo deve ter cabeçalhos em português ou inglês. Colunas reconhecidas: <strong>nome, email, telefone, origem, campanha, produto, valor estimado, administradora, vendedor, lider, temperatura, status, tipo próxima ação, data próxima ação, próxima ação, observações</strong>.</p>
+          <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
           {error && <div className="flex items-center gap-2 text-red-600 text-sm"><AlertCircle className="w-4 h-4" />{error}</div>}
           {done && <div className="flex items-center gap-2 text-green-700 text-sm"><CheckCircle2 className="w-4 h-4" />{rows.length || 'Os'} leads importados com sucesso!</div>}
           {rows.length > 0 && (
@@ -121,7 +121,7 @@ function ImportCSVDialog({ open, onOpenChange, onImport, isLoading }) {
               <p className="text-sm font-medium mb-2">{rows.length} lead(s) encontrado(s) — prévia:</p>
               <div className="overflow-x-auto border rounded">
                 <table className="text-xs w-full">
-                  <thead className="bg-gray-50"><tr><th className="p-2 text-left">Nome</th><th className="p-2 text-left">Email</th><th className="p-2 text-left">Telefone</th><th className="p-2 text-left">Origem</th><th className="p-2 text-left">Produto</th><th className="p-2 text-left">Vendedor</th></tr></thead>
+                  <thead className="bg-gray-50 dark:bg-muted/40"><tr><th className="p-2 text-left">Nome</th><th className="p-2 text-left">Email</th><th className="p-2 text-left">Telefone</th><th className="p-2 text-left">Origem</th><th className="p-2 text-left">Produto</th><th className="p-2 text-left">Vendedor</th></tr></thead>
                   <tbody>{rows.slice(0, 5).map((r, i) => <tr key={i} className="border-t"><td className="p-2">{r.name || '-'}</td><td className="p-2">{r.email || '-'}</td><td className="p-2">{formatPhone(r.phone) || '-'}</td><td className="p-2">{r.origem || '-'}</td><td className="p-2">{r.produto_interesse || '-'}</td><td className="p-2">{r.vendedor_responsavel || '-'}</td></tr>)}</tbody>
                 </table>
                 {rows.length > 5 && <p className="text-xs text-gray-400 p-2">… e mais {rows.length - 5} linha(s)</p>}
@@ -290,7 +290,7 @@ function matchesQuickFilter(lead, quickFilter) {
 
 function NextActionBadge({ lead }) {
   if (!lead.proxima_acao && !lead.data_proxima_acao) {
-    return <Badge className="bg-gray-100 text-gray-700">Sem próxima ação</Badge>;
+    return <Badge className="bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300">Sem próxima ação</Badge>;
   }
 
   const overdue = isOverdue(lead);
@@ -303,7 +303,7 @@ function NextActionBadge({ lead }) {
       <Badge className={overdue ? 'bg-red-100 text-red-800' : today ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}>
         {label} · {dateText}
       </Badge>
-      {lead.proxima_acao && <p className="text-xs text-gray-600 truncate">{lead.proxima_acao}</p>}
+      {lead.proxima_acao && <p className="text-xs text-gray-600 dark:text-gray-300 truncate">{lead.proxima_acao}</p>}
     </div>
   );
 }
@@ -497,7 +497,7 @@ export default function Leads() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Prospecção</h1>
-          <p className="text-gray-500 mt-1">Cockpit de leads, ações comerciais e conversão para oportunidades</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Cockpit de leads, ações comerciais e conversão para oportunidades</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" onClick={exportToCSV} disabled={filtered.length === 0}>
@@ -512,11 +512,11 @@ export default function Leads() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
+      <div className="bg-white dark:bg-card rounded-lg shadow mb-6 overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Funil de Prospecção</p>
-            <p className="text-xs text-gray-500">Cada etapa possui cor própria para facilitar leitura do pipeline</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Cada etapa possui cor própria para facilitar leitura do pipeline</p>
           </div>
           <Button size="sm" variant="ghost" onClick={() => setActiveStage('all')}>Limpar etapa</Button>
         </div>
@@ -534,15 +534,15 @@ export default function Leads() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className={`w-2.5 h-2.5 rounded-full ${visual.dot}`} />
-                      <p className="text-xs font-semibold text-gray-700 truncate">{stage.label}</p>
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate">{stage.label}</p>
                     </div>
-                    {activeStage === stage.value && <span className="text-[10px] font-semibold text-gray-500 uppercase">ativo</span>}
+                    {activeStage === stage.value && <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase">ativo</span>}
                   </div>
                   <div className="flex items-end justify-between gap-3 mt-2">
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stage.count}</p>
-                    <p className="text-xs font-medium text-gray-600">{formatCurrency(stage.valueTotal)}</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300">{formatCurrency(stage.valueTotal)}</p>
                   </div>
-                  <div className="mt-3 h-1.5 rounded-full bg-white/80 border border-white overflow-hidden">
+                  <div className="mt-3 h-1.5 rounded-full bg-white dark:bg-card/80 border border-white overflow-hidden">
                     <div className={`h-full rounded-full ${visual.progress}`} style={{ width: `${stage.progress}%` }} />
                   </div>
                 </button>
@@ -561,7 +561,7 @@ export default function Leads() {
         <KPICard title="Taxa de Conversão" value={formatPercent(kpis.taxa)} Icon={Target} color="cyan" />
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b space-y-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <div className="relative flex-1 w-full">
@@ -615,29 +615,29 @@ export default function Leads() {
                 filtered.map(lead => {
                   const stageVisual = getStageVisual(lead.status);
                   return (
-                    <TableRow key={lead.id} className={`hover:bg-gray-50 border-l-4 ${stageVisual.row}`}>
+                    <TableRow key={lead.id} className={`hover:bg-gray-50 dark:hover:bg-muted/40 border-l-4 ${stageVisual.row}`}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${stageVisual.avatar}`}>{lead.name?.charAt(0)?.toUpperCase()}</div>
                           <div>
                             <p className="font-medium">{lead.name}</p>
-                            <p className="text-xs text-gray-500">{lead.email || lead.vendedor_responsavel || ''}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{lead.email || lead.vendedor_responsavel || ''}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm">{formatPhone(lead.phone) || '-'}</TableCell>
                       <TableCell className="hidden lg:table-cell text-sm"><Badge variant="outline">{ORIGEM_LABELS[lead.origem] || '-'}</Badge></TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm"><div><p>{lead.produto_interesse || '-'}</p>{lead.valor_estimado_carta && <p className="text-xs text-gray-500">{formatCurrency(lead.valor_estimado_carta)}</p>}</div></TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm"><div><p>{lead.produto_interesse || '-'}</p>{lead.valor_estimado_carta && <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(lead.valor_estimado_carta)}</p>}</div></TableCell>
                       <TableCell><div className="flex items-center gap-1">{TEMP_ICONS[lead.temperatura]}<span className="text-xs hidden sm:inline capitalize">{lead.temperatura || '-'}</span></div></TableCell>
                       <TableCell>
                         <Select value={lead.status || 'novo_contato'} onValueChange={v => updateMutation.mutate({ id: lead.id, data: { status: v } })}>
                           <SelectTrigger className="h-7 text-xs w-36 border-0 p-0 shadow-none">
-                            <Badge className={STATUS_COLORS[lead.status] || 'bg-gray-100 text-gray-800'}>{STATUS_LABELS[lead.status] || lead.status}</Badge>
+                            <Badge className={STATUS_COLORS[lead.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>{STATUS_LABELS[lead.status] || lead.status}</Badge>
                           </SelectTrigger>
                           <SelectContent>{LEAD_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell text-sm"><p>{lead.vendedor_responsavel || '-'}</p>{lead.lider_vinculado && <p className="text-xs text-gray-500">Líder: {lead.lider_vinculado}</p>}</TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm"><p>{lead.vendedor_responsavel || '-'}</p>{lead.lider_vinculado && <p className="text-xs text-gray-500 dark:text-gray-400">Líder: {lead.lider_vinculado}</p>}</TableCell>
                       <TableCell><NextActionBadge lead={lead} /></TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -656,13 +656,13 @@ export default function Leads() {
             </TableBody>
           </Table>
         </div>
-        <div className="border-t bg-gray-50 px-4 py-3 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-          <div><p className="text-gray-500">Valor filtrado</p><p className="font-semibold text-green-700">{formatCurrency(kpis.valorTotal)}</p></div>
-          <div><p className="text-gray-500">Ticket médio</p><p className="font-semibold">{formatCurrency(kpis.ticketMedio)}</p></div>
-          <div><p className="text-gray-500">Total</p><p className="font-semibold">{kpis.total}</p></div>
-          <div><p className="text-gray-500">Atrasados</p><p className="font-semibold text-red-700">{kpis.atrasados}</p></div>
-          <div><p className="text-gray-500">Sem responsável</p><p className="font-semibold text-orange-700">{kpis.semResponsavel}</p></div>
-          <div><p className="text-gray-500">Sem próxima ação</p><p className="font-semibold text-gray-700">{kpis.semProximaAcao}</p></div>
+        <div className="border-t bg-gray-50 dark:bg-muted/40 px-4 py-3 grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+          <div><p className="text-gray-500 dark:text-gray-400">Valor filtrado</p><p className="font-semibold text-green-700">{formatCurrency(kpis.valorTotal)}</p></div>
+          <div><p className="text-gray-500 dark:text-gray-400">Ticket médio</p><p className="font-semibold">{formatCurrency(kpis.ticketMedio)}</p></div>
+          <div><p className="text-gray-500 dark:text-gray-400">Total</p><p className="font-semibold">{kpis.total}</p></div>
+          <div><p className="text-gray-500 dark:text-gray-400">Atrasados</p><p className="font-semibold text-red-700">{kpis.atrasados}</p></div>
+          <div><p className="text-gray-500 dark:text-gray-400">Sem responsável</p><p className="font-semibold text-orange-700">{kpis.semResponsavel}</p></div>
+          <div><p className="text-gray-500 dark:text-gray-400">Sem próxima ação</p><p className="font-semibold text-gray-700 dark:text-gray-300">{kpis.semProximaAcao}</p></div>
         </div>
       </div>
 

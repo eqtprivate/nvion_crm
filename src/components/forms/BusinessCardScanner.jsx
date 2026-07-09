@@ -63,7 +63,7 @@ export default function BusinessCardScanner({ open, onOpenChange, onContactExtra
         <div className="space-y-4">
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <Scan className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
               Upload a photo or image of the business card
             </p>
             <Input

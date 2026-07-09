@@ -40,22 +40,22 @@ export default function OpportunitiesChart({ opportunities = [] }) {
     <Card className="col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">Opportunities by user</CardTitle>
-        <Button variant="ghost" size="sm" className="text-gray-500">
+        <Button variant="ghost" size="sm" className="text-gray-500 dark:text-gray-400">
           Month <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex items-center gap-6 text-sm">
           <div>
-            <span className="text-gray-500">Amount</span>
+            <span className="text-gray-500 dark:text-gray-400">Amount</span>
             <p className="text-lg font-bold">${totals.amount.toLocaleString()}</p>
           </div>
           <div>
-            <span className="text-gray-500">Amount Weighted</span>
+            <span className="text-gray-500 dark:text-gray-400">Amount Weighted</span>
             <p className="text-lg font-bold">{totals.weighted.toFixed(1)}%</p>
           </div>
           <div>
-            <span className="text-gray-500">Count</span>
+            <span className="text-gray-500 dark:text-gray-400">Count</span>
             <p className="text-lg font-bold">{totals.count}</p>
           </div>
         </div>

@@ -126,7 +126,7 @@ export default function Profile() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Meu Perfil</h1>
-          <p className="text-gray-500 mt-1">Gerencie suas informações de acesso e identificação no NVION CRM</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie suas informações de acesso e identificação no NVION CRM</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
@@ -150,7 +150,7 @@ export default function Profile() {
                           <Button type="button" variant="outline" onClick={() => document.getElementById('photo-upload').click()} disabled={uploading} className="w-full sm:w-auto">
                             {uploading ? 'Enviando...' : <><Camera className="w-4 h-4 mr-2" />Enviar Foto</>}
                           </Button>
-                          <p className="text-xs text-gray-500 mt-2">JPG, PNG ou WebP. Máximo 2MB.</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">JPG, PNG ou WebP. Máximo 2MB.</p>
                         </div>
                       </div>
                     </div>
@@ -167,13 +167,13 @@ export default function Profile() {
 
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" value={user.email} disabled className="bg-gray-50" />
-                      <p className="text-xs text-gray-500">O email não pode ser alterado nesta tela.</p>
+                      <Input id="email" type="email" value={user.email} disabled className="bg-gray-50 dark:bg-muted/40" />
+                      <p className="text-xs text-gray-500 dark:text-gray-400">O email não pode ser alterado nesta tela.</p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="role">Perfil de Acesso</Label>
-                      <Input id="role" value={user.role} disabled className="bg-gray-50 capitalize" />
+                      <Input id="role" value={user.role} disabled className="bg-gray-50 dark:bg-muted/40 capitalize" />
                     </div>
 
                     <div className="pt-4">
@@ -238,7 +238,7 @@ export default function Profile() {
                     }
                   </Avatar>
                   <h3 className="font-semibold text-lg">{displayName}</h3>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                   <Badge className="mt-2 capitalize">{user.role}</Badge>
                 </div>
               </CardContent>
@@ -251,7 +251,7 @@ export default function Profile() {
                     <User className="w-6 h-6 text-blue-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-500">Tipo de Conta</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Conta</p>
                     <p className="font-semibold capitalize truncate">{user.role}</p>
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export default function Profile() {
                     <Mail className="w-6 h-6 text-green-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-500">Email Verificado</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Email Verificado</p>
                     <p className="font-semibold">Sim</p>
                   </div>
                 </div>
@@ -279,7 +279,7 @@ export default function Profile() {
                     <Shield className="w-6 h-6 text-purple-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-500">Segurança</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Segurança</p>
                     <p className="font-semibold">Supabase Auth</p>
                   </div>
                 </div>

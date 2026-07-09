@@ -57,7 +57,7 @@ const STATUS_STYLES = {
   em_implantacao: 'bg-blue-100 text-blue-800',
   em_analise: 'bg-yellow-100 text-yellow-800',
   suspensa: 'bg-orange-100 text-orange-800',
-  inativa: 'bg-gray-100 text-gray-700',
+  inativa: 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300',
 };
 
 const emptyForm = {
@@ -152,7 +152,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, role, onSubmit, loading })
                   </SelectContent>
                 </Select>
               ) : (
-                <Input value={STATUS_LABELS[form.status] || form.status || '-'} readOnly className="bg-gray-50" />
+                <Input value={STATUS_LABELS[form.status] || form.status || '-'} readOnly className="bg-gray-50 dark:bg-muted/40" />
               )}
             </div>
 
@@ -168,7 +168,7 @@ function EmpresaDialog({ open, onOpenChange, empresa, role, onSubmit, loading })
                   </SelectContent>
                 </Select>
               ) : (
-                <Input value={PLAN_LABELS[form.plano] || form.plano || '-'} readOnly className="bg-gray-50" />
+                <Input value={PLAN_LABELS[form.plano] || form.plano || '-'} readOnly className="bg-gray-50 dark:bg-muted/40" />
               )}
             </div>
           </div>
@@ -192,7 +192,7 @@ function UsersDialog({ open, onOpenChange, empresa, users }) {
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
             Empresa: <span className="font-medium text-gray-900 dark:text-gray-100">{empresa?.nome || '-'}</span>
           </div>
 
@@ -209,7 +209,7 @@ function UsersDialog({ open, onOpenChange, empresa, users }) {
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500 dark:text-gray-400">
                       Nenhum usuário vinculado a esta empresa.
                     </TableCell>
                   </TableRow>
@@ -365,7 +365,7 @@ export default function GestaoEmpresas() {
 
   if (!canAccess) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
         <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
         <p>Acesso restrito a super_admin e admin_empresa com módulo liberado.</p>
       </div>
@@ -374,7 +374,7 @@ export default function GestaoEmpresas() {
 
   if (isAdminEmpresa && !user?.empresa_id) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
         <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
         <p>Seu usuário não possui empresa vinculada. Solicite ajuste ao SUPERADMIN.</p>
       </div>
@@ -386,7 +386,7 @@ export default function GestaoEmpresas() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Gestão de Empresas</h1>
-          <p className="text-gray-500 mt-1">Administre empresas, planos e vínculos operacionais do NVION.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Administre empresas, planos e vínculos operacionais do NVION.</p>
         </div>
         {canCreate && (
           <Button onClick={openCreate} className="bg-primary hover:bg-primary-dark">
@@ -409,10 +409,10 @@ export default function GestaoEmpresas() {
         <KPICard title="Usuários vinculados" value={kpis.usuarios} icon={Users} iconColor="bg-purple-500" />
       </div>
 
-      <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-card rounded-lg shadow border border-gray-200 dark:border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
+            <TableRow className="bg-gray-50 dark:bg-muted/40">
               <TableHead>Empresa</TableHead>
               <TableHead>CNPJ</TableHead>
               <TableHead>Status</TableHead>
@@ -425,13 +425,13 @@ export default function GestaoEmpresas() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-10 text-gray-500 dark:text-gray-400">
                   Carregando empresas...
                 </TableCell>
               </TableRow>
             ) : empresas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                <TableCell colSpan={7} className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <Building2 className="w-10 h-10 mx-auto mb-2 text-gray-300" />
                   Nenhuma empresa encontrada.
                 </TableCell>
@@ -446,7 +446,7 @@ export default function GestaoEmpresas() {
                   </TableCell>
                   <TableCell className="font-mono text-sm">{empresa.cnpj || '-'}</TableCell>
                   <TableCell>
-                    <Badge className={STATUS_STYLES[empresa.status] || 'bg-gray-100 text-gray-700'}>
+                    <Badge className={STATUS_STYLES[empresa.status] || 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300'}>
                       {STATUS_LABELS[empresa.status] || empresa.status || '-'}
                     </Badge>
                   </TableCell>

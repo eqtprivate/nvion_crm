@@ -126,7 +126,7 @@ export default function DadosTeste() {
       <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
           <ShieldAlert className="w-12 h-12 text-gray-300 mx-auto" />
-          <p className="text-gray-500 font-medium">Acesso restrito</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Acesso restrito</p>
           <p className="text-sm text-gray-400">Apenas administradores podem acessar esta área.</p>
         </div>
       </div>
@@ -138,8 +138,8 @@ export default function DadosTeste() {
       <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
           <ShieldAlert className="w-12 h-12 text-yellow-400 mx-auto" />
-          <p className="text-gray-700 font-medium">Empresa não vinculada</p>
-          <p className="text-sm text-gray-500">Seu usuário não possui <code>empresa_vinculada</code> definida. Vincule uma empresa antes de popular dados.</p>
+          <p className="text-gray-700 dark:text-gray-300 font-medium">Empresa não vinculada</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Seu usuário não possui <code>empresa_vinculada</code> definida. Vincule uma empresa antes de popular dados.</p>
         </div>
       </div>
     );
@@ -150,12 +150,12 @@ export default function DadosTeste() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Dados de Teste</h1>
-          <p className="text-gray-500 mt-1">Carga controlada de dados fictícios para demonstração do NVION CRM.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Carga controlada de dados fictícios para demonstração do NVION CRM.</p>
         </div>
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><Database className="w-5 h-5" />Popular Dados de Demonstração</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600">Esta ação cria registros reais vinculados à empresa <strong>{empresa}</strong>. A carga evita duplicidade por nome ou e-mail e não apaga dados existentes.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Esta ação cria registros reais vinculados à empresa <strong>{empresa}</strong>. A carga evita duplicidade por nome ou e-mail e não apaga dados existentes.</p>
             <Button onClick={popular} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Database className="w-4 h-4 mr-2" />}
               {loading ? 'Populando dados...' : 'Popular Dados de Demonstração'}

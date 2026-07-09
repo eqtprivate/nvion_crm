@@ -63,7 +63,7 @@ export default function GestaoBackups() {
   if (!isAdmin) {
     return (
       <div className="p-8">
-        <Card><CardContent className="py-12 text-center text-gray-500">
+        <Card><CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
           <DatabaseBackup className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           Área restrita a administradores.
         </CardContent></Card>
@@ -78,7 +78,7 @@ export default function GestaoBackups() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <DatabaseBackup className="w-6 h-6 text-primary" /> Backups
           </h1>
-          <p className="text-gray-500 mt-1">Snapshots diários dos dados por empresa (retenção de 30 dias).</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Snapshots diários dos dados por empresa (retenção de 30 dias).</p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} /> Atualizar
@@ -97,7 +97,7 @@ export default function GestaoBackups() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-100">
+                <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-border">
                   <th className="px-4 py-3 font-medium">Data</th>
                   <th className="px-4 py-3 font-medium">Empresa</th>
                   <th className="px-4 py-3 font-medium">Registros</th>
@@ -113,11 +113,11 @@ export default function GestaoBackups() {
                   <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Nenhum backup ainda. O primeiro será gerado no próximo ciclo diário.</td></tr>
                 ) : (
                   rows.map((b) => (
-                    <tr key={b.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">{formatDate(b.backup_date)}</td>
-                      <td className="px-4 py-2.5 text-gray-800">{b.empresa_nome || '—'}</td>
-                      <td className="px-4 py-2.5 text-gray-600">{totalRegistros(b.tables)}</td>
-                      <td className="px-4 py-2.5 text-gray-600">{formatSize(b.size_bytes)}</td>
+                    <tr key={b.id} className="border-b border-gray-50 hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">{formatDate(b.backup_date)}</td>
+                      <td className="px-4 py-2.5 text-gray-800 dark:text-gray-200">{b.empresa_nome || '—'}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{totalRegistros(b.tables)}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{formatSize(b.size_bytes)}</td>
                       <td className="px-4 py-2.5">
                         <Badge className={b.status === 'ok' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
                           {b.status === 'ok' ? 'OK' : 'Falhou'}

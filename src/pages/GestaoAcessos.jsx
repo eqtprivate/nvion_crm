@@ -61,7 +61,7 @@ const ROLE_COLORS = {
   gestor_comercial: 'bg-blue-100 text-blue-800',
   lider_comercial: 'bg-cyan-100 text-cyan-800',
   gestor_financeiro: 'bg-emerald-100 text-emerald-800',
-  vendedor: 'bg-gray-100 text-gray-800',
+  vendedor: 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200',
   analista_plataforma: 'bg-teal-100 text-teal-800',
 };
 
@@ -77,7 +77,7 @@ const EMPRESA_STATUS_COLORS = {
   em_analise: 'bg-yellow-100 text-yellow-800',
   elegivel_para_credito: 'bg-cyan-100 text-cyan-800',
   suspensa: 'bg-red-100 text-red-800',
-  inativa: 'bg-gray-100 text-gray-800',
+  inativa: 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200',
 };
 
 const ALL_ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
@@ -149,7 +149,7 @@ function TemporaryPasswordDialog({ open, onOpenChange, payload }) {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {isReset ? (
               <>Nova senha temporária gerada para <strong>{payload?.display_name}</strong>.</>
             ) : (
@@ -165,7 +165,7 @@ function TemporaryPasswordDialog({ open, onOpenChange, payload }) {
               {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Oriente o usuário a acessar o NVION com esta senha e depois alterar a senha no perfil.
           </p>
         </div>
@@ -235,7 +235,7 @@ function ProfileDialog({ open, onOpenChange, profile, onSubmit, isLoading, empre
         )}
 
         {profile && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
+          <div className="bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg p-3 text-xs text-gray-500 dark:text-gray-400">
             UID Supabase: <span className="font-mono">{profile.id}</span>
           </div>
         )}
@@ -586,11 +586,11 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
         <KPICard title="Pendentes" value={kpis.pendentes} icon={Clock} iconColor="bg-yellow-500" />
       </div>
 
-      <div className="bg-white rounded-lg shadow border border-gray-200">
+      <div className="bg-white dark:bg-card rounded-lg shadow border border-gray-200 dark:border-border">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
+              <TableRow className="bg-gray-50 dark:bg-muted/40">
                 <TableHead>Usuário</TableHead>
                 <TableHead>Perfil</TableHead>
                 {isSuperAdmin && <TableHead>Empresa</TableHead>}
@@ -601,7 +601,7 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center py-12 text-gray-500">
+                <TableRow><TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                 </TableCell></TableRow>
               ) : usuarios.length === 0 ? (
@@ -611,20 +611,20 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                 </TableCell></TableRow>
               ) : (
                 usuarios.map((target) => (
-                  <TableRow key={target.id} className="hover:bg-gray-50 border-b border-gray-100">
+                  <TableRow key={target.id} className="hover:bg-gray-50 dark:hover:bg-muted/40 border-b border-gray-100 dark:border-border">
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-900 dark:text-gray-100">{target.display_name}</span>
-                        <span className="text-sm text-gray-500">{target.email}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{target.email}</span>
                         <span className="text-[11px] text-gray-300 font-mono">{target.id}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={ROLE_COLORS[target.role] || 'bg-gray-100 text-gray-800'}>{ROLE_LABELS[target.role] || target.role}</Badge>
+                      <Badge className={ROLE_COLORS[target.role] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>{ROLE_LABELS[target.role] || target.role}</Badge>
                     </TableCell>
-                    {isSuperAdmin && <TableCell className="text-sm text-gray-600">{target.empresa_vinculada || '-'}</TableCell>}
-                    <TableCell className="text-sm text-gray-600">{target.modulos_permitidos?.length || 0} módulos</TableCell>
-                    <TableCell><Badge className={STATUS_COLORS[target.status] || 'bg-gray-100 text-gray-800'}>{target.status}</Badge></TableCell>
+                    {isSuperAdmin && <TableCell className="text-sm text-gray-600 dark:text-gray-300">{target.empresa_vinculada || '-'}</TableCell>}
+                    <TableCell className="text-sm text-gray-600 dark:text-gray-300">{target.modulos_permitidos?.length || 0} módulos</TableCell>
+                    <TableCell><Badge className={STATUS_COLORS[target.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>{target.status}</Badge></TableCell>
                     <TableCell>
                       {canManage(target) ? (
                         <DropdownMenu>
@@ -748,7 +748,7 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
         <KPICard title="Perfis" value={kpis.totalUsuarios} icon={Users} iconColor="bg-purple-500" />
       </div>
 
-      <div className="bg-white rounded-lg shadow border border-gray-200 divide-y divide-gray-100">
+      <div className="bg-white dark:bg-card rounded-lg shadow border border-gray-200 dark:border-border divide-y divide-gray-100">
         {isLoading ? (
           <div className="py-12 text-center text-gray-400">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
@@ -765,18 +765,18 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
             const isExpanded = expandedEmpresa === empresa.id;
             return (
               <div key={empresa.id}>
-                <div className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedEmpresa(isExpanded ? null : empresa.id)}>
+                <div className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-muted/40 cursor-pointer" onClick={() => setExpandedEmpresa(isExpanded ? null : empresa.id)}>
                   <div className="flex items-center gap-3">
                     {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
                     <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center"><Building2 className="w-5 h-5 text-blue-600" /></div>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-100">{getEmpresaNome(empresa)}</p>
-                      <p className="text-xs text-gray-500">{empresa.cnpj || empresa.plano || ''}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{empresa.cnpj || empresa.plano || ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 hidden sm:inline">{users.length} perfil(is)</span>
-                    <Badge className={EMPRESA_STATUS_COLORS[empresa.status] || 'bg-gray-100 text-gray-800'} onClick={(event) => event.stopPropagation()}>{empresa.status?.replace(/_/g, ' ')}</Badge>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">{users.length} perfil(is)</span>
+                    <Badge className={EMPRESA_STATUS_COLORS[empresa.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'} onClick={(event) => event.stopPropagation()}>{empresa.status?.replace(/_/g, ' ')}</Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
@@ -791,24 +791,24 @@ function EmpresasTab({ todosUsuarios, empresas, isLoading }) {
                 </div>
 
                 {isExpanded && (
-                  <div className="px-6 pb-4 bg-gray-50 border-t border-gray-100">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-3">Perfis vinculados</p>
+                  <div className="px-6 pb-4 bg-gray-50 dark:bg-muted/40 border-t border-gray-100 dark:border-border">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 mt-3">Perfis vinculados</p>
                     {users.length === 0 ? (
                       <p className="text-sm text-gray-400 italic">Nenhum perfil vinculado a esta empresa.</p>
                     ) : (
                       <div className="space-y-1.5">
                         {users.map((profile) => (
-                          <div key={profile.id} className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-100">
+                          <div key={profile.id} className="flex items-center justify-between bg-white dark:bg-card rounded px-3 py-2 border border-gray-100 dark:border-border">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{profile.display_name?.charAt(0)?.toUpperCase()}</div>
                               <div>
                                 <p className="text-sm font-medium">{profile.display_name}</p>
-                                <p className="text-xs text-gray-500">{profile.email}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{profile.email}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge className={`text-xs ${ROLE_COLORS[profile.role] || 'bg-gray-100 text-gray-800'}`}>{ROLE_LABELS[profile.role] || profile.role}</Badge>
-                              <Badge className={`text-xs ${STATUS_COLORS[profile.status] || 'bg-gray-100 text-gray-800'}`}>{profile.status}</Badge>
+                              <Badge className={`text-xs ${ROLE_COLORS[profile.role] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}`}>{ROLE_LABELS[profile.role] || profile.role}</Badge>
+                              <Badge className={`text-xs ${STATUS_COLORS[profile.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}`}>{profile.status}</Badge>
                             </div>
                           </div>
                         ))}
@@ -852,12 +852,12 @@ export default function GestaoAcessos() {
     <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Gestão de Acessos</h1>
-        <p className="text-gray-500 mt-1">Crie acessos, gerencie perfis, módulos e empresas usando Supabase</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Crie acessos, gerencie perfis, módulos e empresas usando Supabase</p>
       </div>
 
       {isSuperAdmin ? (
         <Tabs defaultValue="usuarios" className="space-y-6">
-          <TabsList className="bg-white border h-auto">
+          <TabsList className="bg-white dark:bg-card border h-auto">
             <TabsTrigger value="usuarios" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
             <TabsTrigger value="empresas" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"><Building2 className="w-4 h-4 mr-2" />Empresas</TabsTrigger>
           </TabsList>

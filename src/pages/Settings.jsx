@@ -36,12 +36,12 @@ function SettingsShortcutCard({ item }) {
     <Card className="h-full">
       <CardContent className="p-4 flex flex-col h-full">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-            <item.icon className="w-5 h-5 text-gray-700" />
+          <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-muted flex items-center justify-center shrink-0">
+            <item.icon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 leading-tight">{item.title}</h3>
-            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.description}</p>
           </div>
         </div>
         {openButton}
@@ -56,7 +56,7 @@ function SettingsSection({ title, description, items }) {
     <section className="space-y-3">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
-        <p className="text-sm text-gray-500">{description}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item) => <SettingsShortcutCard key={item.key || item.path} item={item} />)}
@@ -288,7 +288,7 @@ function MinhaEmpresaTab({ user }) {
     uploadLogoMutation.mutate(file);
   };
 
-  if (isLoading) return <p className="text-gray-500 py-8 text-center">Carregando dados da empresa...</p>;
+  if (isLoading) return <p className="text-gray-500 dark:text-gray-400 py-8 text-center">Carregando dados da empresa...</p>;
   if (!form) return (
     <Card className="border-yellow-200 bg-yellow-50">
       <CardContent className="p-6 flex gap-3 items-start">
@@ -306,8 +306,8 @@ function MinhaEmpresaTab({ user }) {
           <CardDescription>Razão social, CNPJ e dados de contato</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border bg-gray-50 p-4">
-            <div className="h-20 w-32 rounded border bg-white p-2 flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border bg-gray-50 dark:bg-muted/40 p-4">
+            <div className="h-20 w-32 rounded border bg-white dark:bg-card p-2 flex items-center justify-center">
               {form.logo_url ? (
                 <img src={form.logo_url} alt="Logo" className="max-h-full max-w-full object-contain" />
               ) : (
@@ -316,7 +316,7 @@ function MinhaEmpresaTab({ user }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Logomarca da empresa</p>
-              <p className="text-xs text-gray-500 mt-1">PNG, JPG ou WebP ate 2 MB.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG ou WebP ate 2 MB.</p>
               {uploadError && <p className="text-xs text-red-600 mt-2">{uploadError}</p>}
             </div>
             <div>
@@ -353,7 +353,7 @@ function MinhaEmpresaTab({ user }) {
             <div><Label>Website</Label><Input value={form.website || ''} onChange={(e) => set('website', e.target.value)} placeholder="https://" /></div>
             <div>
               <Label>Plano contratado</Label>
-              <Input value={form.plano_contratado ? (planos.find((p) => p.slug === form.plano_contratado)?.label || form.plano_contratado) : 'Não definido'} readOnly className="bg-gray-50 cursor-default" />
+              <Input value={form.plano_contratado ? (planos.find((p) => p.slug === form.plano_contratado)?.label || form.plano_contratado) : 'Não definido'} readOnly className="bg-gray-50 dark:bg-muted/40 cursor-default" />
             </div>
             <div className="md:col-span-2"><Label>URL do Logotipo</Label><Input value={form.logo_url || ''} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://..." /></div>
           </div>
@@ -494,7 +494,7 @@ export default function Settings() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Configurações</h1>
-          <p className="text-gray-500 mt-1">Central administrativa, preferências da plataforma e operação de dados</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Central administrativa, preferências da plataforma e operação de dados</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

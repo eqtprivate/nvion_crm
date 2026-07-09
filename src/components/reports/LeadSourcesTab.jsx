@@ -165,7 +165,7 @@ export default function LeadSourcesTab({ filteredLeads, filteredOpportunities })
                 ))}
                 {filteredLeads.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No leads</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No leads</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -198,7 +198,7 @@ export default function LeadSourcesTab({ filteredLeads, filteredOpportunities })
                 ))}
                 {sourcePerformance.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-gray-500">No data</TableCell>
+                    <TableCell colSpan={4} className="text-center text-gray-500 dark:text-gray-400">No data</TableCell>
                   </TableRow>
                 )}
               </TableBody>

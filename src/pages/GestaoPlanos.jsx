@@ -221,7 +221,7 @@ export default function GestaoPlanos() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Gestão de Planos</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Gerencie os planos disponíveis e seus módulos</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Gerencie os planos disponíveis e seus módulos</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="w-4 h-4" /> Novo Plano
@@ -230,7 +230,7 @@ export default function GestaoPlanos() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {planos.map((p) => (
-          <div key={p.id} className="bg-white rounded-xl border p-4 space-y-2 shadow-sm">
+          <div key={p.id} className="bg-white dark:bg-card rounded-xl border p-4 space-y-2 shadow-sm">
             <div className="flex items-start justify-between gap-2">
               <span className="font-semibold text-gray-900 dark:text-gray-100">{p.label}</span>
               {p.ativo ? (
@@ -239,11 +239,11 @@ export default function GestaoPlanos() {
                 <Badge variant="secondary" className="text-xs">Inativo</Badge>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
               <Users className="w-3.5 h-3.5" />
               {p.max_usuarios === 0 ? 'Ilimitado' : `Até ${p.max_usuarios} usuários`}
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
               <Package className="w-3.5 h-3.5" />
               {(p.modulos || []).length} módulos
             </div>
@@ -254,10 +254,10 @@ export default function GestaoPlanos() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-card rounded-xl border shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
+            <TableRow className="bg-gray-50 dark:bg-muted/40">
               <TableHead>Plano</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Máx. Usuários</TableHead>
@@ -284,7 +284,7 @@ export default function GestaoPlanos() {
               planos.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.label}</TableCell>
-                  <TableCell><code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">{p.slug}</code></TableCell>
+                  <TableCell><code className="text-xs bg-gray-100 dark:bg-muted px-1.5 py-0.5 rounded">{p.slug}</code></TableCell>
                   <TableCell>{p.max_usuarios === 0 ? '∞ ilimitado' : p.max_usuarios}</TableCell>
                   <TableCell>{(p.modulos || []).length}</TableCell>
                   <TableCell>{empresasPorPlano(p.slug)}</TableCell>
@@ -330,7 +330,7 @@ export default function GestaoPlanos() {
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600">Tem certeza que deseja excluir este plano? Essa ação não pode ser desfeita.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Tem certeza que deseja excluir este plano? Essa ação não pode ser desfeita.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
             <Button

@@ -136,7 +136,7 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Upload className="w-8 h-8 text-gray-400" />
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {file ? file.name : 'Clique para enviar CSV ou Excel'}
                       </p>
                       <p className="text-xs text-gray-400">CSV, XLS, XLSX</p>
@@ -157,7 +157,7 @@ export default function ImportContactsDialog({ open, onOpenChange, onImportCompl
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
+              <div className="bg-gray-50 dark:bg-muted/40 rounded-lg p-3 text-xs text-gray-600 dark:text-gray-300 space-y-1">
                 <p className="font-semibold">Colunas obrigatórias:</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-2">
                   <li>name</li>

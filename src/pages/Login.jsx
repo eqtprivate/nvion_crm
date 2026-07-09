@@ -81,7 +81,7 @@ function EsqueciSenhaDialog({ open, onOpenChange }) {
 
         {step === 'form' ? (
           <form onSubmit={handleSubmit} className="space-y-4 py-2">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Informe seu email cadastrado no Supabase Auth. Enviaremos o link de recuperação de senha.
             </p>
             <div className="space-y-1.5">
@@ -116,7 +116,7 @@ function EsqueciSenhaDialog({ open, onOpenChange }) {
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
             <div>
               <p className="font-semibold text-gray-900 dark:text-gray-100">Solicitação enviada</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Verifique sua caixa de entrada em <strong>{emailInput}</strong> e siga as instruções do Supabase Auth.
               </p>
             </div>
@@ -154,13 +154,13 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white dark:bg-card rounded-2xl shadow-2xl p-8">
           <div className="flex justify-center mb-8">
             <img src="https://media.base44.com/images/public/6a408d646f21968247407e53/b0d5da66e_nvion_logo_white.png" alt="NVION" className="h-12 w-auto" />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center mb-1">Bem-vindo</h1>
-          <p className="text-sm text-gray-500 text-center mb-8">Acesse sua conta para continuar</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-8">Acesse sua conta para continuar</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
@@ -185,7 +185,7 @@ export default function Login() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input id="password" type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="pl-10 pr-10" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-300">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>

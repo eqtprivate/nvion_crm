@@ -138,7 +138,7 @@ export default function Accounts() {
 
   const statusColors = {
     ativa: 'bg-green-100 text-green-800',
-    inativa: 'bg-gray-100 text-gray-800',
+    inativa: 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200',
     em_analise: 'bg-yellow-100 text-yellow-800',
     suspensa: 'bg-red-100 text-red-800',
   };
@@ -169,7 +169,7 @@ export default function Accounts() {
         <AccountKPICard title="Atividades Vencidas" value={kpis.overdueAccounts} chartData={[30, 35, 40, 38, 42, 45]} color="red" />
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -192,12 +192,12 @@ export default function Accounts() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500">Carregando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500 dark:text-gray-400">Carregando...</TableCell></TableRow>
               ) : filteredAccounts.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500"><div className="flex flex-col items-center gap-2"><Building2 className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma administradora encontrada</span></div></TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500 dark:text-gray-400"><div className="flex flex-col items-center gap-2"><Building2 className="w-12 h-12 text-gray-300" /><span className="font-medium">Nenhuma administradora encontrada</span></div></TableCell></TableRow>
               ) : (
                 filteredAccounts.map((account) => (
-                  <TableRow key={account.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleViewInsights(account)}>
+                  <TableRow key={account.id} className="hover:bg-gray-50 dark:hover:bg-muted/40 cursor-pointer" onClick={() => handleViewInsights(account)}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -205,7 +205,7 @@ export default function Accounts() {
                         </div>
                         <div>
                           <p className="font-medium">{account.name}</p>
-                          <p className="text-xs text-gray-500">{formatPhone(account.telefone) || ''}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatPhone(account.telefone) || ''}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -214,7 +214,7 @@ export default function Accounts() {
                     <TableCell className="hidden md:table-cell text-sm">{account.email || '-'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">{account.prazo_medio_pagamento ? `${account.prazo_medio_pagamento} dias` : '-'}</TableCell>
                     <TableCell>
-                      <Badge className={statusColors[account.status] || 'bg-gray-100 text-gray-800'}>
+                      <Badge className={statusColors[account.status] || 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200'}>
                         {statusLabel[account.status] || account.status || '-'}
                       </Badge>
                     </TableCell>

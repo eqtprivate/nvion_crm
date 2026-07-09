@@ -135,7 +135,7 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
             </LineChart>
           </ResponsiveContainer>
           <div className="mt-4 text-center">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Average Accuracy: {' '}
               <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
                 {forecastingAccuracy.length > 0
@@ -243,7 +243,7 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
                 ))}
                 {openOpps.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No open deals</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No open deals</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -273,7 +273,7 @@ export default function PipelineForecastTab({ filteredOpportunities, filteredAct
               <TableBody>
                 {dealsAtRisk.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No at-risk deals</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No at-risk deals</TableCell>
                   </TableRow>
                 ) : (
                   dealsAtRisk.map((deal) => (

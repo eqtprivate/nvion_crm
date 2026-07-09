@@ -47,12 +47,12 @@ export default function ForcePasswordChange() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+      <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl shadow-2xl p-8">
         <div className="flex items-center gap-2 mb-1">
           <ShieldAlert className="w-5 h-5 text-primary" />
           <h1 className="text-xl font-bold text-gray-900">Atualize sua senha</h1>
         </div>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Por segurança, sua senha precisa ser atualizada para o novo padrão antes de continuar.
         </p>
 
@@ -68,7 +68,7 @@ export default function ForcePasswordChange() {
                 className="pr-10"
                 autoFocus
               />
-              <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-300">
                 {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -98,7 +98,7 @@ export default function ForcePasswordChange() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Salvando...' : 'Salvar nova senha'}
           </Button>
-          <button type="button" onClick={logout} className="w-full text-xs text-gray-400 hover:text-gray-600">Sair</button>
+          <button type="button" onClick={logout} className="w-full text-xs text-gray-400 hover:text-gray-600 dark:text-gray-300">Sair</button>
         </form>
       </div>
     </div>

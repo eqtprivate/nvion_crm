@@ -36,8 +36,8 @@ function mesLabel(ym) {
 function ChartTooltip({ active, payload, label, labelKey }) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="rounded-md border bg-white px-3 py-2 shadow-sm text-xs">
-      <p className="font-medium text-gray-700">{labelKey ? payload[0]?.payload?.[labelKey] : label}</p>
+    <div className="rounded-md border bg-white dark:bg-card px-3 py-2 shadow-sm text-xs">
+      <p className="font-medium text-gray-700 dark:text-gray-300">{labelKey ? payload[0]?.payload?.[labelKey] : label}</p>
       <p className="text-gray-900 dark:text-gray-100 font-semibold">{money(payload[0].value)}</p>
     </div>
   );
@@ -52,7 +52,7 @@ function KPI({ title, value, Icon, tone = 'default', sub }) {
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-1">
-          <p className="text-xs text-gray-500">{title}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{title}</p>
           {Icon && <Icon className="w-4 h-4 text-gray-400" />}
         </div>
         <p className={`text-xl font-bold ${tones[tone]}`}>{value}</p>
@@ -142,7 +142,7 @@ export default function PainelRecebiveis() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Painel de Recebíveis</h1>
-          <p className="text-gray-500 mt-1">Indicadores da carteira, elegibilidade e base para antecipação</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Indicadores da carteira, elegibilidade e base para antecipação</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtrados.length === 0}>
           <Download className="w-4 h-4 mr-2" />Exportar indicadores
@@ -150,7 +150,7 @@ export default function PainelRecebiveis() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-3">
+      <div className="bg-white dark:bg-card rounded-lg shadow p-4 mb-6 flex flex-wrap gap-3">
         <Select value={filterAdministradora} onValueChange={setFilterAdministradora}>
           <SelectTrigger className="w-52"><SelectValue placeholder="Administradora" /></SelectTrigger>
           <SelectContent>
@@ -194,9 +194,9 @@ export default function PainelRecebiveis() {
       </div>
 
       {isLoading ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">Carregando indicadores...</div>
+        <div className="bg-white dark:bg-card rounded-lg shadow p-12 text-center text-gray-500 dark:text-gray-400">Carregando indicadores...</div>
       ) : filtrados.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
+        <div className="bg-white dark:bg-card rounded-lg shadow p-12 text-center text-gray-500 dark:text-gray-400">
           <Wallet className="w-12 h-12 mx-auto mb-2 text-gray-300" />
           Nenhum recebível encontrado para os filtros selecionados.
         </div>
@@ -270,13 +270,13 @@ export default function PainelRecebiveis() {
                 <CardContent>
                   <div className="flex items-end justify-between mb-2 text-sm">
                     <span className="text-blue-700 font-semibold">Elegível {money(m.elegibilidade.elegivelValor)}</span>
-                    <span className="text-gray-500">Inelegível {money(m.elegibilidade.inelegivelValor)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Inelegível {money(m.elegibilidade.inelegivelValor)}</span>
                   </div>
-                  <div className="flex h-4 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div className="flex h-4 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-muted">
                     <div className="h-full" style={{ width: `${elegTotal > 0 ? (m.elegibilidade.elegivelValor / elegTotal) * 100 : 0}%`, background: COLOR.blue }} title={`Elegível ${pct(m.elegibilidade.elegivelPct)}`} />
                     <div className="h-full" style={{ width: `${elegTotal > 0 ? (m.elegibilidade.inelegivelValor / elegTotal) * 100 : 0}%`, background: COLOR.neutral }} />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{pct(m.elegibilidade.elegivelPct)} da carteira a receber é elegível.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{pct(m.elegibilidade.elegivelPct)} da carteira a receber é elegível.</p>
 
                   {m.elegibilidade.porMotivo.length > 0 && (
                     <div className="mt-4">
@@ -284,8 +284,8 @@ export default function PainelRecebiveis() {
                       <div className="space-y-1.5">
                         {m.elegibilidade.porMotivo.slice(0, 5).map((mo) => (
                           <div key={mo.motivo} className="flex justify-between text-sm">
-                            <span className="text-gray-600 truncate mr-2">{mo.motivo}</span>
-                            <span className="font-medium text-gray-800">{money(mo.valor)}</span>
+                            <span className="text-gray-600 dark:text-gray-300 truncate mr-2">{mo.motivo}</span>
+                            <span className="font-medium text-gray-800 dark:text-gray-200">{money(mo.valor)}</span>
                           </div>
                         ))}
                       </div>
@@ -297,9 +297,9 @@ export default function PainelRecebiveis() {
               <Card>
                 <CardHeader><CardTitle className="text-base">Base histórica (para o motor de limite)</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-3 gap-3 text-center">
-                  <div><p className="text-xs text-gray-500">Meses de operação</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{m.historico.mesesOperacao}</p></div>
-                  <div><p className="text-xs text-gray-500">Volume recebido</p><p className="text-xl font-bold text-green-700">{moneyShort(m.historico.volumeRecebido)}</p></div>
-                  <div><p className="text-xs text-gray-500">Conversão</p><p className="text-xl font-bold text-primary">{pct(m.realizadoVsPrevisto.taxaConversao)}</p></div>
+                  <div><p className="text-xs text-gray-500 dark:text-gray-400">Meses de operação</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{m.historico.mesesOperacao}</p></div>
+                  <div><p className="text-xs text-gray-500 dark:text-gray-400">Volume recebido</p><p className="text-xl font-bold text-green-700">{moneyShort(m.historico.volumeRecebido)}</p></div>
+                  <div><p className="text-xs text-gray-500 dark:text-gray-400">Conversão</p><p className="text-xl font-bold text-primary">{pct(m.realizadoVsPrevisto.taxaConversao)}</p></div>
                 </CardContent>
               </Card>
             </div>

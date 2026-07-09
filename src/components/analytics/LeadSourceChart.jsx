@@ -31,7 +31,7 @@ export default function LeadSourceChart({ leads = [], opportunities = [] }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">Lead Source</CardTitle>
-        <button className="text-gray-400 hover:text-gray-600">⋮</button>
+        <button className="text-gray-400 hover:text-gray-600 dark:text-gray-300">⋮</button>
       </CardHeader>
       <CardContent>
         <div className="relative">
@@ -53,7 +53,7 @@ export default function LeadSourceChart({ leads = [], opportunities = [] }) {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-sm text-gray-500">Top Source</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Top Source</p>
             <p className="text-3xl font-bold">{topSource.value}%</p>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function LeadSourceChart({ leads = [], opportunities = [] }) {
           {data.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-              <span className="text-sm text-gray-600">{item.name}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">{item.name}</span>
             </div>
           ))}
         </div>

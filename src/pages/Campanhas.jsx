@@ -31,7 +31,7 @@ const STATUS_LABEL = {
 };
 
 const STATUS_COLORS = {
-  rascunho: 'bg-gray-100 text-gray-700',
+  rascunho: 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300',
   ativa: 'bg-green-100 text-green-800',
   pausada: 'bg-yellow-100 text-yellow-800',
   encerrada: 'bg-blue-100 text-blue-800',
@@ -477,7 +477,7 @@ export default function Campanhas() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Campanhas</h1>
-          <p className="text-gray-500 mt-1">Crie, acompanhe e mensure campanhas comerciais do funil NVION.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Crie, acompanhe e mensure campanhas comerciais do funil NVION.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
@@ -496,16 +496,16 @@ export default function Campanhas() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Campanhas</p><p className="text-xl font-bold">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Ativas</p><p className="text-xl font-bold text-green-700">{kpis.ativas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Leads</p><p className="text-xl font-bold text-blue-700">{kpis.leads}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Vendas</p><p className="text-xl font-bold text-primary">{kpis.vendas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Valor cartas</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.valorCartas)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Orç. previsto</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.orcamentoPrevisto)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Orç. realizado</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.orcamentoRealizado)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Campanhas</p><p className="text-xl font-bold">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Ativas</p><p className="text-xl font-bold text-green-700">{kpis.ativas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Leads</p><p className="text-xl font-bold text-blue-700">{kpis.leads}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Vendas</p><p className="text-xl font-bold text-primary">{kpis.vendas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Valor cartas</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.valorCartas)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Orç. previsto</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.orcamentoPrevisto)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Orç. realizado</p><p className="text-xl font-bold text-gray-900 dark:text-gray-100">{money(kpis.orcamentoRealizado)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-56">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -549,9 +549,9 @@ export default function Campanhas() {
             </TableHeader>
             <TableBody>
               {campanhasQuery.isLoading ? (
-                <TableRow><TableCell colSpan={11} className="text-center py-10 text-gray-500">Carregando campanhas...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={11} className="text-center py-10 text-gray-500 dark:text-gray-400">Carregando campanhas...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={11} className="text-center py-12 text-gray-500"><Megaphone className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma campanha encontrada.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={11} className="text-center py-12 text-gray-500 dark:text-gray-400"><Megaphone className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma campanha encontrada.</TableCell></TableRow>
               ) : filtered.map((campanha) => (
                 <TableRow key={campanha.id}>
                   <TableCell>
@@ -559,7 +559,7 @@ export default function Campanhas() {
                     <div className="text-xs text-gray-400 font-mono">{campanha.codigo_campanha || '-'}</div>
                   </TableCell>
                   <TableCell>{TIPO_LABEL[campanha.tipo_campanha] || campanha.tipo_campanha || '-'}</TableCell>
-                  <TableCell><Badge className={STATUS_COLORS[campanha.status_campanha] || 'bg-gray-100 text-gray-700'}>{STATUS_LABEL[campanha.status_campanha] || campanha.status_campanha || '-'}</Badge></TableCell>
+                  <TableCell><Badge className={STATUS_COLORS[campanha.status_campanha] || 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300'}>{STATUS_LABEL[campanha.status_campanha] || campanha.status_campanha || '-'}</Badge></TableCell>
                   <TableCell>{formatDate(campanha.data_inicio)} → {formatDate(campanha.data_fim)}</TableCell>
                   <TableCell><div>{money(campanha.orcamento_realizado)}</div><div className="text-xs text-gray-400">prev. {money(campanha.orcamento_previsto)}</div></TableCell>
                   <TableCell>{campanha.metrics.leads_gerados}</TableCell>

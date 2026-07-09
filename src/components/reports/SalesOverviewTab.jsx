@@ -170,7 +170,7 @@ export default function SalesOverviewTab({ filteredOpportunities, filteredLeads 
               <TableBody>
                 {recentWonDeals.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No won deals</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No won deals</TableCell>
                   </TableRow>
                 ) : (
                   recentWonDeals.map((deal) => (
@@ -202,7 +202,7 @@ export default function SalesOverviewTab({ filteredOpportunities, filteredLeads 
               <TableBody>
                 {topDeals.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No deals</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No deals</TableCell>
                   </TableRow>
                 ) : (
                   topDeals.map((deal) => (

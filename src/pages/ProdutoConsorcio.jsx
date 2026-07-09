@@ -217,7 +217,7 @@ export default function ProdutoConsorcio() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Produtos de Consórcio</h1>
-          <p className="text-gray-500 mt-1">Cadastro de produtos, administradoras, categorias e parâmetros de comissão</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Cadastro de produtos, administradoras, categorias e parâmetros de comissão</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}><Download className="w-4 h-4 mr-2" />Exportar CSV</Button>
@@ -226,13 +226,13 @@ export default function ProdutoConsorcio() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total de Produtos</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Produtos Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Administradoras Vinculadas</p><p className="text-2xl font-bold text-blue-700">{kpis.administradoras}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Comissão Média</p><p className="text-2xl font-bold text-primary">{formatPercent(kpis.comissaoMedia)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Total de Produtos</p><p className="text-2xl font-bold">{kpis.total}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Produtos Ativos</p><p className="text-2xl font-bold text-green-700">{kpis.ativos}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Administradoras Vinculadas</p><p className="text-2xl font-bold text-blue-700">{kpis.administradoras}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Comissão Média</p><p className="text-2xl font-bold text-primary">{formatPercent(kpis.comissaoMedia)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -254,12 +254,12 @@ export default function ProdutoConsorcio() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500">Carregando produtos...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500 dark:text-gray-400">Carregando produtos...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500"><Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum produto encontrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-12 text-gray-500 dark:text-gray-400"><Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhum produto encontrado</TableCell></TableRow>
               ) : filtered.map((produto) => (
                 <TableRow key={produto.id}>
-                  <TableCell><p className="font-medium">{produto.nome_produto}</p><p className="text-xs text-gray-500">{produto.observacoes || ''}</p></TableCell>
+                  <TableCell><p className="font-medium">{produto.nome_produto}</p><p className="text-xs text-gray-500 dark:text-gray-400">{produto.observacoes || ''}</p></TableCell>
                   <TableCell>{produto.administradora_vinculada || '-'}</TableCell>
                   <TableCell>{categoriaLabel[produto.categoria] || produto.categoria || '-'}</TableCell>
                   <TableCell>{produto.percentual_comissao_padrao ? formatPercent(produto.percentual_comissao_padrao) : '-'}</TableCell>

@@ -37,7 +37,7 @@ const STATUS_COLORS = {
   pendente: 'bg-yellow-100 text-yellow-800',
   conciliada: 'bg-green-100 text-green-800',
   divergente: 'bg-red-100 text-red-800',
-  nao_encontrada: 'bg-gray-100 text-gray-700',
+  nao_encontrada: 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300',
   duplicada: 'bg-orange-100 text-orange-800',
   ignorada: 'bg-slate-100 text-slate-700',
 };
@@ -452,7 +452,7 @@ export default function ConciliacaoAdministradora() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Conciliação com Administradoras</h1>
-          <p className="text-gray-500 mt-1">Importe relatórios das administradoras e concilie com vendas e comissões internas</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Importe relatórios das administradoras e concilie com vendas e comissões internas</p>
         </div>
         <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
           <Download className="w-4 h-4 mr-2" />Exportar CSV
@@ -460,14 +460,14 @@ export default function ConciliacaoAdministradora() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Importações</p><p className="text-2xl font-bold">{kpis.totalImportacoes}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Conciliadas</p><p className="text-2xl font-bold text-green-700">{kpis.conciliadas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Divergentes</p><p className="text-2xl font-bold text-red-700">{kpis.divergentes}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Não encontradas</p><p className="text-2xl font-bold text-gray-700">{kpis.naoEncontradas}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Valor conciliado</p><p className="text-2xl font-bold text-primary">{money(kpis.valorConciliado)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Importações</p><p className="text-2xl font-bold">{kpis.totalImportacoes}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Conciliadas</p><p className="text-2xl font-bold text-green-700">{kpis.conciliadas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Divergentes</p><p className="text-2xl font-bold text-red-700">{kpis.divergentes}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Não encontradas</p><p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{kpis.naoEncontradas}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-gray-500 dark:text-gray-400">Valor conciliado</p><p className="text-2xl font-bold text-primary">{money(kpis.valorConciliado)}</p></CardContent></Card>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
+      <div className="bg-white dark:bg-card rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div>
             <Label>Arquivo CSV</Label>
@@ -496,7 +496,7 @@ export default function ConciliacaoAdministradora() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-card rounded-lg shadow">
         <div className="p-4 border-b flex flex-col xl:flex-row gap-3 xl:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -546,7 +546,7 @@ export default function ConciliacaoAdministradora() {
               {isLoading ? (
                 <TableRow><TableCell colSpan={12} className="text-center py-8">Carregando conciliações...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={12} className="text-center py-12 text-gray-500"><FileCheck className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma conciliação encontrada</TableCell></TableRow>
+                <TableRow><TableCell colSpan={12} className="text-center py-12 text-gray-500 dark:text-gray-400"><FileCheck className="w-12 h-12 mx-auto mb-2 text-gray-300" />Nenhuma conciliação encontrada</TableCell></TableRow>
               ) : filtered.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.cliente_relatorio || '-'}</TableCell>

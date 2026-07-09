@@ -53,8 +53,8 @@ export default function ManageModulesDialog({ open, onOpenChange, user, onSubmit
         <form onSubmit={handleSubmit}>
           <div className="py-4 space-y-4">
             {user?.role && (
-              <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                <span className="text-sm text-gray-600">
+              <div className="flex items-center justify-between bg-gray-50 dark:bg-muted/40 rounded-lg p-3">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Padrão do perfil: <strong>{ROLE_LABELS[user.role]}</strong>
                 </span>
                 <Button type="button" variant="outline" size="sm" onClick={applyRoleDefaults}>

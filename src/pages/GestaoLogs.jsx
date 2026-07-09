@@ -100,7 +100,7 @@ export default function GestaoLogs() {
   if (!isAdmin) {
     return (
       <div className="p-8">
-        <Card><CardContent className="py-12 text-center text-gray-500">
+        <Card><CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
           <ScrollText className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           Área restrita a administradores.
         </CardContent></Card>
@@ -115,7 +115,7 @@ export default function GestaoLogs() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <ScrollText className="w-6 h-6 text-primary" /> Logs de Auditoria
           </h1>
-          <p className="text-gray-500 mt-1">Registro de acessos e alterações de dados.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Registro de acessos e alterações de dados.</p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} /> Atualizar
@@ -124,12 +124,12 @@ export default function GestaoLogs() {
 
       <Card className="mb-4">
         <CardContent className="p-4 flex flex-wrap items-end gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-500"><Filter className="w-4 h-4" /> Filtros:</div>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><Filter className="w-4 h-4" /> Filtros:</div>
           <div>
             <select
               value={filters.action}
               onChange={(e) => { setPage(0); setFilters((f) => ({ ...f, action: e.target.value })); }}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+              className="border border-gray-200 dark:border-border rounded-lg px-3 py-2 text-sm bg-white dark:bg-card"
             >
               <option value="">Todas as ações</option>
               {actionOptions.map(([value, label]) => (
@@ -162,7 +162,7 @@ export default function GestaoLogs() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-100">
+                <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-border">
                   <th className="px-4 py-3 font-medium">Data/Hora</th>
                   <th className="px-4 py-3 font-medium">Usuário</th>
                   <th className="px-4 py-3 font-medium">Ação</th>
@@ -179,16 +179,16 @@ export default function GestaoLogs() {
                   logs.map((log) => {
                     const prof = profiles[log.user_id];
                     return (
-                      <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                        <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">{formatDateTime(log.created_at)}</td>
-                        <td className="px-4 py-2.5 text-gray-800">{prof?.display_name || prof?.email || <span className="text-gray-400">{log.user_id?.slice(0, 8) || '—'}</span>}</td>
+                      <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50/50 dark:hover:bg-muted/30">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">{formatDateTime(log.created_at)}</td>
+                        <td className="px-4 py-2.5 text-gray-800 dark:text-gray-200">{prof?.display_name || prof?.email || <span className="text-gray-400">{log.user_id?.slice(0, 8) || '—'}</span>}</td>
                         <td className="px-4 py-2.5">
-                          <Badge className={ACTION_COLORS[log.action] || 'bg-gray-100 text-gray-700'}>
+                          <Badge className={ACTION_COLORS[log.action] || 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300'}>
                             {ACTION_LABELS[log.action] || log.action}
                           </Badge>
                         </td>
-                        <td className="px-4 py-2.5 text-gray-600">{log.entity || '—'}{log.entity_id ? <span className="text-gray-400 text-xs"> #{String(log.entity_id).slice(0, 8)}</span> : null}</td>
-                        <td className="px-4 py-2.5 text-gray-500 text-xs max-w-xs truncate">
+                        <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300">{log.entity || '—'}{log.entity_id ? <span className="text-gray-400 text-xs"> #{String(log.entity_id).slice(0, 8)}</span> : null}</td>
+                        <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs max-w-xs truncate">
                           {log.metadata && Object.keys(log.metadata).length > 0 ? JSON.stringify(log.metadata) : '—'}
                         </td>
                       </tr>
@@ -202,7 +202,7 @@ export default function GestaoLogs() {
       </Card>
 
       <div className="flex items-center justify-between mt-4">
-        <span className="text-sm text-gray-500">Página {page + 1}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">Página {page + 1}</span>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled={page === 0 || loading} onClick={() => setPage((p) => Math.max(0, p - 1))}>Anterior</Button>
           <Button variant="outline" size="sm" disabled={logs.length < PAGE_SIZE || loading} onClick={() => setPage((p) => p + 1)}>Próxima</Button>

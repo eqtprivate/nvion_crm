@@ -16,7 +16,7 @@ export default function BoasVindas() {
       <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen flex items-center justify-center">
         <div className="text-center space-y-3">
           <ShieldAlert className="w-12 h-12 text-gray-300 mx-auto" />
-          <p className="text-gray-500 font-medium">Página restrita</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Página restrita</p>
           <p className="text-sm text-gray-400">A configuração inicial é feita pelo administrador da empresa.</p>
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function BoasVindas() {
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Bem-vindo(a){user?.display_name ? `, ${user.display_name.split(' ')[0]}` : ''}!
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 dark:text-gray-300 mt-1">
                 Vamos preparar a operação da {empresa ? <strong>{empresa}</strong> : 'sua empresa'} em alguns passos.
                 Siga a ordem abaixo — cada item é marcado automaticamente conforme você cadastra.
               </p>
@@ -46,11 +46,11 @@ export default function BoasVindas() {
           </div>
 
           <div className="mt-6">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-1.5">
+            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300 mb-1.5">
               <span className="font-medium">{doneCount} de {total} concluídos</span>
               <span>{pct}%</span>
             </div>
-            <div className="h-2.5 w-full rounded-full bg-white/70 overflow-hidden border border-primary/10">
+            <div className="h-2.5 w-full rounded-full bg-white dark:bg-card/70 overflow-hidden border border-primary/10">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -91,15 +91,15 @@ export default function BoasVindas() {
                       ? <CheckCircle2 className="w-6 h-6 text-green-600" />
                       : <Circle className="w-6 h-6 text-gray-300" />}
                   </div>
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-green-100' : 'bg-gray-100'}`}>
-                    <Icon className={`w-5 h-5 ${step.done ? 'text-green-700' : 'text-gray-600'}`} />
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-green-100' : 'bg-gray-100 dark:bg-muted'}`}>
+                    <Icon className={`w-5 h-5 ${step.done ? 'text-green-700' : 'text-gray-600 dark:text-gray-300'}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
                       <span className="text-gray-400 mr-1.5">{index + 1}.</span>{step.title}
                       {step.done && <span className="ml-2 text-xs font-medium text-green-700">Concluído</span>}
                     </p>
-                    <p className="text-sm text-gray-500">{step.desc}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{step.desc}</p>
                   </div>
                   <Button asChild variant={step.done ? 'ghost' : isNext ? 'default' : 'outline'} size="sm" className="flex-shrink-0">
                     <Link to={createPageUrl(step.path)}>

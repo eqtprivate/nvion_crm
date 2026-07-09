@@ -115,7 +115,7 @@ export default function AccountHealthTab({ filteredAccounts, filteredActivities,
               <TableBody>
                 {atRiskAccounts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No at-risk accounts</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No at-risk accounts</TableCell>
                   </TableRow>
                 ) : (
                   atRiskAccounts.map((account) => (
@@ -158,7 +158,7 @@ export default function AccountHealthTab({ filteredAccounts, filteredActivities,
                 ))}
                 {filteredAccounts.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-gray-500">No accounts</TableCell>
+                    <TableCell colSpan={3} className="text-center text-gray-500 dark:text-gray-400">No accounts</TableCell>
                   </TableRow>
                 )}
               </TableBody>

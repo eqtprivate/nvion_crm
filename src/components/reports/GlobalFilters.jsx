@@ -6,11 +6,11 @@ import { Download, FileText, RotateCcw, Calendar, User } from 'lucide-react';
 
 export default function GlobalFilters({ filters, onFilterChange, onExportCSV, onExportPDF, owners = [] }) {
   return (
-    <Card className="p-4 mb-6 sticky top-0 z-10 bg-white shadow-md border-gray-200">
+    <Card className="p-4 mb-6 sticky top-0 z-10 bg-white dark:bg-card shadow-md border-gray-200 dark:border-border">
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         <div className="flex flex-wrap gap-3 flex-1">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
+            <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <Select value={filters.dateRange} onValueChange={(value) => onFilterChange('dateRange', value)}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Date: This Quarter" />
@@ -27,7 +27,7 @@ export default function GlobalFilters({ filters, onFilterChange, onExportCSV, on
           </div>
 
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-gray-500" />
+            <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <Select value={filters.owner} onValueChange={(value) => onFilterChange('owner', value)}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Owner: All" />

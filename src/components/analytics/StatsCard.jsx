@@ -9,7 +9,7 @@ export default function StatsCard({ title, value, change, icon: Icon, iconColor 
     <Card className="p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-gray-500 mb-2">{title}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{title}</p>
           <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">{value}</p>
           <div className="flex items-center gap-1">
             {isPositive ? (

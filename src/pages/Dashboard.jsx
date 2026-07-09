@@ -46,7 +46,7 @@ function KPI({ title, value, Icon }) {
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-500">{title}</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{title}</span>
           <Icon className="w-4 h-4 text-primary" />
         </div>
         <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
@@ -136,7 +136,7 @@ export default function Dashboard() {
     <div className="p-4 sm:p-8 bg-gray-50 dark:bg-background min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Painel Geral</h1>
-        <p className="text-gray-500 mt-1">Visão geral da operação comercial de consórcios</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Visão geral da operação comercial de consórcios</p>
       </div>
 
       <OnboardingBanner />
@@ -239,7 +239,7 @@ export default function Dashboard() {
                 <div key={op.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-muted rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900 dark:text-gray-100">{op.name}</p>
-                    <p className="text-sm text-gray-500">{op.cliente_vinculado || '-'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{op.cliente_vinculado || '-'}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900 dark:text-gray-100">{money(op.valor_carta)}</p>
