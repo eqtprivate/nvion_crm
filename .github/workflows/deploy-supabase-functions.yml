@@ -39,3 +39,9 @@ jobs:
 
       - name: Deploy send-email function
         run: supabase functions deploy send-email --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Deploy daily-backup function
+        run: supabase functions deploy daily-backup --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Deploy backup-download function
+        run: supabase functions deploy backup-download --project-ref "$SUPABASE_PROJECT_ID"

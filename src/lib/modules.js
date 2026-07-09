@@ -21,6 +21,7 @@ export const AVAILABLE_MODULES = [
   'GestaoPlanos',
   'GestaoEmailTemplates',
   'GestaoLogs',
+  'GestaoBackups',
 ];
 
 export const MODULE_LABELS = {
@@ -46,6 +47,7 @@ export const MODULE_LABELS = {
   GestaoPlanos: 'Gestão de Planos',
   GestaoEmailTemplates: 'Templates de E-mail',
   GestaoLogs: 'Logs de Auditoria',
+  GestaoBackups: 'Backups',
 };
 
 export const ROLE_LABELS = {

@@ -24,6 +24,7 @@ import GestaoPlanos from './pages/GestaoPlanos';
 import GestaoEmpresas from './pages/GestaoEmpresas';
 import GestaoEmailTemplates from './pages/GestaoEmailTemplates';
 import GestaoLogs from './pages/GestaoLogs';
+import GestaoBackups from './pages/GestaoBackups';
 import __Layout from './Layout.jsx';
 
 export const PAGES = {
@@ -53,6 +54,7 @@ export const PAGES = {
   GestaoEmpresas,
   GestaoEmailTemplates,
   GestaoLogs,
+  GestaoBackups,
 };
 
 export const pagesConfig = {

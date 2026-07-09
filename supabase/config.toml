@@ -9,3 +9,8 @@ verify_jwt = false
 # a autenticidade vem do segredo compartilhado (SEND_EMAIL_FN_SECRET).
 [functions.send-email]
 verify_jwt = false
+
+# daily-backup é chamada pelo agendador (pg_cron/Supabase Cron), sem JWT de
+# usuário — autenticidade via BACKUP_FN_SECRET. backup-download usa JWT do usuário.
+[functions.daily-backup]
+verify_jwt = false
