@@ -28,6 +28,22 @@
 
 ---
 
+## 1.1 Atualização pós-validação (2026-07-08)
+
+Verificação ao vivo do banco (via SQL colado pelo usuário) + correções de código aplicadas (v1.11.0).
+
+| Achado | Estado atual |
+|--------|--------------|
+| **A-01** Escalonamento via `profiles` | **RESOLVIDO / não explorável.** A policy `profiles update by admin` usa `USING can_manage_user(id)` e `WITH CHECK can_manage_profile_values(empresa_id, role)`. As funções (SECURITY DEFINER, search_path fixo) só liberam super_admin ou admin_empresa dentro da própria empresa, **bloqueando `role='super_admin'`**. Usuário comum **não consegue atualizar `profiles`** — logo não há auto-promoção. Trigger `enforce_profile_privilege_rules` adicionado como defesa redundante. *(Efeito colateral funcional: vendedor não edita o próprio nome/foto — bug a tratar, não segurança.)* |
+| **A-02** Dependências | **CORRIGIDO.** `npm audit fix` + remoção do `react-quill` não usado → **0 vulnerabilidades** (era 21, incl. jspdf crítica). |
+| **A-03** E-mail fail-open | **CORRIGIDO (código).** `send-email` e `auth-email-hook` agora *fail-closed* (segredo obrigatório). Requer re-deploy das functions. |
+| **B-01** iframe preview | **CORRIGIDO.** `sandbox=""` adicionado. |
+| **M-07** *(novo)* Grants amplos ao `anon` | **CONFIRMADO.** O role `anon` tem ALL (incl. TRUNCATE) em todas as tabelas. Não explorável hoje (RLS `to authenticated` barra o anon; PostgREST não expõe TRUNCATE), mas viola menor-privilégio. **Correção:** `revoke all on all tables in schema public from anon;` (o app exige login; anon não precisa de acesso). |
+| **A-04 / M-05** Auth hardening / DNS | **PENDENTE (painel):** confirmar leaked-password protection, confirmação de e-mail, OTP, Advisors sem ERROR; e SPF/DKIM/DMARC no Resend. |
+| **2b / 2c** RLS e search_path | **A confirmar:** consultas de "tabelas sem RLS" e "funções SECURITY DEFINER sem search_path" ainda não retornadas (esperado: nenhuma linha). |
+
+---
+
 ## 2. Tabela de achados
 
 | ID | Sev. | Categoria | Evidência (arquivo:linha) | Impacto | Correção |
