@@ -42,6 +42,9 @@ Verificação ao vivo do banco (via SQL colado pelo usuário) + correções de c
 | **A-04** Auth hardening | **PENDENTE (painel):** confirmar leaked-password protection, confirmação de e-mail, OTP, Advisors sem ERROR. |
 | **M-05** DNS/e-mail (nvion.com.br) | **DIAGNOSTICADO.** DNS atual bloqueia envio: SPF `v=spf1 -all` (nega tudo), **sem DKIM**, DMARC `p=reject`. Envio pela **raiz**: trocar SPF para `v=spf1 include:amazonses.com -all`, adicionar DKIM `resend._domainkey` (valor do Resend) e MX/SPF de return-path em `send.nvion.com.br`. DMARC `p=reject` mantém-se (passa por alinhamento DKIM). `EMAIL_FROM=nao-responda@nvion.com.br`. |
 | **2b / 2c** RLS e search_path | **A confirmar:** consultas de "tabelas sem RLS" e "funções SECURITY DEFINER sem search_path" ainda não retornadas (esperado: nenhuma linha). |
+| **M-02** Connectors OAuth (Base44) | **OK / não aplicável.** 0 de 62 connectors conectados — nenhum escopo OAuth concedido. |
+| **M-03** PII legada no Base44 | **CONFIRMADO (ao vivo).** Entities do Base44 ainda contêm dados reais (clientes com CPF/CNPJ, e-mail, telefone) apesar da migração para o Supabase. Duplicata de dado sensível fora da fonte-da-verdade → superfície extra + LGPD. **Ação:** se o Base44 só é usado para upload/IA, expurgar os dados das entities (manter só o necessário) e revisar `requiresAuth` do client. |
+| **M-01** Isolamento por vendedor | **DECISÃO PENDENTE.** RLS isola por empresa; o recorte "vendedor vê só o seu" é client-side (`applyAccessFilter` por `display_name`). Levar à RLS é possível, mas exige helper de identidade e é frágil a renomeações — ver decisão com o time. |
 
 ---
 
