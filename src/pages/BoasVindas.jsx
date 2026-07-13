@@ -6,6 +6,7 @@ import { createPageUrl } from '@/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, ArrowRight, Rocket, ShieldAlert, Sparkles } from 'lucide-react';
+import ProgressRing from '@/components/ProgressRing';
 
 export default function BoasVindas() {
   const { user } = useAuth();
@@ -42,6 +43,9 @@ export default function BoasVindas() {
                 Vamos preparar a operação da {empresa ? <strong>{empresa}</strong> : 'sua empresa'} em alguns passos.
                 Siga a ordem abaixo — cada item é marcado automaticamente conforme você cadastra.
               </p>
+            </div>
+            <div className="hidden sm:block flex-shrink-0">
+              <ProgressRing value={pct} size={72} stroke={7} />
             </div>
           </div>
 

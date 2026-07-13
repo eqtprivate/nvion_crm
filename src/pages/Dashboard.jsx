@@ -10,6 +10,10 @@ import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
 import EmptyState from '@/components/EmptyState';
 import { CardsSkeleton } from '@/components/Skeletons';
 import { useChartPalette } from '@/lib/chartPalette';
+import { motion } from 'framer-motion';
+import { staggerContainer, fadeUpItem } from '@/lib/motion';
+import AnimatedNumber from '@/components/AnimatedNumber';
+import Sparkline from '@/components/Sparkline';
 import {
   ResponsiveContainer, BarChart, Bar, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, Cell,
@@ -41,17 +45,24 @@ function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function KPI({ title, value, Icon }) {
+function KPI({ title, amount, format = (v) => Math.round(v).toLocaleString('pt-BR'), Icon, spark }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-500 dark:text-gray-400">{title}</span>
-          <Icon className="w-4 h-4 text-primary" />
-        </div>
-        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-      </CardContent>
-    </Card>
+    <motion.div variants={fadeUpItem}>
+      <Card className="transition-shadow hover:shadow-md">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">{title}</span>
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex items-end justify-between gap-2">
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <AnimatedNumber value={amount} format={format} />
+            </p>
+            {spark && spark.length > 1 && <Sparkline data={spark} className="text-primary flex-shrink-0" />}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -142,18 +153,18 @@ export default function Dashboard() {
       <OnboardingBanner />
 
       {isLoading ? <div className="mb-6"><CardsSkeleton count={10} /></div> : (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <KPI title="Total de Leads" value={kpis.totalLeads} Icon={Target} />
-        <KPI title="Leads Ativos" value={kpis.leadsAtivos} Icon={Target} />
-        <KPI title="Taxa de Conversão" value={kpis.conversao + '%'} Icon={TrendingUp} />
-        <KPI title="Win Rate" value={kpis.winRate + '%'} Icon={Percent} />
-        <KPI title="Vendas no Mês" value={kpis.vendasMes} Icon={CheckCircle} />
-        <KPI title="Oportunidades Abertas" value={kpis.abertas} Icon={DollarSign} />
-        <KPI title="Oportunidades Ganhas" value={kpis.ganhas} Icon={CheckCircle} />
-        <KPI title="Ticket Médio" value={money(kpis.ticketMedio)} Icon={Receipt} />
-        <KPI title="Pipeline Aberto" value={money(kpis.pipelineAberto)} Icon={DollarSign} />
-        <KPI title="Pipeline Ponderado" value={money(kpis.pipelinePonderado)} Icon={Gauge} />
-      </div>
+      <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        <KPI title="Total de Leads" amount={kpis.totalLeads} Icon={Target} />
+        <KPI title="Leads Ativos" amount={kpis.leadsAtivos} Icon={Target} />
+        <KPI title="Taxa de Conversão" amount={parseFloat(kpis.conversao)} format={(v) => v.toFixed(1) + '%'} Icon={TrendingUp} />
+        <KPI title="Win Rate" amount={parseFloat(kpis.winRate)} format={(v) => v.toFixed(1) + '%'} Icon={Percent} />
+        <KPI title="Vendas no Mês" amount={kpis.vendasMes} Icon={CheckCircle} />
+        <KPI title="Oportunidades Abertas" amount={kpis.abertas} Icon={DollarSign} />
+        <KPI title="Oportunidades Ganhas" amount={kpis.ganhas} Icon={CheckCircle} spark={charts.evolucao.map((b) => b.value)} />
+        <KPI title="Ticket Médio" amount={kpis.ticketMedio} format={money} Icon={Receipt} />
+        <KPI title="Pipeline Aberto" amount={kpis.pipelineAberto} format={money} Icon={DollarSign} />
+        <KPI title="Pipeline Ponderado" amount={kpis.pipelinePonderado} format={money} Icon={Gauge} />
+      </motion.div>
       )}
 
       {!isLoading && (

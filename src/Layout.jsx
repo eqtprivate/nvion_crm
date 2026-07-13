@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createPageUrl } from './utils';
+import { pageTransition } from '@/lib/motion';
 import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard,
@@ -167,6 +169,10 @@ export default function Layout({ children, currentPageName }) {
 
   const isActive = (itemName) => currentPageName === itemName;
 
+  // Rótulo da página atual para o breadcrumb.
+  const allNavItems = [...menuSections.flatMap((s) => s.items), ...allBottomMenuItems];
+  const currentLabel = allNavItems.find((i) => i.path === currentPageName)?.name || currentPageName;
+
   const SidebarContent = ({ forMobile = false } = {}) => (
     <>
       <div className={`h-16 flex items-center gap-2.5 px-4 border-b border-sidebar-border ${sidebarCollapsed && !forMobile ? 'justify-center' : ''}`}>
@@ -253,6 +259,11 @@ export default function Layout({ children, currentPageName }) {
                 <kbd className="hidden lg:inline text-[10px] font-medium bg-gray-200 dark:bg-muted text-gray-500 rounded px-1.5 py-0.5">⌘K</kbd>
               </button>
             </div>
+            <nav className="hidden lg:flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 truncate">
+              <span>Início</span>
+              <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="font-medium text-gray-700 dark:text-gray-200 truncate">{currentLabel}</span>
+            </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
@@ -263,7 +274,19 @@ export default function Layout({ children, currentPageName }) {
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 overflow-auto bg-slate-50 dark:bg-background">{children}</main>
+        <main className="flex-1 overflow-auto bg-slate-50 dark:bg-background">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={pageTransition.initial}
+              animate={pageTransition.animate}
+              exit={pageTransition.exit}
+              transition={pageTransition.transition}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
       <CommandPalette open={commandOpen} setOpen={setCommandOpen} sections={paletteSections} />
     </div>
