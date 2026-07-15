@@ -23,7 +23,11 @@ import {
   Copy,
   Check,
   Loader2,
+  Repeat,
+  BellOff,
+  Bell,
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -94,10 +98,19 @@ async function fetchEmpresas() {
   const supabase = assertSupabaseConfigured();
   const { data, error } = await supabase
     .from('empresas')
-    .select('id, nome, cnpj, status, plano, created_at, updated_at')
+    .select('id, nome, cnpj, status, plano, lead_auto_distribute, created_at, updated_at')
     .order('nome', { ascending: true });
   if (error) throw error;
   return data || [];
+}
+
+const PRESENCE_WINDOW_MS = 3 * 60 * 1000;
+
+function isOnline(lastSeenAt) {
+  if (!lastSeenAt) return false;
+  const ts = new Date(lastSeenAt).getTime();
+  if (Number.isNaN(ts)) return false;
+  return Date.now() - ts < PRESENCE_WINDOW_MS;
 }
 
 async function fetchProfilesWithModules() {
@@ -105,7 +118,7 @@ async function fetchProfilesWithModules() {
   const [{ data: profiles, error: profilesError }, { data: modules, error: modulesError }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, display_name, email, empresa_id, empresa_vinculada, role, status, profile_picture, created_at, updated_at')
+      .select('id, display_name, email, empresa_id, empresa_vinculada, role, status, profile_picture, created_at, updated_at, last_seen_at, receive_leads')
       .order('display_name', { ascending: true }),
     supabase
       .from('user_modules')
@@ -498,6 +511,32 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
     onError: (error) => toast.error(`Erro ao alterar status: ${error?.message || 'sem detalhe'}`),
   });
 
+  const receiveLeadsMutation = useMutation({
+    mutationFn: async ({ id, receive_leads }) => {
+      const supabase = assertSupabaseConfigured();
+      const { error } = await supabase.from('profiles').update({ receive_leads }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['supabaseProfiles'] });
+      toast.success(variables.receive_leads ? 'Vendedor incluído no rodízio de leads.' : 'Vendedor removido do rodízio de leads.');
+    },
+    onError: (error) => toast.error(`Erro ao atualizar rodízio: ${error?.message || 'sem detalhe'}`),
+  });
+
+  const autoDistributeMutation = useMutation({
+    mutationFn: async ({ id, lead_auto_distribute }) => {
+      const supabase = assertSupabaseConfigured();
+      const { error } = await supabase.from('empresas').update({ lead_auto_distribute }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['supabaseEmpresas'] });
+      toast.success(variables.lead_auto_distribute ? 'Distribuição automática de leads ativada.' : 'Distribuição automática de leads desativada.');
+    },
+    onError: (error) => toast.error(`Erro ao alterar distribuição: ${error?.message || 'sem detalhe'}`),
+  });
+
   const resetPasswordMutation = useMutation({
     mutationFn: async (target) => {
       const supabase = assertSupabaseConfigured();
@@ -555,6 +594,16 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
     pendentes: usuarios.filter((usuario) => usuario.status === 'pendente').length,
   }), [usuarios]);
 
+  const empresaConfig = useMemo(() => {
+    if (isSuperAdmin) return empresaFiltro !== 'all' ? empresas.find((e) => e.id === empresaFiltro) || null : null;
+    return empresaAtual || null;
+  }, [isSuperAdmin, empresaFiltro, empresas, empresaAtual]);
+
+  const vendedoresOnline = useMemo(
+    () => usuarios.filter((u) => u.role === 'vendedor' && u.status === 'ativo' && u.receive_leads !== false && isOnline(u.last_seen_at)).length,
+    [usuarios],
+  );
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-4 text-sm">
@@ -586,6 +635,33 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
         <KPICard title="Pendentes" value={kpis.pendentes} icon={Clock} iconColor="bg-yellow-500" />
       </div>
 
+      {empresaConfig && (
+        <div className="bg-white dark:bg-card rounded-lg shadow border border-gray-200 dark:border-border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Repeat className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 dark:text-gray-100">Distribuição automática de leads (round-robin)</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Novos leads sem responsável de <strong>{getEmpresaNome(empresaConfig)}</strong> são distribuídos automaticamente entre os vendedores online.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {vendedoresOnline} vendedor(es) online no rodízio agora.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <span className="text-sm text-gray-500 dark:text-gray-400">{empresaConfig.lead_auto_distribute ? 'Ativa' : 'Inativa'}</span>
+            <Switch
+              checked={Boolean(empresaConfig.lead_auto_distribute)}
+              onCheckedChange={(checked) => autoDistributeMutation.mutate({ id: empresaConfig.id, lead_auto_distribute: checked })}
+              disabled={autoDistributeMutation.isPending}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-card rounded-lg shadow border border-gray-200 dark:border-border">
         <div className="overflow-x-auto">
           <Table>
@@ -614,7 +690,16 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                   <TableRow key={target.id} className="hover:bg-gray-50 dark:hover:bg-muted/40 border-b border-gray-100 dark:border-border">
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{target.display_name}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                          <span
+                            className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${isOnline(target.last_seen_at) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                            title={isOnline(target.last_seen_at) ? 'Online' : 'Offline'}
+                          />
+                          {target.display_name}
+                          {target.role === 'vendedor' && target.receive_leads === false && (
+                            <Badge variant="outline" className="text-[10px] font-normal text-gray-500 dark:text-gray-400">fora do rodízio</Badge>
+                          )}
+                        </span>
                         <span className="text-sm text-gray-500 dark:text-gray-400">{target.email}</span>
                         <span className="text-[11px] text-gray-300 font-mono">{target.id}</span>
                       </div>
@@ -638,6 +723,13 @@ function UsuariosTab({ isSuperAdmin, empresaAtual, todosUsuarios, empresas, isLo
                             <DropdownMenuItem onClick={() => { setSelectedUser(target); setModulesDialogOpen(true); }}>
                               <LayoutGrid className="w-4 h-4 mr-2" /> Gerenciar Módulos
                             </DropdownMenuItem>
+                            {target.role === 'vendedor' && (
+                              <DropdownMenuItem onClick={() => receiveLeadsMutation.mutate({ id: target.id, receive_leads: target.receive_leads === false })}>
+                                {target.receive_leads === false
+                                  ? <><Bell className="w-4 h-4 mr-2" /> Incluir no rodízio de leads</>
+                                  : <><BellOff className="w-4 h-4 mr-2" /> Remover do rodízio de leads</>}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => resetPasswordMutation.mutate(target)}>
                               <Mail className="w-4 h-4 mr-2" /> Enviar recuperação de senha
                             </DropdownMenuItem>
