@@ -471,8 +471,14 @@ export default function VendasConsorcio() {
       .map((venda) => repararComissaoExistente(venda, comissoesPorVenda.get(venda.id)));
 
     backfillKeyRef.current = backfillKey;
+    // Ignora violação de unicidade (23505): outra sessão pode ter gerado a
+    // comissão da mesma venda em paralelo (índice único comissoes_venda_uniq).
+    const ignorarDuplicata = (e) => {
+      if (e?.code === '23505') return null;
+      throw e;
+    };
     const operacoes = [
-      ...vendasSemComissao.map((venda) => gerarComissao(venda.id, venda)),
+      ...vendasSemComissao.map((venda) => gerarComissao(venda.id, venda, { comParcelas: true }).catch(ignorarDuplicata)),
       ...reparos,
     ];
     if (operacoes.length === 0) return;

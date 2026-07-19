@@ -64,8 +64,34 @@ export default function Comissoes() {
     [allComissoes, user, teamMembers]
   );
 
+  // Estados terminais da comissão que devem refletir nas parcelas materializadas.
+  const PARCELA_STATUS_POR_COMISSAO = {
+    paga: 'paga',
+    cancelada: 'cancelada',
+    estornada: 'estornada',
+    confirmada: 'confirmada',
+  };
+
+  const propagarStatusParcelas = async (comissaoId, statusComissao) => {
+    const statusParcela = PARCELA_STATUS_POR_COMISSAO[statusComissao];
+    if (!statusParcela) return; // liberada/bloqueada/prevista não alteram parcelas
+    const todas = await db.ParcelasComissao.list();
+    const vinculadas = todas.filter((p) =>
+      p.comissao_vinculada === comissaoId &&
+      p.empresa_vinculada === empresa &&
+      !['paga', 'cancelada', 'estornada'].includes(p.status_parcela)
+    );
+    await Promise.all(vinculadas
+      // estorno só afeta parcelas estornáveis
+      .filter((p) => statusParcela !== 'estornada' || p.estornavel)
+      .map((p) => db.ParcelasComissao.update(p.id, { status_parcela: statusParcela })));
+  };
+
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }) => db.Comissoes.update(id, { status_comissao: status }),
+    mutationFn: async ({ id, status }) => {
+      await db.Comissoes.update(id, { status_comissao: status });
+      await propagarStatusParcelas(id, status);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['comissoes', empresa] }),
   });
 

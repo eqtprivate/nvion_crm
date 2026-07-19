@@ -165,24 +165,22 @@ Ainda não há módulo de upload/importação de relatório de administradora, c
 
 A tese central do produto depende de converter vendas conciliadas em recebíveis futuros elegíveis. Essa camada ainda não existe.
 
-### 3.7 Pendências de robustez da Sprint 2 (Comissões)
+### 3.7 Pendências de robustez da Sprint 2 (Comissões) — resolvidas
 
-O fluxo funciona, mas a auditoria identificou pontos a endurecer:
+A auditoria identificou os pontos abaixo, todos já endurecidos:
 
-1. **Recebíveis com valor zerado no caminho novo**: `gerarRecebiveis` usa
-   `data.valor_comissao_prevista` como total; com a engine nova de regras esse
-   campo pode vir vazio, gerando recebíveis com `valor_recebivel = 0`. Deveria
-   usar `calc.valorComissaoTotal` (ou a soma das parcelas).
-2. **Risco de comissão duplicada por venda**: o backfill retroativo é guardado
-   apenas por `backfillKeyRef` no cliente. Com dois admins simultâneos (ou
-   corrida entre leitura e escrita) pode criar mais de uma `Comissoes` para a
-   mesma venda. Recomenda-se índice único parcial em
-   `comissoes(venda_vinculada)` no Supabase.
-3. **Backfill não materializa parcelas**: `gerarComissao(venda, venda)` roda com
-   `comParcelas = false`, então comissões retroativas ficam sem
-   `ParcelasComissao` — inconsistente com o cadastro normal.
-4. **Consistência de status**: a UI de `Comissoes` altera `status_comissao`, mas
-   não propaga o status às `ParcelasComissao` vinculadas (estorno/cancelamento).
+1. ✅ **Recebíveis com valor zerado no caminho novo**: `gerarRecebiveis` agora usa
+   o total calculado da comissão (`comissao.valor_comissao_total`) como fallback
+   quando `data.valor_comissao_prevista` vem vazio.
+2. ✅ **Risco de comissão duplicada por venda**: índice único parcial
+   `comissoes_venda_uniq` em `(empresa_id, venda_vinculada)`
+   (migração `20260715000000_comissoes_unique.sql`, com dedupe prévio). O backfill
+   passou a ignorar violação de unicidade (23505).
+3. ✅ **Backfill materializa parcelas**: a geração retroativa roda com
+   `comParcelas: true`, alinhada ao cadastro normal.
+4. ✅ **Consistência de status**: alterar o status da comissão para
+   paga/cancelada/estornada/confirmada propaga às `ParcelasComissao` não
+   terminais (estorno só afeta parcelas estornáveis).
 
 ## 4. Roadmap por Sprints
 
