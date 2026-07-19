@@ -1,6 +1,6 @@
 // Backup diário: gera um snapshot JSON por empresa e grava no bucket 'backups'.
 // Disparo: pg_cron (net.http_post) ou Supabase Cron, 1x/dia, com o header
-// x-backup-secret = BACKUP_FN_SECRET. Retenção: 30 dias.
+// x-backup-secret = BACKUP_FN_SECRET. Retenção: 7 dias.
 //
 // Secrets (Supabase → Edge Functions → Secrets):
 //   BACKUP_FN_SECRET          segredo compartilhado do agendador
@@ -8,7 +8,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
-const RETENTION_DAYS = 30;
+const RETENTION_DAYS = 7;
 
 // Tabelas de negócio a incluir no snapshot (todas com empresa_id).
 const TABLES = [

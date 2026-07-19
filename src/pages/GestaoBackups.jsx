@@ -78,7 +78,7 @@ export default function GestaoBackups() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <DatabaseBackup className="w-6 h-6 text-primary" /> Backups
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Snapshots diários dos dados por empresa (retenção de 30 dias).</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Snapshots diários dos dados por empresa (retenção de 7 dias).</p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} /> Atualizar
