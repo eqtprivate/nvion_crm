@@ -243,3 +243,9 @@ Estado por etapa e próximos passos em
 - [`docs/NVION_MVP_READINESS.md`](docs/NVION_MVP_READINESS.md) — prontidão do MVP
 - [`docs/NVION_QA_MVP.md`](docs/NVION_QA_MVP.md) — QA
 - [`SECURITY_AUDIT.md`](SECURITY_AUDIT.md) — auditoria de segurança
+
+## Licença
+
+Software proprietário. Copyright © 2026 **SmartX Ventures Ltda.** Todos os
+direitos reservados. O uso, cópia, modificação ou distribuição sem autorização
+prévia e por escrito do titular é proibido. Ver [`LICENSE`](LICENSE).

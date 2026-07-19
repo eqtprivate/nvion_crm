@@ -1,7 +1,9 @@
 {
-  "name": "base44-app",
+  "name": "nvion-crm",
   "private": true,
   "version": "1.16.3",
+  "license": "UNLICENSED",
+  "author": "SmartX Ventures Ltda.",
   "type": "module",
   "scripts": {
     "dev": "vite",
