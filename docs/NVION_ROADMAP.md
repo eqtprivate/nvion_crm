@@ -29,9 +29,14 @@ Lead → Oportunidade → Venda de Consórcio → Conciliação com Administrado
   geração a partir da venda + parcelas (`VendasConsorcio.jsx`), página
   `Comissoes.jsx` com KPIs/filtros/status/CSV. **Pendências de robustez**:
   ver seção 3.7.
-- **Sprints 3–5 (conciliação, recebíveis, antecipação)**: existem entidades e
-  esqueleto parcial (`RecebiveisConsorcio`, `conciliacao_vendas`), mas os
-  módulos ainda não estão completos.
+- **Sprint 3 (conciliação)**: página `ConciliacaoAdministradora.jsx` (~600 linhas)
+  com importação de relatório e matching — em consolidação/validação.
+- **Sprint 4/4.5 (recebíveis)**: páginas `Recebiveis.jsx` e
+  `PainelRecebiveis.jsx` já existem; recebíveis são gerados a partir da venda.
+  Falta a camada de métricas reutilizável (`recebiveisMetrics.js`) e alguns KPIs.
+- **Sprint 5 (antecipação)**: ainda não iniciada (depende da consolidação de 4.5).
+- **Módulos adicionais já no ar**: Campanhas Comerciais, Templates de E-mail,
+  Logs de Auditoria, Gestão de Empresas/Planos, Backups.
 
 ## 2. Estado Atual do Projeto
 
