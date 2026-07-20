@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase, assertSupabaseConfigured } from '@/lib/supabaseClient';
+import { assertSupabaseConfigured } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
