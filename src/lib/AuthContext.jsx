@@ -137,6 +137,23 @@ export const AuthProvider = ({ children }) => {
     };
   }, [clearAuthState, loadProfile]);
 
+  // Heartbeat de presença: enquanto logado, marca last_seen_at (entra no rodízio
+  // de leads). A presença expira sozinha ~3 min após o último sinal.
+  useEffect(() => {
+    if (!isAuthenticated || !supabase) return undefined;
+    const touch = () => { supabase.rpc('touch_presence').catch(() => {}); };
+    touch();
+    const interval = setInterval(touch, 60000);
+    const onVisible = () => { if (document.visibilityState === 'visible') touch(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', touch);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', touch);
+    };
+  }, [isAuthenticated]);
+
   const login = async (email, password) => {
     const client = assertSupabaseConfigured();
     setAuthError(null);
@@ -157,12 +174,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     void logAudit('login', { empresaId: profile.empresa_id ?? null });
+    supabase.rpc('touch_presence').catch(() => {}); // entra no rodízio de leads
     return profile;
   };
 
   const logout = async () => {
     await logAudit('logout', { empresaId: user?.empresa_id ?? null });
-    if (supabase) await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.rpc('clear_presence').catch(() => {}); // sai do rodízio de leads
+      await supabase.auth.signOut();
+    }
     clearAuthState();
   };
 

@@ -8,6 +8,36 @@ Fluxo-alvo:
 
 Lead → Oportunidade → Venda de Consórcio → Conciliação com Administradora → Comissão Confirmada → Recebível Futuro → Limite Antecipável → Solicitação de Antecipação Parcial
 
+## 1.1 Estado real (atualizado em 2026-07)
+
+> Este bloco reflete o estado atual do código, que evoluiu além da redação
+> original das seções abaixo (que descrevem a fase Base44/localStorage).
+
+- **Backend migrado para Supabase**: Auth nativo, RLS multiempresa, Edge
+  Functions (criação de usuário, reset de senha, e-mails, backup) e RPCs.
+- **Segurança (Sprint 7) muito avançada**: política de senha forte + reset
+  obrigatório, senha temporária protegida, recuperação por e-mail, trilha de
+  auditoria, isolamento por empresa via RLS, expurgo de PII do Base44
+  (ver `SECURITY_AUDIT.md`).
+- **Backup diário por empresa**: snapshot em bucket privado
+  `backups/{empresa_id}/{data}.json`, retenção de 7 dias, agendado por
+  `pg_cron` (ver `docs/nvion-backup.md`).
+- **Distribuição round-robin de leads**: presença por heartbeat + trigger
+  `assign_lead_round_robin`; vendedor logado entra no rodízio, deslogado sai.
+- **Sprint 1 (core comercial)**: implementado (lead → oportunidade → venda).
+- **Sprint 2 (comissões)**: implementado — engine `src/lib/comissao.js`,
+  geração a partir da venda + parcelas (`VendasConsorcio.jsx`), página
+  `Comissoes.jsx` com KPIs/filtros/status/CSV. **Pendências de robustez**:
+  ver seção 3.7.
+- **Sprint 3 (conciliação)**: página `ConciliacaoAdministradora.jsx` (~600 linhas)
+  com importação de relatório e matching — em consolidação/validação.
+- **Sprint 4/4.5 (recebíveis)**: páginas `Recebiveis.jsx` e
+  `PainelRecebiveis.jsx` já existem; recebíveis são gerados a partir da venda.
+  Falta a camada de métricas reutilizável (`recebiveisMetrics.js`) e alguns KPIs.
+- **Sprint 5 (antecipação)**: ainda não iniciada (depende da consolidação de 4.5).
+- **Módulos adicionais já no ar**: Campanhas Comerciais, Templates de E-mail,
+  Logs de Auditoria, Gestão de Empresas/Planos, Backups.
+
 ## 2. Estado Atual do Projeto
 
 ### 2.1 Stack
@@ -19,7 +49,8 @@ Lead → Oportunidade → Venda de Consórcio → Conciliação com Administrado
 - Tailwind
 - Radix UI
 - Recharts
-- SDK Base44
+- Supabase (Auth, Postgres/RLS, Edge Functions) — camada `src/api/db` ainda
+  expõe entidades no estilo Base44 por compatibilidade
 
 ### 2.2 Repositório
 
@@ -138,6 +169,23 @@ Ainda não há módulo de upload/importação de relatório de administradora, c
 ### 3.6 Recebíveis e antecipação ainda não implementados
 
 A tese central do produto depende de converter vendas conciliadas em recebíveis futuros elegíveis. Essa camada ainda não existe.
+
+### 3.7 Pendências de robustez da Sprint 2 (Comissões) — resolvidas
+
+A auditoria identificou os pontos abaixo, todos já endurecidos:
+
+1. ✅ **Recebíveis com valor zerado no caminho novo**: `gerarRecebiveis` agora usa
+   o total calculado da comissão (`comissao.valor_comissao_total`) como fallback
+   quando `data.valor_comissao_prevista` vem vazio.
+2. ✅ **Risco de comissão duplicada por venda**: índice único parcial
+   `comissoes_venda_uniq` em `(empresa_id, venda_vinculada)`
+   (migração `20260715000000_comissoes_unique.sql`, com dedupe prévio). O backfill
+   passou a ignorar violação de unicidade (23505).
+3. ✅ **Backfill materializa parcelas**: a geração retroativa roda com
+   `comParcelas: true`, alinhada ao cadastro normal.
+4. ✅ **Consistência de status**: alterar o status da comissão para
+   paga/cancelada/estornada/confirmada propaga às `ParcelasComissao` não
+   terminais (estorno só afeta parcelas estornáveis).
 
 ## 4. Roadmap por Sprints
 

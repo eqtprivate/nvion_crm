@@ -337,10 +337,12 @@ export default function VendasConsorcio() {
     return true;
   };
 
-  const gerarRecebiveis = async (vendaId, comissaoId, data) => {
+  const gerarRecebiveis = async (vendaId, comissaoId, data, valorComissaoTotal) => {
     const numParcelas = Number(data.num_parcelas_comissao || 1);
     const prazo = Number(data.prazo_primeira_parcela_dias || 30);
-    const valorTotal = Number(data.valor_comissao_prevista || 0);
+    // No caminho novo (engine de regras) data.valor_comissao_prevista costuma vir
+    // vazio; usa o total efetivamente calculado da comissão como fallback.
+    const valorTotal = Number(data.valor_comissao_prevista || valorComissaoTotal || 0);
     const valorParcela = numParcelas > 0 ? valorTotal / numParcelas : valorTotal;
     const dataBase = data.data_venda || new Date().toISOString().slice(0, 10);
     for (let i = 0; i < numParcelas; i++) {
@@ -469,8 +471,14 @@ export default function VendasConsorcio() {
       .map((venda) => repararComissaoExistente(venda, comissoesPorVenda.get(venda.id)));
 
     backfillKeyRef.current = backfillKey;
+    // Ignora violação de unicidade (23505): outra sessão pode ter gerado a
+    // comissão da mesma venda em paralelo (índice único comissoes_venda_uniq).
+    const ignorarDuplicata = (e) => {
+      if (e?.code === '23505') return null;
+      throw e;
+    };
     const operacoes = [
-      ...vendasSemComissao.map((venda) => gerarComissao(venda.id, venda)),
+      ...vendasSemComissao.map((venda) => gerarComissao(venda.id, venda, { comParcelas: true }).catch(ignorarDuplicata)),
       ...reparos,
     ];
     if (operacoes.length === 0) return;
@@ -488,7 +496,7 @@ export default function VendasConsorcio() {
     mutationFn: async (data) => {
       const venda = await db.VendasConsorcio.create({ ...data, empresa_vinculada: empresa });
       const comissao = await gerarComissao(venda.id, data, { comParcelas: true });
-      await gerarRecebiveis(venda.id, comissao?.id, data);
+      await gerarRecebiveis(venda.id, comissao?.id, data, comissao?.valor_comissao_total);
       await concluirOportunidadeVinculada(data);
       return venda;
     },
