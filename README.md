@@ -237,6 +237,7 @@ Estado por etapa e próximos passos em
 
 ## Documentação
 
+- [`docs/NVION_MODULOS.md`](docs/NVION_MODULOS.md) — **documentação dos módulos** (o que fazem, premissas e organograma de interação)
 - [`docs/NVION_ROADMAP.md`](docs/NVION_ROADMAP.md) — roadmap e etapas
 - [`docs/nvion-backup.md`](docs/nvion-backup.md) — backup diário
 - [`docs/supabase-password-recovery-email.md`](docs/supabase-password-recovery-email.md) — e-mail de recuperação
